@@ -419,11 +419,21 @@ async function dbQuery(table,params){
   return res.json();
 }
 
-async function carregarEmpresas(){
-  if(_dbEmpresas.length>0)return _dbEmpresas;
-  var data=await dbQuery('empresas','select=cnpj,razao,regime,uf,cidade,grupo,status&order=razao&limit=3000');
-  _dbEmpresas=data;
-  return data;
+async function carregarEmpresas(forcar){
+  if(!forcar&&_dbEmpresas.length>0)return _dbEmpresas;
+  // busca em lotes de 1000 (limite do Supabase REST)
+  var todos=[];
+  var offset=0;
+  while(true){
+    var data=await dbQuery('empresas','select=cnpj,razao,regime,cidade,uf,grupo,status&order=razao&limit=1000&offset='+offset);
+    if(!data||data.length===0)break;
+    todos=todos.concat(data);
+    if(data.length<1000)break;
+    offset+=1000;
+    if(offset>=5000)break; // máximo 5000
+  }
+  _dbEmpresas=todos;
+  return todos;
 }
 
 function sc(s){return{"Ativo":"#4ade80","Inativo":"#f43f5e","Pendente":"#fbbf24","Concluída":"#4ade80","Em Andamento":"#38bdf8","Conforme":"#4ade80","Divergente":"#f43f5e"}[s]||"#64748b";}
@@ -747,7 +757,7 @@ function rEmpresas(){
   '<select id="euf" onchange="fE()" style="min-width:80px"><option value="">UF</option></select>'+
   '<select id="ereg" onchange="fE()" style="min-width:130px"><option value="">Regime</option></select>'+
   '</div>'+
-  '<div class="panel"><table><thead><tr><th>CNPJ</th><th>Empresa</th><th>Grupo</th><th>Regime</th><th>UF</th><th>Status</th></tr></thead><tbody id="etb"><tr><td colspan="6" style="text-align:center;padding:24px;color:#475569">Carregando...</td></tr></tbody></table></div>';
+  '<div class="panel"><table><thead><tr><th>CNPJ</th><th>Empresa</th><th>Grupo</th><th>Regime</th><th>Cidade</th><th>UF</th><th>Status</th></tr></thead><tbody id="etb"><tr><td colspan="6" style="text-align:center;padding:24px;color:#475569">Carregando...</td></tr></tbody></table></div>';
 
   // carrega do banco
   carregarEmpresas().then(function(data){
@@ -786,6 +796,7 @@ function eRows(a){
       '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
       '<td style="color:#94a3b8">'+(e.grupo||'—')+'</td>'+
       '<td style="color:#94a3b8;font-size:10px">'+(e.regime||'—')+'</td>'+
+      '<td style="color:#94a3b8;font-size:10px">'+(e.cidade||'—')+'</td>'+
       '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
       '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>'+
     '</tr>';
