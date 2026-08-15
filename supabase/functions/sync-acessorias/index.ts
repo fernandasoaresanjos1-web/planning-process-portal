@@ -79,9 +79,10 @@ Deno.serve(async (req) => {
     }
 
     if (modo === "tags") {
+      // 1. lista todas as tags (sem companies)
       const tags: Record<string, unknown>[] = [];
       for (let page = pagInicio; page <= pagFim; page++) {
-        const res = await fetch(`${BASE}/tags/ListAll?companies&Pagina=${page}`, { headers: apiHeaders });
+        const res = await fetch(`${BASE}/tags/ListAll?Pagina=${page}`, { headers: apiHeaders });
         if (!res.ok) break;
         const data = await res.json();
         if (!Array.isArray(data) || data.length === 0) break;
@@ -89,22 +90,33 @@ Deno.serve(async (req) => {
         if (data.length < 20) break;
         await sleep(650);
       }
+      console.log(`Tags listadas: ${tags.length}`);
 
+      // 2. upsert das tags
       const tagRows = tags.map((t) => ({ id: Number(t.id), nome: String(t.nome ?? ""), status: String(t.status ?? "Ativo"), sincronizado_em: new Date().toISOString() }));
       for (let i = 0; i < tagRows.length; i += 200) {
         const res = await supabase.from("tags").upsert(tagRows.slice(i, i + 200), { onConflict: "id" });
         if (res.error) throw new Error(`upsert tags: ${res.error.message}`);
       }
 
+      // 3. para cada tag, busca as empresas vinculadas
       const pivots: { cnpj: string; tag_id: number }[] = [];
       for (const tag of tags) {
         const tagId = Number(tag.id);
-        const companies = (tag.companies ?? []) as Array<{ cnpj: string }>;
+        await sleep(700);
+        const res = await fetch(`${BASE}/tags/${tagId}?companies`, { headers: apiHeaders });
+        if (!res.ok) continue;
+        const data = await res.json();
+        // resposta pode ser array ou objeto com companies
+        const tagData = Array.isArray(data) ? data[0] : data;
+        const companies = (tagData?.companies ?? tagData?.Empresas ?? []) as Array<Record<string, unknown>>;
         for (const c of companies) {
-          const cnpj = String(c.cnpj ?? "").replace(/\D/g, "");
+          const cnpj = String(c.cnpj ?? c.Identificador ?? c.CNPJ ?? "").replace(/\D/g, "");
           if (cnpj) pivots.push({ cnpj, tag_id: tagId });
         }
       }
+      console.log(`Vínculos empresa-tag: ${pivots.length}`);
+
       if (pivots.length > 0) {
         const tagIds = [...new Set(pivots.map((p) => p.tag_id))];
         await supabase.from("empresa_tags").delete().in("tag_id", tagIds);
