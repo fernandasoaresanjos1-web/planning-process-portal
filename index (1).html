@@ -1,0 +1,907 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Planning Process — Portal de Gestão de Risco</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',system-ui,sans-serif;background:#070a0e;color:#e2e8f0;min-height:100vh;display:flex}
+
+/* SIDEBAR */
+aside{width:220px;background:#0a0d12;border-right:1px solid rgba(255,255,255,0.06);display:flex;flex-direction:column;flex-shrink:0;position:sticky;top:0;height:100vh;overflow-y:auto}
+.logo-box{padding:22px 20px;display:flex;align-items:center;gap:11px}
+.logo-mark{width:34px;height:34px;background:#00e676;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:900;color:#070a0e;font-size:17px;box-shadow:0 0 20px rgba(0,230,118,0.4);flex-shrink:0}
+.nav-item{display:flex;align-items:center;gap:12px;padding:11px 20px;cursor:pointer;font-size:13px;font-weight:500;color:#64748b;border:none;background:none;width:100%;text-align:left;font-family:inherit;transition:all 0.15s;border-left:3px solid transparent}
+.nav-item:hover{background:rgba(255,255,255,0.03);color:#cbd5e1}
+.nav-item.on{background:rgba(0,230,118,0.07);color:#00e676;border-left-color:#00e676}
+.nav-icon{width:17px;height:17px;flex-shrink:0;stroke:currentColor;fill:none;stroke-width:1.8}
+
+/* MAIN */
+main{flex:1;min-width:0;display:flex;flex-direction:column}
+.topbar{padding:18px 32px;display:flex;align-items:center;gap:14px;justify-content:flex-end}
+.search-box{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:24px;padding:9px 18px;display:flex;align-items:center;gap:10px;width:280px}
+.search-box input{background:none;border:none;color:#e2e8f0;font-size:12px;outline:none;flex:1;font-family:inherit}
+.search-box input::placeholder{color:#475569}
+.icon-btn{width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative;color:#94a3b8}
+
+.content{flex:1;padding:0 32px 32px;overflow-y:auto}
+.screen{display:none}
+.screen.active{display:block}
+
+/* GRADE DE PRODUTOS */
+.grid-stage{position:relative;width:100%;margin:0 auto}
+#wires{position:absolute;inset:0;width:100%;height:100%;z-index:0;pointer-events:none;overflow:visible}
+.prow{display:grid;grid-template-columns:repeat(4,1fr);gap:20px;position:relative;z-index:2}
+.prow+.prow{margin-top:20px}
+.gcard{position:relative;border-radius:18px;padding:22px 18px 20px;cursor:pointer;overflow:hidden;min-height:154px;display:flex;flex-direction:column;border:1px solid rgba(120,150,135,0.10);background:linear-gradient(158deg,rgba(255,255,255,0.022) 0%,rgba(10,14,17,0.9) 60%);box-shadow:none;transition:transform .28s cubic-bezier(.2,.8,.3,1),box-shadow .28s,border-color .28s,background .28s}
+.gcard .topline{position:absolute;top:0;left:16px;right:16px;height:1px;background:linear-gradient(90deg,transparent,rgba(120,150,135,0.22),transparent);transition:background .28s}
+.gcard .glow{position:absolute;top:-30px;right:-30px;width:110px;height:110px;border-radius:50%;background:radial-gradient(circle,rgba(0,230,118,0.14),transparent 68%);opacity:0;transition:opacity .28s;pointer-events:none}
+.gico{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin-bottom:14px;flex-shrink:0;position:relative;z-index:1;border:1px solid rgba(120,150,135,0.16);background:rgba(255,255,255,0.025);box-shadow:none;transition:all .28s}
+.gico svg{stroke:#5b6f66;transition:stroke .28s}
+.gtit{font-size:12px;font-weight:800;letter-spacing:0.07em;margin-bottom:6px;position:relative;z-index:1;color:#7d938a;transition:color .28s}
+.gsub{font-size:10px;line-height:1.55;flex:1;position:relative;z-index:1;color:#4a5f56;transition:color .28s}
+.gstatus{display:flex;align-items:center;gap:6px;margin-top:14px;font-size:9px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;position:relative;z-index:1;color:#4a5f56;transition:color .28s}
+.sdot{width:5px;height:5px;border-radius:50%;flex-shrink:0;background:#3a4b43;box-shadow:none;transition:all .28s}
+.gcard:hover{transform:translateY(-5px);border-color:rgba(0,230,118,0.55);background:linear-gradient(158deg,rgba(0,230,118,0.13) 0%,rgba(9,15,13,0.94) 60%);box-shadow:0 14px 42px rgba(0,230,118,0.20)}
+.gcard:hover .topline{background:linear-gradient(90deg,transparent,rgba(0,230,118,0.95),transparent)}
+.gcard:hover .glow{opacity:1}
+.gcard:hover .gico{border-color:rgba(0,230,118,0.55);background:rgba(0,230,118,0.14);box-shadow:0 0 22px rgba(0,230,118,0.25);transform:scale(1.05)}
+.gcard:hover .gico svg{stroke:#00e676}
+.gcard:hover .gtit{color:#fff}
+.gcard:hover .gsub{color:rgba(0,230,118,0.62)}
+.gcard:hover .gstatus{color:#00e676}
+.gcard:hover .sdot{background:#00e676;box-shadow:0 0 9px #00e676}
+.gcard.ativo .sdot{background:#4a6b5c;animation:pulseDim 3s ease-in-out infinite}
+.gcard.ativo:hover .sdot{animation:none}
+@keyframes pulseDim{0%,100%{opacity:1}50%{opacity:0.45}}
+.node-port{position:absolute;width:5px;height:5px;border-radius:50%;z-index:3;transform:translate(-50%,-50%);background:rgba(120,150,135,0.28);box-shadow:none;transition:all .3s}
+
+/* ACESSO RÁPIDO */
+.quick-section{margin-top:38px;padding-top:26px;border-top:1px solid rgba(120,150,135,0.10)}
+.quick-head{display:flex;align-items:flex-end;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:12px}
+.quick-tag{font-size:9px;font-weight:800;letter-spacing:0.14em;text-transform:uppercase;color:#00e676;margin-bottom:6px}
+.quick-title{font-size:16px;font-weight:800;color:#e8f0ec;letter-spacing:-0.01em}
+.quick-note{font-size:10.5px;color:#4a5f56;display:flex;align-items:center;gap:6px}
+.quick-note::before{content:'';width:5px;height:5px;border-radius:50%;background:#00e676;box-shadow:0 0 7px #00e676}
+.quick-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+.qcard{
+  display:flex;align-items:center;gap:14px;
+  padding:16px 18px;border-radius:14px;cursor:pointer;
+  border:1px solid rgba(120,150,135,0.12);
+  background:rgba(255,255,255,0.022);
+  transition:all .24s cubic-bezier(.2,.8,.3,1);
+}
+.qcard:hover{
+  transform:translateX(4px);
+  border-color:rgba(0,230,118,0.5);
+  background:rgba(0,230,118,0.08);
+  box-shadow:0 8px 26px rgba(0,230,118,0.14);
+}
+.qico{
+  width:38px;height:38px;border-radius:10px;flex-shrink:0;
+  display:flex;align-items:center;justify-content:center;
+  border:1px solid rgba(120,150,135,0.18);
+  background:rgba(255,255,255,0.03);
+  transition:all .24s;
+}
+.qico svg{stroke:#5b6f66;transition:stroke .24s}
+.qcard:hover .qico{border-color:rgba(0,230,118,0.5);background:rgba(0,230,118,0.13);box-shadow:0 0 18px rgba(0,230,118,0.2)}
+.qcard:hover .qico svg{stroke:#00e676}
+.qtxt{flex:1;min-width:0}
+.qtit{font-size:12px;font-weight:700;color:#95a9a0;transition:color .24s;margin-bottom:3px}
+.qsub{font-size:10px;color:#46594f;transition:color .24s;line-height:1.4}
+.qcard:hover .qtit{color:#fff}
+.qcard:hover .qsub{color:rgba(0,230,118,0.6)}
+.qarrow{font-size:14px;color:#3d4f46;transition:all .24s;flex-shrink:0}
+.qcard:hover .qarrow{color:#00e676;transform:translateX(3px)}
+
+.health-card{background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.09);border-radius:14px;padding:16px 20px;width:250px;flex-shrink:0}
+
+/* PRODUCT CARDS */
+.pcard{background:radial-gradient(ellipse at 50% 40%,rgba(255,255,255,0.035) 0%,rgba(10,13,18,0.6) 70%);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:32px 24px;text-align:center;cursor:pointer;transition:all 0.25s;position:relative;overflow:hidden}
+.pcard:hover{transform:translateY(-4px)}
+.pcard-num{font-size:26px;font-weight:800;letter-spacing:-0.02em;margin-bottom:20px}
+.pcard-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px;border:2px solid}
+.pcard-title{font-size:14px;font-weight:800;color:#f1f5f9;letter-spacing:0.04em;margin-bottom:8px}
+.pcard-sub{font-size:11px;color:#64748b;line-height:1.5;margin-bottom:18px}
+.pcard-arrow{width:34px;height:34px;border-radius:50%;border:1.5px solid;display:flex;align-items:center;justify-content:center;margin:0 auto;font-size:15px;transition:all 0.2s}
+
+/* TABLE */
+table{width:100%;border-collapse:collapse}
+th{font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.06em;padding:10px 14px;text-align:left;font-weight:700;border-bottom:1px solid rgba(255,255,255,0.06);background:rgba(255,255,255,0.02);white-space:nowrap}
+td{font-size:11px;padding:10px 14px;border-bottom:1px solid rgba(255,255,255,0.04);color:#cbd5e1}
+tr:hover td{background:rgba(255,255,255,0.025)}
+.badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;white-space:nowrap}
+input,select{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#e2e8f0;font-family:inherit;font-size:12px;padding:8px 12px;outline:none}
+input::placeholder{color:#475569}
+select option{background:#0a0d12}
+.kpi{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:12px;padding:16px}
+.kpi-l{font-size:9px;color:#475569;text-transform:uppercase;letter-spacing:.07em;font-weight:700;margin-bottom:5px}
+.kpi-v{font-size:26px;font-weight:800;line-height:1}
+.kpi-s{font-size:10px;color:#334155;margin-top:3px}
+.panel{background:rgba(255,255,255,0.025);border:1px solid rgba(255,255,255,0.07);border-radius:14px;overflow:hidden}
+.back-btn{background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:8px;color:#94a3b8;font-size:11px;font-weight:600;padding:7px 14px;cursor:pointer;font-family:inherit;transition:all 0.15s}
+.back-btn:hover{background:rgba(255,255,255,0.09);color:#e2e8f0}
+.tag-btn{padding:6px 16px;border-radius:20px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#94a3b8;font-weight:700;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
+.tag-btn.active{border-color:#a78bfa;background:rgba(167,139,250,0.14);color:#c4b5fd}
+.sys-btn{padding:7px 16px;border-radius:8px;border:2px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.04);color:#94a3b8;font-weight:700;font-size:11px;cursor:pointer;font-family:inherit;transition:all .15s}
+.sys-btn.active{border-color:#38bdf8;background:rgba(56,189,248,0.14);color:#7dd3fc}
+.mod-btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#f1f5f9;font-size:13px;font-weight:600;text-align:left;cursor:pointer;padding:13px 16px;width:100%;font-family:inherit;transition:all 0.18s;display:flex;align-items:center;gap:11px}
+.mod-btn:hover{background:rgba(255,255,255,0.07);border-color:rgba(0,230,118,0.3);transform:translateX(3px)}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen" style="position:fixed;inset:0;background:#070a0e;display:flex;align-items:center;justify-content:center;z-index:100">
+  <div style="background:rgba(255,255,255,0.04);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:40px;width:340px;box-shadow:0 20px 60px rgba(0,0,0,0.6)">
+    <div style="display:flex;align-items:center;gap:12px;margin-bottom:30px">
+      <div class="logo-mark" style="width:40px;height:40px;font-size:19px">P</div>
+      <div>
+        <div style="font-weight:900;font-size:16px;color:#fff;letter-spacing:0.02em">PLANNING</div>
+        <div style="font-size:9px;color:#475569;letter-spacing:0.18em;font-weight:600">P R O C E S S</div>
+      </div>
+    </div>
+    <div style="margin-bottom:14px">
+      <label style="font-size:10px;font-weight:700;color:#475569;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">E-mail</label>
+      <input id="l-email" type="email" placeholder="seu@planning.com.br" style="width:100%">
+    </div>
+    <div style="margin-bottom:20px">
+      <label style="font-size:10px;font-weight:700;color:#475569;display:block;margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em">Senha</label>
+      <input id="l-senha" type="password" placeholder="********" style="width:100%">
+    </div>
+    <div id="l-erro" style="display:none;background:rgba(244,63,94,0.14);border:1px solid rgba(244,63,94,0.3);color:#fb7185;border-radius:8px;padding:8px 12px;font-size:12px;margin-bottom:14px;font-weight:600"></div>
+    <button onclick="doLogin()" style="width:100%;padding:12px;background:#00e676;border:none;border-radius:10px;font-weight:800;font-size:13px;color:#070a0e;cursor:pointer;box-shadow:0 0 24px rgba(0,230,118,0.35);font-family:inherit">Acessar o Hub</button>
+
+    <div style="display:flex;align-items:center;gap:10px;margin:20px 0 16px">
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+      <span style="font-size:9px;color:#3a4b43;font-weight:700;letter-spacing:0.1em;text-transform:uppercase">ou</span>
+      <div style="flex:1;height:1px;background:rgba(255,255,255,0.08)"></div>
+    </div>
+
+    <button onclick="entrarPublico()" id="btn-publico" style="width:100%;padding:11px;background:rgba(255,255,255,0.03);border:1px solid rgba(120,150,135,0.2);border-radius:10px;font-weight:700;font-size:12px;color:#95a9a0;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:9px;transition:all .22s"
+      onmouseover="this.style.borderColor='rgba(0,230,118,0.5)';this.style.background='rgba(0,230,118,0.08)';this.style.color='#fff'"
+      onmouseout="this.style.borderColor='rgba(120,150,135,0.2)';this.style.background='rgba(255,255,255,0.03)';this.style.color='#95a9a0'">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M3 3v18h18"/><path d="M7 15l4-5 4 3 5-7"/></svg>
+      Consultas &mdash; acesso livre
+    </button>
+
+    <div style="margin-top:18px;font-size:10px;color:#293548;text-align:center;line-height:1.8">
+      admin@planning.com.br &middot; admin123<br>gestor@planning.com.br &middot; gestor123<br>auditor@planning.com.br &middot; audit123
+    </div>
+  </div>
+</div>
+
+<!-- SIDEBAR -->
+<aside id="sidebar" style="display:none">
+  <div class="logo-box">
+    <div class="logo-mark">P</div>
+    <div>
+      <div style="font-weight:900;font-size:15px;color:#fff;letter-spacing:0.02em">PLANNING</div>
+      <div style="font-size:8px;color:#475569;letter-spacing:0.16em;font-weight:600">P R O C E S S</div>
+    </div>
+  </div>
+  <nav style="flex:1;padding-top:8px">
+    <button class="nav-item on" onclick="goHome()">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 10l9-7 9 7v10a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/></svg>Início</button>
+    <button class="nav-item nav-restrito" onclick="goHome()">
+      <svg class="nav-icon" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>Produtos</button>
+    <button class="nav-item" onclick="openProduto('acessorias');openModulo('dashboard')">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><path d="M7 16l4-6 4 3 5-8"/></svg>Performance</button>
+    <button class="nav-item nav-restrito" onclick="openProduto('acessorias');openModulo('auditoria')">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>Alertas
+      <span style="margin-left:auto;background:rgba(0,230,118,0.15);color:#00e676;font-size:10px;font-weight:800;padding:2px 8px;border-radius:20px">8</span></button>
+    <button class="nav-item nav-restrito" onclick="goHome()">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M12 2l3 6.5 7 1-5 4.9 1.2 7-6.2-3.3L5.8 21 7 14.4 2 9.5l7-1z"/></svg>Favoritos</button>
+    <button class="nav-item nav-restrito" onclick="openProduto('acessorias');openModulo('validacao')">
+      <svg class="nav-icon" viewBox="0 0 24 24"><path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6"/><rect x="12" y="8" width="3" height="10"/><rect x="17" y="5" width="3" height="13"/></svg>Relatórios</button>
+    <button class="nav-item nav-restrito" onclick="goHome()">
+      <svg class="nav-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 11-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 110-4h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 4.6a1.65 1.65 0 001-1.51V3a2 2 0 114 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 110 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Configurações</button>
+  </nav>
+  <div style="padding:14px 16px">
+    <div style="background:rgba(255,255,255,0.035);border:1px solid rgba(255,255,255,0.08);border-radius:11px;padding:11px 13px;display:flex;align-items:center;gap:10px">
+      <div id="u-avatar" style="width:30px;height:30px;background:#00e676;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#070a0e;flex-shrink:0">A</div>
+      <div style="flex:1;min-width:0">
+        <div id="u-nome" style="font-size:11px;font-weight:700;color:#f1f5f9;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">Administrador</div>
+        <div id="u-papel" style="font-size:9px;color:#475569">Gestão de Risco</div>
+      </div>
+    </div>
+  </div>
+  <button class="nav-item" style="border-top:1px solid rgba(255,255,255,0.05);padding:16px 20px" onclick="doLogout()">
+    <svg class="nav-icon" viewBox="0 0 24 24"><path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/></svg><span id="logout-label">Sair do sistema</span></button>
+</aside>
+
+<!-- MAIN -->
+<main id="main-area" style="display:none">
+  <div class="topbar">
+    <div class="search-box">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#475569" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+      <input placeholder="Buscar no Process...">
+    </div>
+    <div class="icon-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.7 21a2 2 0 01-3.4 0"/></svg>
+      <span style="position:absolute;top:8px;right:9px;width:7px;height:7px;background:#00e676;border-radius:50%;border:2px solid #070a0e"></span>
+    </div>
+    <div class="icon-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="10"/><path d="M9.1 9a3 3 0 015.8 1c0 2-3 3-3 3"/><circle cx="12" cy="17" r="0.6" fill="currentColor"/></svg>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- TELA 1: HOME / ECOSSISTEMA -->
+    <div class="screen active" id="scr-home">
+      <div style="display:flex;align-items:flex-end;justify-content:space-between;gap:30px;margin-bottom:28px;flex-wrap:wrap">
+        <div style="flex:1;min-width:300px">
+          <div style="font-size:10px;font-weight:800;letter-spacing:0.16em;text-transform:uppercase;margin-bottom:10px;color:#00e676">Planning Process</div>
+          <h1 style="font-size:29px;font-weight:800;color:#fff;letter-spacing:-0.02em;line-height:1.2">Ecossistema de Soluções</h1>
+          <p style="font-size:12.5px;color:#6b8478;margin-top:9px;max-width:520px;line-height:1.6">Sistemas integrados que conectam pessoas, processos e dados para uma gestão inteligente e eficiente.</p>
+        </div>
+        <div class="health-card">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+            <span style="font-size:9px;color:#64748b;text-transform:uppercase;letter-spacing:.09em;font-weight:700">Saúde do Ecossistema</span>
+            <svg width="16" height="12" viewBox="0 0 24 16" fill="none" stroke="#00e676" stroke-width="1.8"><path d="M1 8h4l2-5 3 10 3-7 2 2h8"/></svg>
+          </div>
+          <div style="font-size:36px;font-weight:800;color:#00e676;line-height:1;letter-spacing:-0.02em">92%</div>
+          <div style="display:flex;align-items:center;gap:7px;margin-top:9px">
+            <span style="width:7px;height:7px;background:#00e676;border-radius:50%;box-shadow:0 0 8px #00e676"></span>
+            <span style="font-size:11.5px;color:#94a3b8;font-weight:600">Muito saudável</span>
+            <span style="margin-left:auto;font-size:11px;color:#00e676;font-weight:700">&uarr; 4,2%</span>
+          </div>
+        </div>
+      </div>
+
+      <div id="public-bar" style="display:none;align-items:center;gap:12px;background:rgba(0,230,118,0.06);border:1px solid rgba(0,230,118,0.2);border-radius:12px;padding:13px 18px;margin-bottom:24px">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#00e676" stroke-width="1.8" stroke-linecap="round" style="flex-shrink:0"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:12px;font-weight:700;color:#e8f0ec">Modo consulta &mdash; acesso livre</div>
+          <div style="font-size:10.5px;color:#5c7a6e;margin-top:2px">Base de Informações e Auditoria exigem login.</div>
+        </div>
+        <button onclick="doLogout()" style="background:rgba(0,230,118,0.14);border:1px solid rgba(0,230,118,0.35);border-radius:8px;color:#00e676;font-size:11px;font-weight:700;padding:7px 15px;cursor:pointer;font-family:inherit;flex-shrink:0;white-space:nowrap">Fazer login</button>
+      </div>
+
+      <div id="grid-label"></div>
+      <div class="grid-stage" id="stage">
+        <svg id="wires"></svg>
+        <div class="prow" id="row1"></div>
+        <div class="prow" id="row2"></div>
+      </div>
+
+      <!-- ACESSO RÁPIDO -->
+      <div class="quick-section">
+        <div class="quick-head">
+          <div>
+            <div class="quick-tag">Acesso rápido</div>
+            <div class="quick-title">Consultas Acessórias</div>
+          </div>
+          <div class="quick-note">Disponível para todas as equipes</div>
+        </div>
+        <div class="quick-grid" id="quick-grid"></div>
+      </div>
+    </div>
+
+    <!-- TELA 2: PRODUTO (QUADROS) -->
+    <div class="screen" id="scr-produto">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:26px">
+        <button class="back-btn" onclick="goHome()">&larr; Voltar ao Process</button>
+      </div>
+      <div style="background:rgba(255,255,255,0.02);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:32px">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:30px">
+          <div>
+            <div id="prod-tag" style="font-size:11px;color:#00e676;font-weight:800;letter-spacing:0.12em;text-transform:uppercase">ACESSÓRIAS</div>
+            <h2 id="prod-title" style="font-size:26px;font-weight:800;color:#fff;margin:8px 0 6px;letter-spacing:-0.01em">Controle operacional completo</h2>
+            <p style="font-size:12px;color:#64748b">Escolha uma área para acessar as funcionalidades</p>
+          </div>
+          <button class="back-btn" style="display:flex;align-items:center;gap:7px">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg>
+            Sobre o módulo
+          </button>
+        </div>
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:20px" id="quadros-grid"></div>
+      </div>
+    </div>
+
+    <!-- TELA 3: MÓDULO INTERNO -->
+    <div class="screen" id="scr-modulo">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px">
+        <button class="back-btn" onclick="backToProduto()">&larr; Voltar</button>
+        <div style="width:1px;height:20px;background:rgba(255,255,255,0.1)"></div>
+        <div>
+          <div style="font-size:9px;color:#334155;text-transform:uppercase;letter-spacing:.09em;font-weight:700">Acessórias</div>
+          <div id="mod-title" style="font-size:17px;font-weight:800;color:#fff">Módulo</div>
+        </div>
+      </div>
+      <div id="mod-content"></div>
+    </div>
+
+  </div>
+</main>
+
+<script>
+/* ===== DADOS ===== */
+var USERS=[
+  {email:"admin@planning.com.br",senha:"admin123",nome:"Administrador",papel:"admin",cargo:"Gestão de Risco"},
+  {email:"gestor@planning.com.br",senha:"gestor123",nome:"Gestor",papel:"gestor",cargo:"Coordenação"},
+  {email:"auditor@planning.com.br",senha:"audit123",nome:"Auditor",papel:"auditor",cargo:"Gestão de Risco"}
+];
+
+var PRODUTOS=[
+  {id:"acessorias",nome:"ACESSÓRIAS",sub:"Controle operacional completo",ativo:true,
+   icon:'<path d="M12 2L2 7l10 5 10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>'},
+  {id:"saam",nome:"SAAM",sub:"Automação e integrações",ativo:false,
+   icon:'<path d="M13 2L3 14h8l-1 8 10-12h-8z"/>'},
+  {id:"sittax",nome:"SITTAX",sub:"Inteligência tributária",ativo:false,
+   icon:'<path d="M21.2 15.9A10 10 0 118.1 2.8"/><path d="M22 12A10 10 0 0012 2v10z"/>'},
+  {id:"auditoria",nome:"AUDITORIA",sub:"Validações e controles",ativo:false,
+   icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>'},
+  {id:"processos",nome:"PROCESSOS",sub:"Gestão de processos",ativo:false,
+   icon:'<circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><path d="M8.6 13.5l6.8 4M15.4 6.5l-6.8 4"/>'},
+  {id:"onboarding",nome:"ONBOARDING",sub:"Entrada de clientes",ativo:false,
+   icon:'<path d="M16 21v-2a4 4 0 00-4-4H6a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M19 8v6M22 11h-6"/>'},
+  {id:"offboarding",nome:"OFFBOARDING",sub:"Saída de clientes",ativo:false,
+   icon:'<path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4"/><path d="M16 17l5-5-5-5M21 12H9"/>'},
+  {id:"bi",nome:"BI & DADOS",sub:"Análises e indicadores",ativo:false,
+   icon:'<path d="M3 3v18h18"/><path d="M7 15l4-5 4 3 5-7"/>'}
+];
+
+var QUADROS={
+  acessorias:[
+    {num:"01",titulo:"CONSULTAS",sub:"Visões e indicadores operacionais",cor:"#00e676",
+     icon:'<path d="M3 3v18h18"/><rect x="7" y="12" width="3" height="6" fill="currentColor"/><rect x="12" y="8" width="3" height="10" fill="currentColor"/><rect x="17" y="5" width="3" height="13" fill="currentColor"/>',
+     perfis:["admin","gestor","auditor"],
+     itens:[{k:"dashboard",l:"Dashboard de Performance"},{k:"consulta-grupo",l:"Consulta Grupo por TAG"},{k:"consulta-gestao",l:"Consulta Gestão por TAG"}]},
+    {num:"02",titulo:"BASE DE INFORMAÇÕES",sub:"Dados estruturais e informações corporativas",cor:"#38bdf8",
+     icon:'<ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.7-4 3-9 3s-9-1.3-9-3"/><path d="M3 5v14c0 1.7 4 3 9 3s9-1.3 9-3V5"/>',
+     perfis:["admin","gestor"],
+     itens:[{k:"empresas",l:"Informações de Empresas"},{k:"equipes",l:"Equipes x Grupos"}]},
+    {num:"03",titulo:"AUDITORIA",sub:"Validações, controles e análises detalhadas",cor:"#a78bfa",
+     icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
+     perfis:["admin","auditor"],
+     itens:[{k:"auditoria",l:"Auditoria Geral"},{k:"cadastral",l:"Auditoria Cadastral"},{k:"validacao",l:"Validação Cadastral"}]}
+  ]
+};
+
+var EMPRESAS=[
+  {cnpj:"12.345.678/0001-90",nome:"Alfa Comércio Ltda",grupo:"Grupo Norte",equipe:"Equipe A",tag:"TAG-001",regime:"Lucro Real",status:"Ativo"},
+  {cnpj:"98.765.432/0001-10",nome:"Beta Serviços S.A.",grupo:"Grupo Sul",equipe:"Equipe B",tag:"TAG-002",regime:"Simples Nacional",status:"Ativo"},
+  {cnpj:"11.222.333/0001-44",nome:"Gama Indústria Ltda",grupo:"Grupo Norte",equipe:"Equipe A",tag:"TAG-001",regime:"Lucro Presumido",status:"Inativo"},
+  {cnpj:"55.444.333/0001-22",nome:"Delta Tech ME",grupo:"Grupo Centro",equipe:"Equipe C",tag:"TAG-003",regime:"Simples Nacional",status:"Ativo"},
+  {cnpj:"77.666.555/0001-33",nome:"Épsilon Consultoria",grupo:"Grupo Sul",equipe:"Equipe B",tag:"TAG-002",regime:"Lucro Real",status:"Ativo"},
+  {cnpj:"33.222.111/0001-55",nome:"Zeta Alimentos Ltda",grupo:"Grupo Centro",equipe:"Equipe C",tag:"TAG-003",regime:"Lucro Presumido",status:"Ativo"}
+];
+var GRUPOS=[
+  {nome:"Grupo Norte",tag:"TAG-001",empresas:2,responsavel:"Carlos Menezes"},
+  {nome:"Grupo Sul",tag:"TAG-002",empresas:2,responsavel:"Ana Lima"},
+  {nome:"Grupo Centro",tag:"TAG-003",empresas:2,responsavel:"Pedro Araujo"}
+];
+var EQUIPES=[
+  {nome:"Equipe A",grupo:"Grupo Norte",tag:"TAG-001",membros:4,lider:"José Silva"},
+  {nome:"Equipe B",grupo:"Grupo Sul",tag:"TAG-002",membros:3,lider:"Maria Costa"},
+  {nome:"Equipe C",grupo:"Grupo Centro",tag:"TAG-003",membros:5,lider:"Roberto Alves"}
+];
+var AUDITORIA=[
+  {empresa:"Alfa Comércio Ltda",cnpj:"12.345.678/0001-90",tipo:"Cadastral",status:"Pendente",sistema:"SAAM",data:"2026-08-10",resp:"Ana Lima",prio:"Alta"},
+  {empresa:"Beta Serviços S.A.",cnpj:"98.765.432/0001-10",tipo:"Validação",status:"Concluída",sistema:"Sittax Monitora",data:"2026-08-08",resp:"Carlos Menezes",prio:"Média"},
+  {empresa:"Gama Indústria Ltda",cnpj:"11.222.333/0001-44",tipo:"Cadastral",status:"Em Andamento",sistema:"Sittax Token",data:"2026-08-12",resp:"Pedro Araujo",prio:"Alta"},
+  {empresa:"Delta Tech ME",cnpj:"55.444.333/0001-22",tipo:"Validação",status:"Pendente",sistema:"Sittax SN",data:"2026-08-13",resp:"Ana Lima",prio:"Baixa"},
+  {empresa:"Épsilon Consultoria",cnpj:"77.666.555/0001-33",tipo:"Cadastral",status:"Concluída",sistema:"SAAM",data:"2026-08-07",resp:"Maria Costa",prio:"Média"},
+  {empresa:"Zeta Alimentos Ltda",cnpj:"33.222.111/0001-55",tipo:"Validação",status:"Em Andamento",sistema:"Sittax Monitora",data:"2026-08-11",resp:"Roberto Alves",prio:"Alta"}
+];
+var VALIDACAO={
+  "SAAM":[
+    {empresa:"Alfa Comércio Ltda",cnpj:"12.345.678/0001-90",situacao:"Divergente",campo:"Endereço",detalhe:"CEP desatualizado"},
+    {empresa:"Épsilon Consultoria",cnpj:"77.666.555/0001-33",situacao:"Conforme",campo:"Todos",detalhe:"Cadastro validado"},
+    {empresa:"Beta Serviços S.A.",cnpj:"98.765.432/0001-10",situacao:"Pendente",campo:"Sócios",detalhe:"Aguardando documentação"}],
+  "Sittax Monitora":[
+    {empresa:"Beta Serviços S.A.",cnpj:"98.765.432/0001-10",situacao:"Conforme",campo:"Todos",detalhe:"Sincronizado"},
+    {empresa:"Zeta Alimentos Ltda",cnpj:"33.222.111/0001-55",situacao:"Divergente",campo:"CNAE",detalhe:"Atividade principal diverge"}],
+  "Sittax Token":[
+    {empresa:"Gama Indústria Ltda",cnpj:"11.222.333/0001-44",situacao:"Pendente",campo:"Token",detalhe:"Token expirado"},
+    {empresa:"Delta Tech ME",cnpj:"55.444.333/0001-22",situacao:"Conforme",campo:"Todos",detalhe:"Token ativo"}],
+  "Sittax SN":[
+    {empresa:"Delta Tech ME",cnpj:"55.444.333/0001-22",situacao:"Conforme",campo:"Regime",detalhe:"SN ativo"},
+    {empresa:"Beta Serviços S.A.",cnpj:"98.765.432/0001-10",situacao:"Divergente",campo:"Faturamento",detalhe:"Teto SN próximo do limite"},
+    {empresa:"Zeta Alimentos Ltda",cnpj:"33.222.111/0001-55",situacao:"Pendente",campo:"Apuração",detalhe:"Aguardando lançamentos"}]
+};
+
+var user=null,currentTag="",currentSis="SAAM",currentProd="acessorias",origemModulo="quadro";
+
+/* ===== SUPABASE ===== */
+var SUPA_URL="https://vnmuxxyucstbckbyitro.supabase.co";
+var SUPA_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZubXV4eHl1Y3N0YmNrYnlpdHJvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY3Mzc0OTIsImV4cCI6MjEwMjMxMzQ5Mn0.MEzR1o4VuGOVJ95j9psgy2du61b5-tKj8fLUkfmzcgE";
+var _dbEmpresas=[];
+
+async function dbQuery(table,params){
+  var url=SUPA_URL+'/rest/v1/'+table+'?'+params;
+  var res=await fetch(url,{headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Accept':'application/json'}});
+  if(!res.ok)throw new Error('DB '+res.status);
+  return res.json();
+}
+
+async function carregarEmpresas(){
+  if(_dbEmpresas.length>0)return _dbEmpresas;
+  var data=await dbQuery('empresas','select=cnpj,razao,regime,uf,cidade,grupo,status&order=razao&limit=3000');
+  _dbEmpresas=data;
+  return data;
+}
+
+function sc(s){return{"Ativo":"#4ade80","Inativo":"#f43f5e","Pendente":"#fbbf24","Concluída":"#4ade80","Em Andamento":"#38bdf8","Conforme":"#4ade80","Divergente":"#f43f5e"}[s]||"#64748b";}
+function sb(s){return{"Ativo":"rgba(74,222,128,0.14)","Inativo":"rgba(244,63,94,0.14)","Pendente":"rgba(251,191,36,0.14)","Concluída":"rgba(74,222,128,0.14)","Em Andamento":"rgba(56,189,248,0.14)","Conforme":"rgba(74,222,128,0.14)","Divergente":"rgba(244,63,94,0.14)"}[s]||"rgba(100,116,139,0.14)";}
+function pc(p){return{"Alta":"#f43f5e","Média":"#fbbf24","Baixa":"#4ade80"}[p];}
+function pb(p){return{"Alta":"rgba(244,63,94,0.14)","Média":"rgba(251,191,36,0.14)","Baixa":"rgba(74,222,128,0.14)"}[p];}
+function bg(l,c,b){return'<span class="badge" style="color:'+c+';background:'+b+'">'+l+'</span>';}
+function kpis(items){return'<div style="display:grid;grid-template-columns:repeat('+items.length+',1fr);gap:12px;margin-bottom:18px">'+items.map(function(k){return'<div class="kpi" style="border-top:3px solid '+k.c+'"><div class="kpi-l">'+k.l+'</div><div class="kpi-v" style="color:'+k.c+'">'+k.v+'</div>'+(k.s?'<div class="kpi-s">'+k.s+'</div>':'')+'</div>';}).join('')+'</div>';}
+
+/* ===== LOGIN ===== */
+function doLogin(){
+  var e=document.getElementById('l-email').value,s=document.getElementById('l-senha').value;
+  var u=USERS.find(function(x){return x.email===e&&x.senha===s;});
+  if(!u){var er=document.getElementById('l-erro');er.style.display='block';er.textContent='E-mail ou senha incorretos.';return;}
+  user=u;
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('main-area').style.display='flex';
+  document.getElementById('u-nome').textContent=u.nome;
+  document.getElementById('u-papel').textContent=u.cargo;
+  document.getElementById('u-avatar').textContent=u.nome.charAt(0);
+  document.getElementById('u-avatar').style.background='#00e676';
+  document.getElementById('u-avatar').style.color='#070a0e';
+  aplicarModoPublico(false);
+  buildGrid();
+  goHome();
+}
+document.addEventListener('keydown',function(e){if(e.key==='Enter'&&document.getElementById('login-screen').style.display!=='none')doLogin();});
+function entrarPublico(){
+  user={nome:"Visitante",papel:"publico",cargo:"Acesso livre"};
+  document.getElementById('login-screen').style.display='none';
+  document.getElementById('sidebar').style.display='flex';
+  document.getElementById('main-area').style.display='flex';
+  document.getElementById('u-nome').textContent=user.nome;
+  document.getElementById('u-papel').textContent=user.cargo;
+  document.getElementById('u-avatar').textContent='V';
+  document.getElementById('u-avatar').style.background='rgba(120,150,135,0.3)';
+  document.getElementById('u-avatar').style.color='#95a9a0';
+  aplicarModoPublico(true);
+  buildGrid();
+  goHome();
+}
+
+function aplicarModoPublico(on){
+  // barra de aviso + botão de login
+  document.getElementById('public-bar').style.display=on?'flex':'none';
+  // esconde grade de produtos (só consultas ficam disponíveis)
+  document.getElementById('stage').style.display=on?'none':'block';
+  document.getElementById('grid-label').style.display=on?'none':'block';
+  // itens de menu restritos
+  var restritos=document.querySelectorAll('.nav-restrito');
+  for(var i=0;i<restritos.length;i++)restritos[i].style.display=on?'none':'flex';
+  // texto do botão sair
+  document.getElementById('logout-label').textContent=on?'Fazer login':'Sair do sistema';
+}
+
+function doLogout(){
+  user=null;
+  aplicarModoPublico(false);
+  document.getElementById('u-avatar').style.background='#00e676';
+  document.getElementById('u-avatar').style.color='#070a0e';
+  document.getElementById('sidebar').style.display='none';
+  document.getElementById('main-area').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('l-email').value='';document.getElementById('l-senha').value='';
+  document.getElementById('l-erro').style.display='none';
+}
+
+/* ===== ÓRBITA ===== */
+function cardHTML(p,i){
+  return '<div class="gcard'+(p.ativo?' ativo':'')+'" id="card-'+i+'" '+
+    'onclick="cardClick(\''+p.id+'\')" '+
+    'onmouseenter="lightUp('+i+',true)" onmouseleave="lightUp('+i+',false)">'+
+    '<div class="topline"></div><div class="glow"></div>'+
+    '<div class="gico"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke-width="1.75" stroke-linejoin="round" stroke-linecap="round">'+p.icon+'</svg></div>'+
+    '<div class="gtit">'+p.nome+'</div>'+
+    '<div class="gsub">'+p.sub+'</div>'+
+    '<div class="gstatus"><span class="sdot"></span>'+(p.ativo?'Ativo':'Em breve')+'</div>'+
+  '</div>';
+}
+
+function cardClick(id){
+  var p=PRODUTOS.find(function(x){return x.id===id;});
+  if(p.ativo)openProduto(p.id);
+  else alert(p.nome+' - em desenvolvimento');
+}
+
+var CONSULTAS_RAPIDAS=[
+  {k:"dashboard",titulo:"Dashboard de Performance",sub:"Indicadores e evolução por departamento",
+   icon:'<path d="M3 3v18h18"/><path d="M7 15l4-5 4 3 5-7"/>'},
+  {k:"consulta-grupo",titulo:"Consulta Grupo por TAG",sub:"Grupo, responsável e empresas vinculadas",
+   icon:'<path d="M20.6 13.4l-7.1 7.1a2 2 0 01-2.8 0l-8.3-8.3A2 2 0 012 10.8V4a2 2 0 012-2h6.8a2 2 0 011.4.6l8.4 8.4a2 2 0 010 2.4z"/><circle cx="7" cy="7" r="1.2" fill="currentColor"/>'},
+  {k:"consulta-gestao",titulo:"Consulta Gestão por TAG",sub:"Equipe, líder e carteira por etiqueta",
+   icon:'<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 9h8M8 13h8M8 17h5"/>'}
+];
+
+function quickHTML(c){
+  return '<div class="qcard" onclick="abrirConsulta(\''+c.k+'\')">'+
+    '<div class="qico"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke-width="1.7" stroke-linejoin="round" stroke-linecap="round">'+c.icon+'</svg></div>'+
+    '<div class="qtxt"><div class="qtit">'+c.titulo+'</div><div class="qsub">'+c.sub+'</div></div>'+
+    '<div class="qarrow">&rarr;</div>'+
+  '</div>';
+}
+
+function abrirConsulta(k){
+  currentProd='acessorias';
+  origemModulo='home';
+  openModulo(k);
+}
+
+function buildGrid(){
+  document.getElementById('row1').innerHTML=PRODUTOS.slice(0,4).map(function(p,i){return cardHTML(p,i);}).join('');
+  document.getElementById('row2').innerHTML=PRODUTOS.slice(4,8).map(function(p,i){return cardHTML(p,i+4);}).join('');
+  document.getElementById('quick-grid').innerHTML=CONSULTAS_RAPIDAS.map(quickHTML).join('');
+  if(user&&user.papel!=='publico')setTimeout(drawWires,80);
+}
+
+var NS='http://www.w3.org/2000/svg';
+var wireMap={};
+
+function drawWires(){
+  var stage=document.getElementById('stage');
+  var svg=document.getElementById('wires');
+  if(!stage||!svg)return;
+  var sr=stage.getBoundingClientRect();
+  if(!sr.width){setTimeout(drawWires,120);return;}
+  svg.setAttribute('width',sr.width);
+  svg.setAttribute('height',sr.height);
+  svg.innerHTML='';
+  var olds=stage.querySelectorAll('.node-port');
+  for(var i=0;i<olds.length;i++)olds[i].remove();
+  wireMap={};
+  for(var i=0;i<8;i++)wireMap[i]=[];
+
+  var defs=document.createElementNS(NS,'defs');
+  defs.innerHTML='<filter id="sg" x="-200%" y="-200%" width="500%" height="500%">'+
+    '<feGaussianBlur stdDeviation="1.8" result="b"/>'+
+    '<feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+  svg.appendChild(defs);
+
+  var pos=[];
+  for(var i=0;i<8;i++){
+    var el=document.getElementById('card-'+i);
+    if(!el)return;
+    var r=el.getBoundingClientRect();
+    pos.push({cx:r.left-sr.left+r.width/2,cy:r.top-sr.top+r.height/2,
+      l:r.left-sr.left,rr:r.left-sr.left+r.width,
+      t:r.top-sr.top,b:r.top-sr.top+r.height});
+  }
+
+  function wire(d,dash,speed,delay,owners){
+    var base=document.createElementNS(NS,'path');
+    base.setAttribute('d',d);
+    base.setAttribute('fill','none');
+    base.setAttribute('stroke','rgba(120,150,135,0.14)');
+    base.setAttribute('stroke-width','1');
+    base.style.transition='stroke .3s';
+    if(dash)base.setAttribute('stroke-dasharray','3 5');
+    svg.appendChild(base);
+
+    var len=base.getTotalLength();
+    if(!len||len<10)return;
+    var live=document.createElementNS(NS,'path');
+    live.setAttribute('d',d);
+    live.setAttribute('fill','none');
+    live.setAttribute('stroke','rgba(140,170,155,0.42)');
+    live.setAttribute('stroke-width','1.1');
+    live.setAttribute('stroke-linecap','round');
+    live.setAttribute('filter','url(#sg)');
+    live.style.transition='stroke .3s,stroke-width .3s';
+    var seg=Math.min(34,len*0.24);
+    live.setAttribute('stroke-dasharray',seg+' '+len);
+    live.setAttribute('opacity','0');
+    svg.appendChild(live);
+
+    var an=document.createElementNS(NS,'animate');
+    an.setAttribute('attributeName','stroke-dashoffset');
+    an.setAttribute('from',seg);an.setAttribute('to',-len);
+    an.setAttribute('dur',speed+'s');an.setAttribute('begin',delay+'s');
+    an.setAttribute('repeatCount','indefinite');
+    live.appendChild(an);
+
+    var fo=document.createElementNS(NS,'animate');
+    fo.setAttribute('attributeName','opacity');
+    fo.setAttribute('values','0;0.9;0.9;0');
+    fo.setAttribute('keyTimes','0;0.15;0.85;1');
+    fo.setAttribute('dur',speed+'s');fo.setAttribute('begin',delay+'s');
+    fo.setAttribute('repeatCount','indefinite');
+    live.appendChild(fo);
+
+    owners.forEach(function(o){wireMap[o].push({base:base,live:live});});
+  }
+
+  function port(x,y,owners){
+    var d=document.createElement('div');
+    d.className='node-port';
+    d.style.left=x+'px';d.style.top=y+'px';
+    stage.appendChild(d);
+    owners.forEach(function(o){wireMap[o].push({port:d});});
+  }
+
+  [[0,1,2,3],[4,5,6,7]].forEach(function(row,ri){
+    for(var k=0;k<3;k++){
+      var ia=row[k],ib=row[k+1];
+      var a=pos[ia],b=pos[ib];
+      wire('M '+a.rr+' '+a.cy+' L '+b.l+' '+b.cy,false,3.2+k*0.4,ri*1.3+k*0.9,[ia,ib]);
+      port(a.rr,a.cy,[ia]);port(b.l,b.cy,[ib]);
+    }
+  });
+
+  for(var k=0;k<4;k++){
+    var a=pos[k],b=pos[k+4];
+    wire('M '+a.cx+' '+a.b+' L '+b.cx+' '+b.t,false,2.4+k*0.3,0.6+k*1.1,[k,k+4]);
+    port(a.cx,a.b,[k]);port(b.cx,b.t,[k+4]);
+  }
+
+  var gapY=(pos[4].t+pos[0].b)/2;
+  var diag=[[0,5],[1,6],[2,7],[1,4],[2,5],[3,6]];
+  diag.forEach(function(d,i){
+    var a=pos[d[0]],b=pos[d[1]];
+    var bend=(i%2===0?-1:1)*(14+i*3);
+    var path='M '+a.cx+' '+a.b+' C '+a.cx+' '+(gapY+bend)+', '+b.cx+' '+(gapY-bend)+', '+b.cx+' '+b.t;
+    wire(path,true,4.5+i*0.5,i*1.4,[d[0],d[1]]);
+  });
+}
+
+function lightUp(i,on){
+  var list=wireMap[i]||[];
+  list.forEach(function(w){
+    if(w.port){
+      w.port.style.background=on?'#00e676':'rgba(120,150,135,0.28)';
+      w.port.style.boxShadow=on?'0 0 10px #00e676':'none';
+    }else{
+      w.base.setAttribute('stroke',on?'rgba(0,230,118,0.35)':'rgba(120,150,135,0.14)');
+      w.live.setAttribute('stroke',on?'rgba(0,230,118,0.95)':'rgba(140,170,155,0.42)');
+      w.live.setAttribute('stroke-width',on?'1.6':'1.1');
+    }
+  });
+}
+
+window.addEventListener('resize',function(){
+  clearTimeout(window._rt);
+  window._rt=setTimeout(function(){if(user)drawWires();},180);
+});
+
+/* ===== NAVEGAÇÃO ===== */
+function show(id){
+  var scr=document.querySelectorAll('.screen');
+  for(var i=0;i<scr.length;i++)scr[i].classList.remove('active');
+  document.getElementById(id).classList.add('active');
+}
+function goHome(){show('scr-home');setNav(0);}
+function setNav(i){
+  var items=document.querySelectorAll('.nav-item');
+  for(var j=0;j<items.length;j++)items[j].classList.remove('on');
+  if(items[i])items[i].classList.add('on');
+}
+function openProduto(pid){
+  if(user.papel==='publico'){alert('Área restrita. Faça login para acessar.');return;}
+  currentProd=pid;
+  var p=PRODUTOS.find(function(x){return x.id===pid;});
+  document.getElementById('prod-tag').textContent=p.nome;
+  document.getElementById('prod-title').textContent=p.sub;
+  var q=QUADROS[pid]||[];
+  document.getElementById('quadros-grid').innerHTML=q.map(function(c){
+    var lib=c.perfis.indexOf(user.papel)>=0;
+    return '<div class="pcard" style="border-color:'+(lib?'rgba(255,255,255,0.09)':'rgba(255,255,255,0.05)')+';'+(lib?'':'opacity:0.5')+'" '+
+    (lib?'onclick="openQuadro(\''+c.num+'\')" onmouseover="this.style.borderColor=\''+c.cor+'55\';this.style.boxShadow=\'0 8px 30px '+c.cor+'22\'" onmouseout="this.style.borderColor=\'rgba(255,255,255,0.09)\';this.style.boxShadow=\'none\'"':'')+'>'+
+    '<div class="pcard-num" style="color:'+c.cor+'">'+c.num+'</div>'+
+    '<div class="pcard-icon" style="border-color:'+c.cor+';background:radial-gradient(circle,'+c.cor+'22,transparent);box-shadow:0 0 24px '+c.cor+'33">'+
+    '<svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="'+c.cor+'" stroke-width="1.6">'+c.icon+'</svg></div>'+
+    '<div class="pcard-title">'+c.titulo+'</div>'+
+    '<div class="pcard-sub">'+c.sub+'</div>'+
+    (lib?'<div class="pcard-arrow" style="border-color:'+c.cor+';color:'+c.cor+'">&rarr;</div>'
+        :'<div style="font-size:11px;color:#475569;font-weight:600">Acesso restrito</div>')+
+    '</div>';
+  }).join('');
+  show('scr-produto');setNav(1);
+}
+function openQuadro(num){
+  origemModulo='quadro';
+  var c=(QUADROS[currentProd]||[]).find(function(x){return x.num===num;});
+  if(!c)return;
+  document.getElementById('mod-title').textContent=c.titulo;
+  document.getElementById('mod-content').innerHTML=
+    '<div style="max-width:420px;display:flex;flex-direction:column;gap:10px">'+
+    c.itens.map(function(it){return'<button class="mod-btn" onclick="openModulo(\''+it.k+'\')">'+it.l+'</button>';}).join('')+
+    '</div>';
+  show('scr-modulo');
+}
+function backToProduto(){
+  if(origemModulo==='home'){goHome();origemModulo='quadro';}
+  else openProduto(currentProd);
+}
+
+var TITLES={dashboard:"Dashboard de Performance","consulta-grupo":"Consulta Grupo por TAG","consulta-gestao":"Consulta Gestão por TAG",empresas:"Informações de Empresas",equipes:"Equipes x Grupos",auditoria:"Auditoria Geral",cadastral:"Auditoria Cadastral",validacao:"Validação Cadastral"};
+var MODULOS_PUBLICOS=['dashboard','consulta-grupo','consulta-gestao'];
+function openModulo(k){
+  if(user.papel==='publico'&&MODULOS_PUBLICOS.indexOf(k)<0){alert('Área restrita. Faça login para acessar.');return;}
+  document.getElementById('mod-title').textContent=TITLES[k]||k;
+  var c=document.getElementById('mod-content');
+  if(k==='empresas')c.innerHTML=rEmpresas();
+  else if(k==='equipes')c.innerHTML=rEquipes();
+  else if(k==='consulta-grupo'||k==='consulta-gestao')c.innerHTML=rConsulta(k);
+  else if(k==='dashboard'){c.innerHTML=rDash();setTimeout(drawChart,60);}
+  else if(k==='auditoria')c.innerHTML=rAud();
+  else if(k==='cadastral')c.innerHTML=rCad();
+  else if(k==='validacao')c.innerHTML=rVal();
+  show('scr-modulo');
+}
+
+/* ===== MÓDULOS ===== */
+function rEmpresas(){
+  var html='<div class="kpi" style="margin-bottom:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'+
+    '<div class="kpi" style="border-top:3px solid #38bdf8"><div class="kpi-l">Total</div><div class="kpi-v" id="emp-total" style="color:#38bdf8">—</div><div class="kpi-s">cadastradas</div></div>'+
+    '<div class="kpi" style="border-top:3px solid #4ade80"><div class="kpi-l">Ativas</div><div class="kpi-v" id="emp-ativas" style="color:#4ade80">—</div></div>'+
+    '<div class="kpi" style="border-top:3px solid #f43f5e"><div class="kpi-l">Inativas</div><div class="kpi-v" id="emp-inativas" style="color:#f43f5e">—</div></div>'+
+  '</div>'+
+  '<div style="display:flex;gap:8px;margin-bottom:14px">'+
+  '<input id="es" oninput="fE()" placeholder="Buscar nome, CNPJ ou grupo..." style="flex:1">'+
+  '<select id="euf" onchange="fE()" style="min-width:80px"><option value="">UF</option></select>'+
+  '<select id="ereg" onchange="fE()" style="min-width:130px"><option value="">Regime</option></select>'+
+  '</div>'+
+  '<div class="panel"><table><thead><tr><th>CNPJ</th><th>Empresa</th><th>Grupo</th><th>Regime</th><th>UF</th><th>Status</th></tr></thead><tbody id="etb"><tr><td colspan="6" style="text-align:center;padding:24px;color:#475569">Carregando...</td></tr></tbody></table></div>';
+
+  // carrega do banco
+  carregarEmpresas().then(function(data){
+    _dbEmpresas=data;
+    // KPIs
+    var ativas=data.filter(function(e){return(e.status||'').toLowerCase().indexOf('ativ')>=0;});
+    document.getElementById('emp-total').textContent=data.length.toLocaleString('pt-BR');
+    document.getElementById('emp-ativas').textContent=ativas.length.toLocaleString('pt-BR');
+    document.getElementById('emp-inativas').textContent=(data.length-ativas.length).toLocaleString('pt-BR');
+    // popula selects
+    var ufs=[...new Set(data.map(function(e){return e.uf;}).filter(Boolean))].sort();
+    var regs=[...new Set(data.map(function(e){return e.regime;}).filter(Boolean))].sort();
+    var euf=document.getElementById('euf');
+    if(euf){ufs.forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;euf.appendChild(o);});}
+    var ereg=document.getElementById('ereg');
+    if(ereg){regs.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;ereg.appendChild(o);});}
+    // renderiza tabela
+    document.getElementById('etb').innerHTML=eRows(data);
+  }).catch(function(err){
+    document.getElementById('etb').innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:#f43f5e">Erro ao carregar: '+err.message+'</td></tr>';
+  });
+
+  return html;
+}
+
+function eRows(a){
+  if(!a||a.length===0)return'<tr><td colspan="6" style="text-align:center;padding:20px;color:#475569">Nenhuma empresa encontrada</td></tr>';
+  return a.map(function(e){
+    var cnpj=e.cnpj||'';
+    var fmt=cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5');
+    var st=e.status||'Ativa';
+    var stC=st.toLowerCase().indexOf('ativ')>=0?'#4ade80':'#f43f5e';
+    var stB=st.toLowerCase().indexOf('ativ')>=0?'rgba(74,222,128,0.14)':'rgba(244,63,94,0.14)';
+    return'<tr>'+
+      '<td style="font-family:monospace;font-size:10px;color:#475569">'+(fmt||cnpj)+'</td>'+
+      '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
+      '<td style="color:#94a3b8">'+(e.grupo||'—')+'</td>'+
+      '<td style="color:#94a3b8;font-size:10px">'+(e.regime||'—')+'</td>'+
+      '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
+      '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>'+
+    '</tr>';
+  }).join('');
+}
+
+function fE(){
+  var q=(document.getElementById('es').value||'').toLowerCase();
+  var uf=(document.getElementById('euf').value||'');
+  var reg=(document.getElementById('ereg').value||'');
+  var filtered=_dbEmpresas.filter(function(e){
+    if(uf&&e.uf!==uf)return false;
+    if(reg&&e.regime!==reg)return false;
+    if(!q)return true;
+    return (e.razao||'').toLowerCase().indexOf(q)>=0||(e.cnpj||'').indexOf(q)>=0||(e.grupo||'').toLowerCase().indexOf(q)>=0;
+  });
+  document.getElementById('etb').innerHTML=eRows(filtered);
+}
+
+function rEquipes(){
+  return'<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px"><div>'+
+  '<div style="font-size:10px;color:#38bdf8;font-weight:800;text-transform:uppercase;letter-spacing:.09em;margin-bottom:12px">Grupos</div>'+
+  GRUPOS.map(function(g){return'<div class="kpi" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><div style="font-weight:700;font-size:13px;color:#f1f5f9">'+g.nome+'</div><span class="badge" style="background:rgba(167,139,250,0.14);color:#c4b5fd">'+g.tag+'</span></div><div style="display:grid;grid-template-columns:1fr 1fr;gap:8px"><div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:#334155;font-weight:700;text-transform:uppercase">Responsável</div><div style="font-size:12px;font-weight:600;color:#cbd5e1;margin-top:2px">'+g.responsavel+'</div></div><div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:#334155;font-weight:700;text-transform:uppercase">Empresas</div><div style="font-size:20px;font-weight:800;color:#f1f5f9">'+g.empresas+'</div></div></div></div>';}).join('')+
+  '</div><div><div style="font-size:10px;color:#00e676;font-weight:800;text-transform:uppercase;letter-spacing:.09em;margin-bottom:12px">Equipes</div>'+
+  EQUIPES.map(function(q){return'<div class="kpi" style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;margin-bottom:10px"><div style="font-weight:700;font-size:13px;color:#f1f5f9">'+q.nome+'</div><span class="badge" style="background:rgba(167,139,250,0.14);color:#c4b5fd">'+q.tag+'</span></div><div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px"><div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:#334155;font-weight:700;text-transform:uppercase">Grupo</div><div style="font-size:11px;font-weight:600;color:#cbd5e1;margin-top:2px">'+q.grupo+'</div></div><div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:#334155;font-weight:700;text-transform:uppercase">Líder</div><div style="font-size:11px;font-weight:600;color:#cbd5e1;margin-top:2px">'+q.lider+'</div></div><div style="background:rgba(255,255,255,0.03);border-radius:8px;padding:8px 10px"><div style="font-size:9px;color:#334155;font-weight:700;text-transform:uppercase">Membros</div><div style="font-size:20px;font-weight:800;color:#f1f5f9">'+q.membros+'</div></div></div></div>';}).join('')+'</div></div>';
+}
+
+function rConsulta(t){
+  var tags=["TAG-001","TAG-002","TAG-003"];
+  return'<div class="kpi" style="margin-bottom:16px"><div style="font-size:11px;color:#64748b;margin-bottom:10px;font-weight:600">Selecione uma TAG para consultar</div><div style="display:flex;gap:8px;flex-wrap:wrap">'+
+  tags.map(function(x){return'<button class="tag-btn'+(currentTag===x?' active':'')+'" onclick="selTag(\''+x+'\',\''+t+'\')">'+x+'</button>';}).join('')+
+  '</div></div>'+(currentTag?tagRes(currentTag):'');
+}
+function selTag(x,t){currentTag=currentTag===x?'':x;document.getElementById('mod-content').innerHTML=rConsulta(t);}
+function tagRes(t){
+  var g=GRUPOS.find(function(x){return x.tag===t;}),q=EQUIPES.find(function(x){return x.tag===t;});
+  var emps=EMPRESAS.filter(function(x){return x.tag===t;});
+  return'<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px">'+
+  (g?'<div class="kpi" style="border-left:4px solid #a78bfa;background:rgba(167,139,250,0.05)"><div style="font-size:9px;color:#a78bfa;font-weight:800;text-transform:uppercase;margin-bottom:6px">Grupo vinculado</div><div style="font-weight:700;font-size:14px;color:#f1f5f9">'+g.nome+'</div><div style="font-size:11px;color:#475569;margin-top:4px">Resp: '+g.responsavel+' &middot; '+g.empresas+' empresas</div></div>':'')+
+  (q?'<div class="kpi" style="border-left:4px solid #00e676;background:rgba(0,230,118,0.05)"><div style="font-size:9px;color:#00e676;font-weight:800;text-transform:uppercase;margin-bottom:6px">Equipe vinculada</div><div style="font-weight:700;font-size:14px;color:#f1f5f9">'+q.nome+'</div><div style="font-size:11px;color:#475569;margin-top:4px">Líder: '+q.lider+' &middot; '+q.membros+' membros</div></div>':'')+
+  '</div><div style="font-size:11px;font-weight:700;color:#cbd5e1;margin-bottom:8px">Empresas com '+t+' ('+emps.length+')</div>'+
+  '<div class="panel"><table><thead><tr><th>CNPJ</th><th>Empresa</th><th>Regime</th><th>Equipe</th><th>Status</th></tr></thead><tbody>'+
+  emps.map(function(e){return'<tr><td style="font-family:monospace;font-size:10px;color:#475569">'+e.cnpj+'</td><td style="font-weight:600;font-size:12px;color:#f1f5f9">'+e.nome+'</td><td>'+e.regime+'</td><td>'+e.equipe+'</td><td>'+bg(e.status,sc(e.status),sb(e.status))+'</td></tr>';}).join('')+'</tbody></table></div>';
+}
+
+function rDash(){
+  return kpis([{l:"Contábil",v:"88%",c:"#818cf8",s:"meta: 95%"},{l:"Fiscal",v:"93%",c:"#00e676",s:"meta: 95%"},{l:"Folha/DP",v:"96%",c:"#fbbf24",s:"meta atingida"}])+
+  kpis([{l:"Entregues no Prazo",v:"412",c:"#4ade80",s:"total geral"},{l:"Com Atraso",v:"38",c:"#f43f5e",s:"após prazo"},{l:"Justificadas",v:"21",c:"#fbbf24",s:"prazo legal ok"},{l:"A Vencer",v:"67",c:"#818cf8",s:"futuro"}])+
+  '<div class="panel"><div style="padding:13px 18px;border-bottom:1px solid rgba(255,255,255,0.05);display:flex;align-items:center;gap:14px">'+
+  '<span style="font-size:12px;font-weight:700;color:#cbd5e1">Evolução mês a mês - por Departamento</span>'+
+  '<div style="display:flex;gap:12px;margin-left:auto;font-size:10px;color:#475569">'+
+  '<span><span style="display:inline-block;width:11px;height:3px;background:#818cf8;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Contábil</span>'+
+  '<span><span style="display:inline-block;width:11px;height:3px;background:#00e676;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Fiscal</span>'+
+  '<span><span style="display:inline-block;width:11px;height:3px;background:#fbbf24;border-radius:2px;vertical-align:middle;margin-right:4px"></span>Folha/DP</span></div></div>'+
+  '<div style="padding:18px"><canvas id="pc" height="150"></canvas></div></div>';
+}
+function drawChart(){
+  var c=document.getElementById('pc');if(!c)return;
+  var W=c.parentElement.offsetWidth-36;c.width=W;c.height=150;
+  var x=c.getContext('2d'),m=['Mai','Jun','Jul','Ago'];
+  var S=[{c:'#818cf8',v:[82,84,87,88]},{c:'#00e676',v:[88,90,91,93]},{c:'#fbbf24',v:[91,93,95,96]}];
+  var p={t:14,r:46,b:24,l:34},cw=W-p.l-p.r,ch=150-p.t-p.b;
+  function X(i){return p.l+(i/3)*cw;}function Y(v){return p.t+ch-((v-70)/30)*ch;}
+  [75,80,85,90,95,100].forEach(function(v){
+    x.strokeStyle='rgba(255,255,255,0.05)';x.lineWidth=1;
+    x.beginPath();x.moveTo(p.l,Y(v));x.lineTo(W-p.r,Y(v));x.stroke();
+    x.fillStyle='#293548';x.font='9px system-ui';x.textAlign='right';x.fillText(v+'%',p.l-5,Y(v)+3);});
+  x.strokeStyle='rgba(255,255,255,0.13)';x.setLineDash([3,3]);
+  x.beginPath();x.moveTo(p.l,Y(95));x.lineTo(W-p.r,Y(95));x.stroke();x.setLineDash([]);
+  x.fillStyle='#475569';x.font='bold 9px system-ui';x.textAlign='left';x.fillText('Meta 95%',W-p.r+5,Y(95)+3);
+  m.forEach(function(t,i){x.fillStyle='#334155';x.font='10px system-ui';x.textAlign='center';x.fillText(t,X(i),148);});
+  S.forEach(function(s){
+    x.beginPath();x.strokeStyle=s.c;x.lineWidth=2.5;
+    s.v.forEach(function(v,i){if(i)x.lineTo(X(i),Y(v));else x.moveTo(X(i),Y(v));});x.stroke();
+    s.v.forEach(function(v,i){x.beginPath();x.arc(X(i),Y(v),3.5,0,6.3);x.fillStyle='#070a0e';x.fill();x.strokeStyle=s.c;x.lineWidth=2;x.stroke();
+      if(i===3){x.fillStyle=s.c;x.font='bold 10px system-ui';x.textAlign='left';x.fillText(v+'%',X(i)+7,Y(v)+4);}});
+  });
+}
+
+function rAud(){
+  return kpis([{l:"Pendentes",v:"2",c:"#f43f5e",s:"aguardando ação"},{l:"Em Andamento",v:"2",c:"#38bdf8",s:"em execução"},{l:"Concluídas",v:"2",c:"#4ade80",s:"este mês"}])+
+  '<div style="display:flex;gap:8px;margin-bottom:14px">'+
+  '<select id="asi" onchange="fA()"><option>Todos</option><option>SAAM</option><option>Sittax Monitora</option><option>Sittax Token</option><option>Sittax SN</option></select>'+
+  '<select id="ast" onchange="fA()"><option>Todos</option><option>Pendente</option><option>Em Andamento</option><option>Concluída</option></select>'+
+  '<span id="act" style="font-size:11px;color:#334155;align-self:center">6 registros</span></div>'+
+  '<div class="panel"><table><thead><tr><th>Empresa</th><th>CNPJ</th><th>Tipo</th><th>Sistema</th><th>Data</th><th>Responsável</th><th>Prioridade</th><th>Status</th></tr></thead><tbody id="atb">'+aRows(AUDITORIA)+'</tbody></table></div>';
+}
+function aRows(a){return a.map(function(x){return'<tr><td style="font-weight:600;font-size:12px;color:#f1f5f9">'+x.empresa+'</td><td style="font-family:monospace;font-size:10px;color:#334155">'+x.cnpj+'</td><td>'+x.tipo+'</td><td><span class="badge" style="background:rgba(56,189,248,0.12);color:#7dd3fc">'+x.sistema+'</span></td><td style="color:#475569">'+x.data+'</td><td>'+x.resp+'</td><td>'+bg(x.prio,pc(x.prio),pb(x.prio))+'</td><td>'+bg(x.status,sc(x.status),sb(x.status))+'</td></tr>';}).join('');}
+function fA(){var s=document.getElementById('asi').value,t=document.getElementById('ast').value;
+  var f=AUDITORIA.filter(function(a){return(s==='Todos'||a.sistema===s)&&(t==='Todos'||a.status===t);});
+  document.getElementById('atb').innerHTML=aRows(f);document.getElementById('act').textContent=f.length+' registros';}
+
+function rCad(){
+  return'<input oninput="fC(this.value)" placeholder="Buscar empresa ou CNPJ..." style="width:100%;margin-bottom:14px">'+
+  '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px" id="cg">'+cCards(EMPRESAS)+'</div>';
+}
+function cCards(a){
+  var S=[["SAAM","SAAM"],["Monitora","Sittax Monitora"],["Token","Sittax Token"],["SN","Sittax SN"]];
+  return a.map(function(e){
+    return'<div class="panel"><div style="padding:11px 15px;border-bottom:1px solid rgba(255,255,255,0.05);background:rgba(255,255,255,0.02)"><div style="font-weight:700;font-size:12px;color:#f1f5f9">'+e.nome+'</div><div style="font-size:10px;color:#334155;font-family:monospace">'+e.cnpj+'</div></div><div style="display:grid;grid-template-columns:1fr 1fr">'+
+    S.map(function(s){var d=(VALIDACAO[s[1]]||[]).find(function(v){return v.cnpj===e.cnpj;});
+    return'<div style="padding:9px 15px;border-right:1px solid rgba(255,255,255,0.04);border-bottom:1px solid rgba(255,255,255,0.04)"><div style="font-size:9px;color:#293548;font-weight:800;text-transform:uppercase;margin-bottom:4px">'+s[0]+'</div>'+(d?bg(d.situacao,sc(d.situacao),sb(d.situacao)):'<span style="font-size:10px;color:#1e293b">-</span>')+'</div>';}).join('')+'</div></div>';
+  }).join('');
+}
+function fC(q){document.getElementById('cg').innerHTML=cCards(EMPRESAS.filter(function(e){return e.nome.toLowerCase().indexOf(q.toLowerCase())>=0||e.cnpj.indexOf(q)>=0;}));}
+
+function rVal(){
+  var sis=Object.keys(VALIDACAO),d=VALIDACAO[currentSis]||[];
+  var dv=d.filter(function(x){return x.situacao==='Divergente';}).length;
+  return'<div style="display:flex;gap:7px;margin-bottom:16px;flex-wrap:wrap">'+
+  sis.map(function(s){return'<button class="sys-btn'+(currentSis===s?' active':'')+'" onclick="selSis(\''+s+'\')">'+s+'</button>';}).join('')+'</div>'+
+  (dv>0?'<div style="background:rgba(244,63,94,0.08);border:1px solid rgba(244,63,94,0.25);border-radius:10px;padding:11px 16px;margin-bottom:14px;font-size:12px;color:#fb7185;font-weight:600">'+dv+' divergência'+(dv>1?'s':'')+' encontrada'+(dv>1?'s':'')+' em '+currentSis+'</div>':'')+
+  '<div class="panel"><table><thead><tr><th>Empresa</th><th>CNPJ</th><th>Campo</th><th>Situação</th><th>Detalhe</th></tr></thead><tbody>'+
+  d.map(function(x){return'<tr style="background:'+(x.situacao==='Divergente'?'rgba(244,63,94,0.04)':'transparent')+'"><td style="font-weight:600;font-size:12px;color:#f1f5f9">'+x.empresa+'</td><td style="font-family:monospace;font-size:10px;color:#334155">'+x.cnpj+'</td><td>'+x.campo+'</td><td>'+bg(x.situacao,sc(x.situacao),sb(x.situacao))+'</td><td style="color:#475569">'+x.detalhe+'</td></tr>';}).join('')+'</tbody></table></div>';
+}
+function selSis(s){currentSis=s;document.getElementById('mod-content').innerHTML=rVal();}
+</script>
+</body>
+</html>
