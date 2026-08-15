@@ -771,13 +771,17 @@ function rEmpresas(){
     var ufs=[...new Set(data.map(function(e){return e.uf;}).filter(Boolean))].sort();
     var regs=[...new Set(data.map(function(e){return e.regime;}).filter(Boolean))].sort();
     var euf=document.getElementById('euf');
-    if(euf){ufs.forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;euf.appendChild(o);});}
+    if(euf){
+      ufs.forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;euf.appendChild(o);});
+    }
     var ereg=document.getElementById('ereg');
-    if(ereg){regs.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;ereg.appendChild(o);});}
-    // renderiza tabela
+    if(ereg){
+      regs.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;ereg.appendChild(o);});
+    }
+    // renderiza tabela COM TODOS OS DADOS (sem filtro)
     document.getElementById('etb').innerHTML=eRows(data);
   }).catch(function(err){
-    document.getElementById('etb').innerHTML='<tr><td colspan="6" style="text-align:center;padding:24px;color:#f43f5e">Erro ao carregar: '+err.message+'</td></tr>';
+    document.getElementById('etb').innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#f43f5e">Erro ao carregar: '+err.message+'</td></tr>';
   });
 
   return html;
@@ -804,9 +808,15 @@ function eRows(a){
 }
 
 function fE(){
+  if(!_dbEmpresas||_dbEmpresas.length===0)return;
   var q=(document.getElementById('es').value||'').toLowerCase();
-  var uf=(document.getElementById('euf').value||'');
-  var reg=(document.getElementById('ereg').value||'');
+  var uf=(document.getElementById('euf')?document.getElementById('euf').value:'');
+  var reg=(document.getElementById('ereg')?document.getElementById('ereg').value:'');
+  // se não tem nenhum filtro, mostra todos
+  if(!q&&!uf&&!reg){
+    document.getElementById('etb').innerHTML=eRows(_dbEmpresas);
+    return;
+  }
   var filtered=_dbEmpresas.filter(function(e){
     if(uf&&e.uf!==uf)return false;
     if(reg&&e.regime!==reg)return false;
