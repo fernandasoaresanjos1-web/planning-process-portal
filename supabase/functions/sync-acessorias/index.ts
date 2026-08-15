@@ -99,34 +99,31 @@ Deno.serve(async (req) => {
         if (res.error) throw new Error(`upsert tags: ${res.error.message}`);
       }
 
-      // 3. para cada tag, busca as empresas vinculadas
-      const pivots: { cnpj: string; tag_id: number }[] = [];
-      for (const tag of tags) {
-        const tagId = Number(tag.id);
-        await sleep(700);
-        const res = await fetch(`${BASE}/tags/${tagId}?companies`, { headers: apiHeaders });
-        if (!res.ok) continue;
-        const data = await res.json();
-        // resposta pode ser array ou objeto com companies
-        const tagData = Array.isArray(data) ? data[0] : data;
-        const companies = (tagData?.companies ?? tagData?.Empresas ?? []) as Array<Record<string, unknown>>;
-        for (const c of companies) {
-          const cnpj = String(c.cnpj ?? c.Identificador ?? c.CNPJ ?? "").replace(/\D/g, "");
-          if (cnpj) pivots.push({ cnpj, tag_id: tagId });
-        }
-      }
-      console.log(`Vínculos empresa-tag: ${pivots.length}`);
+      return new Response(JSON.stringify({ ok: true, modo, tags: tagRows.length, pivots: 0 }),
+        { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+    }
+
+    // modo "tag-empresas": busca empresas de UMA tag específica
+    if (modo === "tag-empresas") {
+      const tagId = Number(pagInicio); // pagInicio = id da tag
+      const res = await fetch(`${BASE}/tags/${tagId}?companies`, { headers: apiHeaders });
+      if (!res.ok) throw new Error(`API ${res.status} tag ${tagId}`);
+      const data = await res.json();
+      const tagData = Array.isArray(data) ? data[0] : data;
+      const companies = (tagData?.companies ?? tagData?.Empresas ?? []) as Array<Record<string, unknown>>;
+      
+      const pivots = companies.map((c) => ({
+        cnpj: String(c.cnpj ?? c.Identificador ?? c.CNPJ ?? "").replace(/\D/g, ""),
+        tag_id: tagId
+      })).filter((p) => p.cnpj.length > 0);
 
       if (pivots.length > 0) {
-        const tagIds = [...new Set(pivots.map((p) => p.tag_id))];
-        await supabase.from("empresa_tags").delete().in("tag_id", tagIds);
-        for (let i = 0; i < pivots.length; i += 200) {
-          const res = await supabase.from("empresa_tags").insert(pivots.slice(i, i + 200));
-          if (res.error) throw new Error(`insert empresa_tags: ${res.error.message}`);
-        }
+        await supabase.from("empresa_tags").delete().eq("tag_id", tagId);
+        const res2 = await supabase.from("empresa_tags").insert(pivots);
+        if (res2.error) throw new Error(`insert empresa_tags: ${res2.error.message}`);
       }
 
-      return new Response(JSON.stringify({ ok: true, modo, tags: tagRows.length, pivots: pivots.length }),
+      return new Response(JSON.stringify({ ok: true, modo, tag_id: tagId, empresas: pivots.length }),
         { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
     }
 
