@@ -139,7 +139,9 @@ select option{background:#0a0d12}
 .eact-btn{padding:5px 12px;font-size:11px;font-weight:600;border-radius:6px;cursor:pointer;border:1px solid;transition:opacity .15s}
 .eact-btn:hover{opacity:.8}
 </style>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+(function(){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.async=true;document.head.appendChild(s);})();
+</script>
 </head>
 <body>
 
@@ -1033,6 +1035,7 @@ function renderETab(tab, data){
 
 /* ── Exportar Excel ── */
 function eExportar(){
+  if(typeof XLSX==='undefined'){alert('Aguarde o carregamento da biblioteca Excel e tente novamente.');return;}
   if(!_dbEmpresas||!_dbEmpresas.length){alert('Carregue os dados primeiro.');return;}
   var cfg=_eCols[_eTab]||_eCols.geral;
   var data=fEFiltered();
