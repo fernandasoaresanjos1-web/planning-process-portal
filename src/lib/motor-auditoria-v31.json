@@ -1,0 +1,5146 @@
+{
+  "versao": "3.1",
+  "descricao": "Motor de auditoria Planning Hub — separado por departamento + classificação de particularidades",
+  "ultima_atualizacao": "2026-08-09",
+  "regimes_ignorar": [
+    "Lucro Presumido CC",
+    "Lucro Real CC",
+    "Simples Nacional CC",
+    "Regime Administrativo - DOC"
+  ],
+  "logica_departamento": {
+    "descricao": "Cada departamento só é auditado se a empresa tiver a TAG correspondente",
+    "regras_tag": {
+      "FISCAL": "empresa deve ter TAG 'Equipe Fiscal X'",
+      "FOLHA": "empresa deve ter TAG 'Equipe DP X'",
+      "CONTABIL": "empresa deve ter TAG 'Equipe Contábil X'"
+    },
+    "regras_matriz_filial": {
+      "FISCAL/MTZ": "somente empresas tipo Geral (matriz) — filial não tem obrigações fiscais federais",
+      "FOLHA": "qualquer empresa que tiver o campo marcado (Geral ou Filial)",
+      "CONTABIL/MTZ": "somente empresas tipo Geral (matriz)"
+    }
+  },
+  "logica_classificacao_obrigacoes": {
+    "descricao": "Como classificar obrigações que chegam da API da assessoria",
+    "tipos": {
+      "OBRIGATORIA": {
+        "descricao": "Obrigação prevista no motor (federal/estadual/municipal/periodicidade)",
+        "badges": [
+          "OK",
+          "FALTA",
+          "SOBRA"
+        ],
+        "auditavel": true
+      },
+      "PARTICULAR": {
+        "descricao": "Obrigação específica do cliente — listada em particularidades_fiscal",
+        "badge": "PARTICULAR",
+        "auditavel": false,
+        "exibe_na_tela": true
+      },
+      "DESCONHECIDA": {
+        "descricao": "Obrigação não encontrada no motor nem nas particularidades",
+        "badge": "DESCONHECIDA",
+        "auditavel": false,
+        "exibe_na_tela": true,
+        "acao": "Alerta para revisão — pode ser nova obrigação a mapear"
+      }
+    }
+  },
+  "logica_cruzamento": {
+    "passos": [
+      "1. Verificar regime — se em regimes_ignorar, pular empresa",
+      "2. Para cada departamento (FISCAL, FOLHA, CONTABIL):",
+      "   a. Verificar se empresa tem TAG do departamento → se não, pular",
+      "   b. Verificar tipo empresa (Geral/Filial) + regra somente_matriz",
+      "3. Montar BASE ESPERADA por departamento:",
+      "   FISCAL:   federal(regime) + estadual(UF) + ST(outras UFs) + municipal(municípios)",
+      "   FOLHA:    federal(regime) + adiantamento(se marcado) + fechamento_folha(5º ou 30)",
+      "   CONTABIL: federal(regime) + periodicidade(fechamento_contabil) + modalidade_LR(se LR)",
+      "4. Buscar obrigações da API assessoria por CNPJ",
+      "5. Para cada obrigação da API:",
+      "   → Está na base esperada? → OK",
+      "   → Não está na base esperada mas está em particularidades_fiscal? → PARTICULAR",
+      "   → Não está em nenhum dos dois? → DESCONHECIDA",
+      "6. Para cada obrigação da base esperada não encontrada na API → FALTA",
+      "7. Gerar resultado por empresa com todos os status"
+    ],
+    "campos_hub_necessarios": {
+      "ja_existem": [
+        "regime_tributario",
+        "tipo_empresa (Geral / Filial)",
+        "uf_cadastro",
+        "fechamento_contabil (periodicidade — Hub Info Empresas)",
+        "modalidade_lucro_real (Hub Info Empresas)",
+        "adiantamento (toggle — Hub Info Empresas)",
+        "fechamento_folha: '5º dia útil' ou 'Dia 30' (Hub Info Empresas)",
+        "inscricoes_estaduais (lista de UFs)",
+        "inscricoes_municipais (lista de municípios)",
+        "tags (Equipe Contábil X, Equipe DP X, Equipe Fiscal X)"
+      ],
+      "nao_existem": [
+        "retencao_lucro → será incluído como particularidade na aba Contábil da empresa"
+      ]
+    },
+    "mapeamento_regime_estadual": {
+      "LUCRO REAL": "Regime Normal",
+      "LUCRO PRESUMIDO": "Regime Normal",
+      "ImunIsenta - Geral": "Regime Normal",
+      "SIMPLES NACIONAL": "Simples Nacional",
+      "MEI": "Simples Nacional"
+    },
+    "mapeamento_fechamento_folha": {
+      "5º dia útil": "DP FECHAMENTO DA FOLHA 5º",
+      "Dia 30": "DP FECHAMENTO DA FOLHA 30"
+    },
+    "mapeamento_periodicidade_contabil": {
+      "Mensal": "Mensal",
+      "Trimestral": "Trimestral",
+      "Trimestral D60": "Trimestr60",
+      "Trimestral D90": "Trimestr90",
+      "Semestral": "Semestral",
+      "Semestral D90": "Semestr90",
+      "Anual": "Anual",
+      "Anual D90": "Anual90"
+    },
+    "mapeamento_modalidade_lr": {
+      "Estimativa": "IRCS Anual",
+      "Balanço": "IRCS Trim"
+    }
+  },
+  "federal_por_regime": {
+    "LUCRO PRESUMIDO": {
+      "FISCAL": [
+        {
+          "obrigacao": "SPED Contribuições - EFD Contribuição",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "EFD REINF",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "DARF - RETENÇÕES FEDERAIS",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "DARF COFINS CUMULATIVO",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "DARF PIS - CUMULATIVO",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "DARF CSLL LUCRO PRESUMIDO - 2372",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "DARF IRPJ LUCRO PRESUMIDO - 2089",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "RECIBO - DCTF Web Fiscal",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "Certidão Negativa de Débitos - Federal",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "MIT",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        }
+      ],
+      "FOLHA": [
+        {
+          "obrigacao": "DP DARF DCTF WEB - PESSOAL",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FOLHA/MTZ"
+        },
+        {
+          "obrigacao": "DP DARF DCTF WEB 13º",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FOLHA/MTZ"
+        },
+        {
+          "obrigacao": "DP FGTS DIGITAL",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FOLHA/MTZ"
+        },
+        {
+          "obrigacao": "DP Folha 13º - 1º Parcela",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA/MTZ/FL"
+        },
+        {
+          "obrigacao": "DP Folha 13º - 2º Parcela",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA/MTZ/FL"
+        }
+      ],
+      "CONTABIL": [
+        {
+          "obrigacao": "Declaracao de Dividendos Isentos na EFD-Reinf",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "CONTABIL/MTZ"
+        },
+        {
+          "obrigacao": "Recibo ECD",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "CONTABIL/MTZ"
+        },
+        {
+          "obrigacao": "Recibo ECF",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "CONTABIL/MTZ"
+        }
+      ]
+    },
+    "LUCRO REAL": {
+      "FISCAL": [
+        {
+          "obrigacao": "SPED Contribuições - EFD Contribuição",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "EFD REINF",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "DARF - RETENÇÕES FEDERAIS",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "DARF COFINS NÃO CUMULATIVO",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "DARF PIS - NÃO CUMULATIVO",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "RECIBO - DCTF Web Fiscal",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "Certidão Negativa de Débitos - Federal",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "MIT",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        }
+      ],
+      "FOLHA": [
+        {
+          "obrigacao": "DP DARF DCTF WEB - PESSOAL",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FOLHA/MTZ"
+        },
+        {
+          "obrigacao": "DP DARF DCTF WEB 13º",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FOLHA/MTZ"
+        },
+        {
+          "obrigacao": "DP FGTS DIGITAL",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FOLHA/MTZ"
+        },
+        {
+          "obrigacao": "DP Folha 13º - 1º Parcela",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA/MTZ/FL"
+        },
+        {
+          "obrigacao": "DP Folha 13º - 2º Parcela",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA/MTZ/FL"
+        }
+      ],
+      "CONTABIL": [
+        {
+          "obrigacao": "Declaracao de Dividendos Isentos na EFD-Reinf",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "CONTABIL/MTZ"
+        },
+        {
+          "obrigacao": "Recibo ECD",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "CONTABIL/MTZ"
+        },
+        {
+          "obrigacao": "Recibo ECF",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "CONTABIL/MTZ"
+        }
+      ]
+    },
+    "SIMPLES NACIONAL": {
+      "FISCAL": [
+        {
+          "obrigacao": "Simples Nacional - DAS",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "Declaração de Apuração do Simples Nacional",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "DEFIS",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "EFD REINF",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "DARF - RETENÇÕES FEDERAIS",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "RECIBO - DCTF Web Fiscal",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        },
+        {
+          "obrigacao": "Certidão Negativa de Débitos - Federal",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FISCAL/MTZ"
+        }
+      ],
+      "FOLHA": [
+        {
+          "obrigacao": "DP DARF DCTF WEB - PESSOAL",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FOLHA/MTZ"
+        },
+        {
+          "obrigacao": "DP DARF DCTF WEB 13º",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FOLHA/MTZ"
+        },
+        {
+          "obrigacao": "DP FGTS DIGITAL",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "FOLHA/MTZ"
+        },
+        {
+          "obrigacao": "DP Folha 13º - 1º Parcela",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA/MTZ/FL"
+        },
+        {
+          "obrigacao": "DP Folha 13º - 2º Parcela",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA/MTZ/FL"
+        }
+      ],
+      "CONTABIL": [
+        {
+          "obrigacao": "Declaracao de Dividendos Isentos na EFD-Reinf",
+          "somente_matriz": true,
+          "inclui_filial": false,
+          "dept_original": "CONTABIL/MTZ"
+        }
+      ]
+    },
+    "MEI": {
+      "FISCAL": [
+        {
+          "obrigacao": "DAS MEI - MENSAL",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FISCAL"
+        },
+        {
+          "obrigacao": "DASN - SIMEI - Dec Anual Simples Nacional para o MEI",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FISCAL"
+        }
+      ],
+      "FOLHA": [],
+      "CONTABIL": []
+    },
+    "DOMESTICA": {
+      "FISCAL": [],
+      "FOLHA": [
+        {
+          "obrigacao": "DAE - DOMÉSTICO",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "DAE - DOMÉSTICO 13º",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "Recibo de Pagamento - Doméstica",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "DP FGTS DIGITAL",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        }
+      ],
+      "CONTABIL": []
+    },
+    "PRODUTOR RURAL": {
+      "FISCAL": [
+        {
+          "obrigacao": "EFD REINF",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FISCAL"
+        },
+        {
+          "obrigacao": "RECIBO - DCTF Web Fiscal",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FISCAL"
+        },
+        {
+          "obrigacao": "GUIA FUNRURAL - 20",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FISCAL"
+        }
+      ],
+      "FOLHA": [
+        {
+          "obrigacao": "DP DARF DCTF WEB - PESSOAL",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "DP DARF DCTF WEB 13º",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "DP FGTS DIGITAL",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "DP Folha 13º - 1º Parcela",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "DP Folha 13º - 2º Parcela",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        }
+      ],
+      "CONTABIL": [
+        {
+          "obrigacao": "RECIBO LCDPR",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "CONTÁBIL"
+        },
+        {
+          "obrigacao": "DECLARAÇÃO AMBIENTAL IBAMA -ADA",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "CONTÁBIL"
+        },
+        {
+          "obrigacao": "DECLARAÇÃO DE CERTIFICADO DE CADASTRO DE IMÓVEL RURAL - CCIR",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "CONTÁBIL"
+        },
+        {
+          "obrigacao": "IMPOSTO SOBRE A PROPRIEDADE TERRITORIAL RURAL - ITR",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "CONTÁBIL"
+        }
+      ]
+    }
+  },
+  "contabil_periodicidade": {
+    "descricao": "Obrigações por periodicidade — CONTABIL/MTZ — somente Geral com TAG Equipe Contábil",
+    "somente_matriz": true,
+    "grupos": {
+      "Anual": [
+        "Balancete - Anual",
+        "Balanco Patrimonial - Anual",
+        "DRE - Anual",
+        "Relatório de Faturamento - Anual",
+        "Relatorio Gerencial PDCA - Anual"
+      ],
+      "Anual90": [
+        "Balancete - Anual D90",
+        "Balanco Patrimonial - Anual D90",
+        "DRE - Anual D90",
+        "Relatório de Faturamento - Anual D90",
+        "Relatorio Gerencial PDCA - Anual D90"
+      ],
+      "Mensal": [
+        "BALANCETE - MENSAL",
+        "DRE - MENSAL",
+        "RELAÇÃO DE FATURAMENTO",
+        "Relatorio Gerencial PDCA - Mensal",
+        "Balanco Patrimonial - Trimestral"
+      ],
+      "Semestral": [
+        "Balancete - Semestral",
+        "Balanço Patrimonial - Semestral",
+        "DRE - Semestral",
+        "Relacao de Faturamento - Semestral",
+        "Relatorio Gerencial PDCA - Semestral"
+      ],
+      "Semestr90": [
+        "Balancete - Semestral D90",
+        "Balanco Patrimonial - Semestral D90",
+        "DRE - Semestral D90",
+        "Relatório de Faturamento - Semestral D90",
+        "Relatorio Gerencial PDCA - Semestral D90"
+      ],
+      "Trimestral": [
+        "Balancete - Trimestral",
+        "Balanco Patrimonial - Trimestral",
+        "DRE - Trimestral",
+        "Relacao de Faturamento TRI",
+        "Relatorio Gerencial PDCA - Trimestral"
+      ],
+      "Trimestr60": [
+        "Balancete - Trimestral D60",
+        "Balanco Patrimonial - Trimestral D60",
+        "DRE - Trimestral D60",
+        "Relacao de Faturamento - Trimestral D60",
+        "Relatorio Gerencial PDCA - Trimestral D60"
+      ],
+      "Trimestr90": [
+        "Balancete - Trimestral D90",
+        "Balanco Patrimonial  - Trimestral D90",
+        "DRE - Trimestral D90",
+        "Relatório de Faturamento - Trimestral D90",
+        "Relatorio Gerencial PDCA - Trimestral D90"
+      ],
+      "IRCS Anual": [
+        "DIRB Mensal",
+        "Guia CSLL Ajuste Anual",
+        "Guia CSLL Mensal",
+        "Guia IRPJ Ajuste Anual",
+        "Guia IRPJ Mensal",
+        "Livro de Apuracao Lucro Real Mensal"
+      ],
+      "IRCS Trim": [
+        "DIRB Trimestral",
+        "Guia CSLL Trimestral",
+        "Guia IRPJ Trimestral",
+        "Livro de Apuracao Lucro Real Trimestral"
+      ]
+    }
+  },
+  "folha_particularidades": {
+    "descricao": "Aplicam em qualquer empresa que tiver o campo marcado (Geral ou Filial)",
+    "adiantamento": {
+      "campo_hub": "adiantamento",
+      "somente_matriz": false,
+      "quando_sim": [
+        "DP ADIANTAMENTO DE SALÁRIO"
+      ]
+    },
+    "fechamento_folha": {
+      "campo_hub": "fechamento_folha",
+      "somente_matriz": false,
+      "opcoes": {
+        "5º dia útil": [
+          "DP FECHAMENTO DA FOLHA 5º"
+        ],
+        "Dia 30": [
+          "DP FECHAMENTO DA FOLHA 30"
+        ]
+      }
+    }
+  },
+  "estadual_normal_por_uf": {
+    "AC": {
+      "Regime Normal": [
+        "Sped ICMS - EFD ICMS-IPI - 15",
+        "GUIA DIFAL CONSUMO - 15",
+        "GUIA ICMS Normal - 20",
+        "DAM - 20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "AL": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 09",
+        "GUIA ICMS Normal - 09",
+        "Sped ICMS - EFD ICMS-IPI - 25"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "AM": {
+      "Regime Normal": [
+        "DAM - 5º DIA UTIL",
+        "Sped ICMS - EFD ICMS-IPI - 12",
+        "GUIA ICMS Normal - 20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "AP": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 10",
+        "GUIA ICMS Normal - 10",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "BA": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 09",
+        "GUIA ICMS Normal - 09",
+        "Sped ICMS - EFD ICMS-IPI - 25"
+      ],
+      "Simples Nacional": []
+    },
+    "CE": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 10",
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "GUIA ICMS Normal - 20"
+      ],
+      "Simples Nacional": []
+    },
+    "DF": {
+      "Regime Normal": [
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "GUIA ICMS Normal - 20",
+        "GUIA DIFAL CONSUMO - 20"
+      ],
+      "Simples Nacional": []
+    },
+    "ES": {
+      "Regime Normal": [
+        "GUIA ICMS Normal - 18",
+        "GUIA ICMS Normal - 18",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "Simples Nacional": []
+    },
+    "GO": {
+      "Regime Normal": [
+        "Sped ICMS - EFD ICMS-IPI - 15",
+        "GUIA ICMS Normal - 20"
+      ],
+      "Simples Nacional": []
+    },
+    "MA": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 20",
+        "GUIA ICMS Normal - 20",
+        "Sped ICMS - EFD ICMS-IPI - 25",
+        "DIEF -  20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "MG": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 08",
+        "GUIA ICMS Normal - 08",
+        "DAPI - 09",
+        "Sped ICMS - EFD ICMS-IPI - 15",
+        "DAMEF-VAF"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "MS": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 15",
+        "GUIA ICMS Normal - 15",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "MT": {
+      "Regime Normal": [
+        "GUIA ICMS Normal - 20",
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "GUIA DIFAL CONSUMO - 20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "PA": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 10",
+        "GUIA ICMS Normal - 10",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "Simples Nacional": [
+        "DEI - Declaração de Entradas Interestaduais"
+      ]
+    },
+    "PB": {
+      "Regime Normal": [
+        "GUIA ICMS Normal - 15",
+        "GUIA DIFAL CONSUMO - 15",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "PE": {
+      "Regime Normal": [
+        "GUIA ICMS Normal - 15",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "PI": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 15",
+        "GUIA ICMS Normal - 15",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "Simples Nacional": []
+    },
+    "PR": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 12",
+        "GUIA ICMS Normal - 12",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "RJ": {
+      "Regime Normal": [
+        "GUIA ICMS Normal - 10",
+        "GUIA DIFAL CONSUMO - 10",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "RN": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 15",
+        "GUIA ICMS Normal - 15",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "RO": {
+      "Regime Normal": [
+        "Sped ICMS - EFD ICMS-IPI - 14",
+        "GUIA DIFAL CONSUMO - 15",
+        "GUIA ICMS Normal - 20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "RR": {
+      "Regime Normal": [
+        "GIM - 20",
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "GUIA DIFAL CONSUMO - 20",
+        "GUIA ICMS Normal - 20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "RS": {
+      "Regime Normal": [
+        "GUIA ICMS Normal - 12",
+        "Sped ICMS - EFD ICMS-IPI - 15",
+        "GIA RS - 15"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "SC": {
+      "Regime Normal": [
+        "DIME - 10",
+        "GUIA DIFAL CONSUMO - 10",
+        "GUIA ICMS Normal - 10",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "SE": {
+      "Regime Normal": [
+        "GUIA DIFAL CONSUMO - 09",
+        "GUIA ICMS Normal - 09",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "SP": {
+      "Regime Normal": [
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "GUIA ICMS Normal - 20"
+      ],
+      "Simples Nacional": [
+        "DeSTDA - 28"
+      ]
+    },
+    "TO": {
+      "Regime Normal": [
+        "GUIA ICMS Normal - 09",
+        "GUIA DIFAL CONSUMO - 09",
+        "Sped ICMS - EFD ICMS-IPI - 15",
+        "DIF"
+      ],
+      "Simples Nacional": []
+    }
+  },
+  "estadual_substituto_por_uf": {
+    "AC": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - AC - 15"
+      },
+      {
+        "obrigacao": "GIA ST - AC - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - AC  - 10"
+      }
+    ],
+    "AL": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - AL - 09"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - AL - 09"
+      },
+      {
+        "obrigacao": "GUIA FCP - AL - 09"
+      }
+    ],
+    "AM": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - AM - 15"
+      },
+      {
+        "obrigacao": "GIA ST - AM - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - AM - 09"
+      }
+    ],
+    "AP": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - AP - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - AP - 10"
+      }
+    ],
+    "BA": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - BA - 15"
+      },
+      {
+        "obrigacao": "GIA ST - BA - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - BA - 09"
+      }
+    ],
+    "CE": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - CE - 15"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - CE - 09"
+      }
+    ],
+    "DF": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - DF - 15"
+      },
+      {
+        "obrigacao": "GIA ST - DF - 10",
+        "observacao": "Verificar se houve Dispensa"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - DF - 09"
+      }
+    ],
+    "ES": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - ES - 15"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - ES - 09"
+      }
+    ],
+    "GO": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - GO - 15"
+      },
+      {
+        "obrigacao": "GIA ST - GO - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - GO - 09"
+      }
+    ],
+    "MA": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - MA - 10"
+      },
+      {
+        "obrigacao": "GIA ST - MA - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - MA - 20"
+      }
+    ],
+    "MG": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - MG - 09"
+      },
+      {
+        "obrigacao": "GIA ST - MG - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - MG - 09"
+      }
+    ],
+    "MS": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - MS - 15"
+      },
+      {
+        "obrigacao": "GIA ST - MS - 10",
+        "observacao": "Verificar se houve Dispensa"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - MS - 10"
+      }
+    ],
+    "MT": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - MT - 15"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - MT - 09"
+      }
+    ],
+    "PA": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - PA - 15"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - PA - 15"
+      }
+    ],
+    "PB": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - PB - 15"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - PB - 09"
+      }
+    ],
+    "PE": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - PE - 15"
+      },
+      {
+        "obrigacao": "GIA ST - PE - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - PE - 09"
+      }
+    ],
+    "PI": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - PI - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - PI - 09"
+      }
+    ],
+    "PR": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - PR - 09"
+      },
+      {
+        "obrigacao": "GIA ST - PR - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - PR - 09"
+      }
+    ],
+    "RJ": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - RJ - 15"
+      },
+      {
+        "obrigacao": "GIA ST - RJ - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - RJ - 09"
+      }
+    ],
+    "RN": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - RN - 15"
+      },
+      {
+        "obrigacao": "GIA ST - RN - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - RN - 10"
+      }
+    ],
+    "RO": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - RO - 15"
+      },
+      {
+        "obrigacao": "GIA ST - RO - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - RO - 09"
+      }
+    ],
+    "RR": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - RR - 10"
+      },
+      {
+        "obrigacao": "GIA ST - RR - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - RR - 10"
+      }
+    ],
+    "RS": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - RS - 09"
+      },
+      {
+        "obrigacao": "GIA ST - RS - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - RS - 09"
+      }
+    ],
+    "SC": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - SC - 15"
+      },
+      {
+        "obrigacao": "GIA ST - SC - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - SC - 10"
+      }
+    ],
+    "SE": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - SE - 15"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - SE - 09"
+      },
+      {
+        "obrigacao": "GUIA FCP - SE - 09"
+      }
+    ],
+    "SP": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - SP - 15"
+      },
+      {
+        "obrigacao": "GIA ST - SP - 10",
+        "observacao": "Verificar se houve Dispensa"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - SP - 09"
+      }
+    ],
+    "TO": [
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - TO - 15"
+      },
+      {
+        "obrigacao": "GIA ST - TO - 10"
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - TO - 09"
+      }
+    ]
+  },
+  "municipal_por_municipio": {
+    "ABADIANIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ACREUNA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "AGUA BOA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "AGUAS LINDAS DE GOIAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ALAGOA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ALAGOINHAS/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ALHANDRA/PB": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ALTA FLORESTA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ALTAMIRA/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ALVORADA DO NORTE/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ALVORADA/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ALVORADA/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "AMERICANA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "AMPARO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ANANINDEUA/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ANAPOLIS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "APARECIDA DE GOIANIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "APUCARANA/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "AQUIRAZ/CE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ARACAJU/SE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ARAGARCAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ARAGUAINA/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ARAQUARI/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ARAUCARIA/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ARAXA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ARIPUANA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ARIQUEMES/RO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ARMACAO DOS BUZIOS/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ARUANA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ASSIS/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 25"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 25"
+      }
+    ],
+    "BACABAL/MA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BAIXA GRANDE DO RIBEIRO/PI": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BALNEARIO DE PICARRAS/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BALSAS/MA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BANDEIRANTES DO TOCANTINS/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BARCARENA/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BARRA DO BUGRES/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BARRA DO GARCAS/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "BARRA DO PIRAI/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BARRA MANSA/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BARRO ALTO/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BARUERI/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BAURU/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BELA VISTA DE GOIAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BELEM/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BELO HORIZONTE/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 08"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 08"
+      }
+    ],
+    "BENTO GONCALVES/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BETIM/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BOA VISTA/RR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BOM CONSELHO/PE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BOM DESPACHO/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BOM JESUS DO TOCANTINS/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BOTUCATU/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BRASILANDIA/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "BRASILIA/DF": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "BRAZABRANTES/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "BURITI ALEGRE/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CABO DE SANTO AGOSTINHO/PE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "CABREUVA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CACOAL/RO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAETITE/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAIAPONIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAIEIRAS/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "CAJAMAR/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      },
+      {
+        "obrigacao": "DIPAM SIGVAF - Mensal",
+        "observacao": "Contribuintes obrigados ao SPED Fiscal (Obrigação de validação do valor adicionado aos municípios)"
+      }
+    ],
+    "CALDAS NOVAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "CAMACARI/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAMAPUA/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAMBUI/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAMPINA GRANDE/PB": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAMPINAS/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAMPO GRANDE/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "CAMPO NOVO DO PARECIS/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAMPO VERDE/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAMPOS DOS GOYTACAZES/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAMPOS LINDOS/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CANARANA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CANDEIAS/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CANELA/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CANOAS/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAPIVARI/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "CARAZINHO/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CARIACICA/ES": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CARMO DO RIO CLARO/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CASCAVEL/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CATALAO/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAUCAIA/CE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CAXIAS DO SUL/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "CERES/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CERQUILHO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      },
+      {
+        "obrigacao": "DIPAM SIGVAF - Mensal",
+        "observacao": "Contribuintes obrigados ao SPED Fiscal (Obrigação de validação do valor adicionado aos municípios)"
+      }
+    ],
+    "CEZARINA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CHAPADAO DO CEU/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "CHAPADAO DO SUL/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CIDADE OCIDENTAL/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CLAUDIA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CODO/MA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "COLIDER/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CONCEICAO DO COITE/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CONFRESA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CONTAGEM/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CORRENTINA/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CORUMBA DE GOIAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "COSTA RICA/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "COUTO DE MAGALHAES/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "COXIM/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CRISTALINA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CRISTIANÓPOLIS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CUBATAO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CUIABA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "CUIABÁ/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "CUMARU DO NORTE/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "CURITIBA/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "CURVELO/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "DIAMANTINO/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "DOURADOS/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "DUQUE DE CAXIAS/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "EDEIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "EMBU DAS ARTES/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ERECHIM/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "Exterior/EX": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "EXTREMA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "FAXINAL/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "FEIRA DE SANTANA/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "FERNANDO DE NORONHA/PE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "FLORIANOPOLIS/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "FORMOSA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "FORTALEZA/CE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GARANHUNS/PE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GAUCHA DO NORTE/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GOIANESIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "GOIANIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "GOIANIRA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "GOIATUBA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GRAJAU/MA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GRAMADO/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GUADALUPE/PI": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GUAPO/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GUARANESIA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GUARANTA DO NORTE/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GUARAPARI/ES": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "GUARULHOS/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 12"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 12"
+      }
+    ],
+    "GURUPI/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "HIDROLANDIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "IACIARA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "IBIRITE/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "IMPERATRIZ/MA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "INDAIATUBA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "INHUMAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "IPAMERI/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "IPOJUCA/PE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITABAIANA/SE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITABERAI/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITABORAI/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITAJAI/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITAPETININGA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITAPEVA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITAPEVA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITAPEVI/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITAQUAQUECETUBA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITUIUTABA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITUMBIARA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ITUPEVA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "JABOATAO DOS GUARARAPES/PE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "JANDIRA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      },
+      {
+        "obrigacao": "DIPAM SIGVAF - Mensal",
+        "observacao": "Contribuintes obrigados ao SPED Fiscal (Obrigação de validação do valor adicionado aos municípios)"
+      }
+    ],
+    "JARAGUA DO SUL/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "JATAI/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "JI-PARANA/RO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "JOAO PESSOA/PB": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "JOINVILLE/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "JUARA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "JUINA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "JUIZ DE FORA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "JUNDIAI/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 25"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 25"
+      }
+    ],
+    "JURUENA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "JUSSARA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "LAGES/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "LAGOA DA CONFUSAO/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "LAURO DE FREITAS/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "LIMEIRA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "LINHARES/ES": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "LONDRINA/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "LORETO/MA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "LUCAS DO RIO VERDE/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "LUIS EDUARDO MAGALHAES/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "LUZIANIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "MACAPA/AP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "MACEIO/AL": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 03"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 03"
+      }
+    ],
+    "MAIRIPORA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MANAUS/AM": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MANHUACU/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MARABA/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MARACAJU/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MARACANAU/CE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MARILIA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      },
+      {
+        "obrigacao": "DIPAM SIGVAF - Mensal",
+        "observacao": "Contribuintes obrigados ao SPED Fiscal (Obrigação de validação do valor adicionado aos municípios)"
+      }
+    ],
+    "MARINGA/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MARITUBA/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MATOZINHOS/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "MAUA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MINACU/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MINEIROS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MOGI DAS CRUZES/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MOJU/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MONTE ALEGRE DO PIAUí/PI": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MONTE ALTO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MONTES CLAROS/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MONTIVIDIU DO NORTE/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "MOSSORO/RN": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NATAL/RN": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NATIVIDADE/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NAVEGANTES/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NAZARIO/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NEROPOLIS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "NIQUELANDIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "NITEROI/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NOBRES/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NOSSA SENHORA DO SOCORRO/SE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NOVA BANDEIRANTES/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NOVA CRIXAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NOVA FRIBURGO/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "NOVA LIMA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 12"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 12"
+      }
+    ],
+    "NOVA MAMORE/RO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "NOVA MARINGA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NOVA MUTUM/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NOVA NAZARE/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NOVA XAVANTINA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NOVO HAMBURGO/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "NOVO PLANALTO/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "OLINDA/PE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ORIENTE/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "OSASCO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PALHOCA/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PALMAS/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PALMEIRANTE/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PALMEIRAS DE GOIAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PALMEIRAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PALMITAL/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PANAMA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PARACATU/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PARAGOMINAS/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PARAISO DAS AGUAS/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "PARAISO DO TOCANTINS/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PARAISOPOLIS/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PARANAGUA/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PARANATINGA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PARAUAPEBAS/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PASSO FUNDO/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PATO BRANCO/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PATOS DE MINAS/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PATROCINIO/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PAULINIA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PEDRA PRETA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PEIXE/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PEIXOTO DE AZEVEDO/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PEROLANDIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PETROLINA/pe": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PIMENTA BUENO/RO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PIRACANJU/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PIRACANJUBA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PIRACICABA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PIRAPORA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PIRAQUARA/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PIRASSUNUNGA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PIRENOPOLIS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PONTA GROSSA/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PORANGATU/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PORTO ALEGRE DO NORTE/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PORTO ALEGRE/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PORTO NACIONAL/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PORTO SEGURO/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PORTO VELHO/RO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "POSSE/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PRESIDENTE OLEGARIO/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "PRIMAVERA DO LESTE/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 25"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 25"
+      }
+    ],
+    "QUERENCIA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "QUIRINOPOLIS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "RECIFE/PE": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "REDENCAO/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "RESENDE/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "RIBEIRAO BONITO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "RIBEIRAO PRETO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "RIBEIRO GONCALVES/PI": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "RIO BRANCO/AC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "RIO DE CONTAS/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "RIO DE JANEIRO/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 03"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 03"
+      }
+    ],
+    "RIO GRANDE/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "RIO VERDE/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "ROLIM DE MOURA/RO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "RONDONOPOLIS/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "SALVADOR/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 03"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 03"
+      }
+    ],
+    "SANTA CRUZ DO XINGU/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SANTA HELENA DE GOIAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SANTA ROSA DE GOIÁS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SANTANA DE PARNAIBA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "SANTANA DO ARAGUAIA/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SANTAREM/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SANTO ANDRE/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SANTO ANTONIO DA PLATINA/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SANTO ANTONIO DE GOIAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SANTOS/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO BERNARDO DO CAMPO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO CAETANO DO SUL/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO CARLOS/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SÃO CARLOS/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO DESIDERIO/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO FRANCISCO DO SUL/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO GABRIEL DO OESTE/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO GONCALO/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO JOAO DA BARRA/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO JOSE DE RIBAMAR/MA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 03"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 03"
+      }
+    ],
+    "SAO JOSE DO RIO PRETO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      },
+      {
+        "obrigacao": "GDE - 20",
+        "observacao": "Contribuintes obrigados ao SPED Fiscal (Obrigação de validação do valor adicionado aos municípios)"
+      }
+    ],
+    "SAO JOSE DO XINGU/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO JOSE DOS CAMPOS/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "SAO JOSE DOS PINHAIS/PR": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO JOSE/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 25"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 25"
+      }
+    ],
+    "SAO LEOPOLDO/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO LUIS/MA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 12"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 12"
+      }
+    ],
+    "SÃO MIGUEL DO ARAGUAIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SÃO MIGUEL DO OESTE/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAO PAULO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAPEZAL/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SAPUCAIA DO SUL/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "SEBASTIAO LEAL/PI": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SENADOR CANEDO/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SERRA/ES": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      },
+      {
+        "obrigacao": "SPED SEFA-SERRA",
+        "observacao": "LEI Nº 5.035, DE 9 DE JULHO DE 2019 - FICAM INSTITUÍDAS OBRIGAÇÕES ACESSÓRIAS, RELATIVAS AO ENVIO DOS ARQUIVOS DO SPED E RELATIVO AO VALOR ADICIONADO FISCAL-VAF PARA AS EMPRESAS COM SEDE NO MUNICÍPIO DA SERRA-ES."
+      }
+    ],
+    "SETE LAGOAS/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SIDROLANDIA/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SILVANIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SIMOES FILHO/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SIMONESIA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SINOP/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SOROCABA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SORRISO/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SUCUPIRA DO NORTE/MA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "SUZANO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "TABOAO DA SERRA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "TAILANDIA/PA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "TALISMA/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "TANGARA DA SERRA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 25"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 25"
+      }
+    ],
+    "TAUBATE/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "TERESINA/PI": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 08"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 08"
+      }
+    ],
+    "TIBAU DO SUL/RN": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "TRES LAGOAS/MS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "TRINDADE/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 15"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 15"
+      }
+    ],
+    "TUBARAO/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "TURVANIA/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "UBERABA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 20"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 20"
+      }
+    ],
+    "UBERLANDIA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "UNAI/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "URUCUI/PI": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 08"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 08"
+      }
+    ],
+    "VARGINHA/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VARZEA GRANDE/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VARZEA PAULISTA/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VASSOURAS/RJ": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VAZANTE/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VERA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VESPASIANO/MG": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VIAMAO/RS": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      },
+      {
+        "obrigacao": "DEISS VIAMÃO RS"
+      }
+    ],
+    "VIANA/ES": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VILA PROPICIO/GO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VILA RICA/MT": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VILA VELHA/ES": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VILHENA/RO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VINHEDO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VISTA ALEGRE DO ALTO/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VITORIA DA CONQUISTA/BA": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VITORIA/ES": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "VOTORANTIM/SP": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "XAMBIOA/TO": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ],
+    "XANXERE/SC": [
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 10"
+      }
+    ]
+  },
+  "particularidades_fiscal": {
+    "descricao": "Obrigações particulares de clientes específicos — não auditáveis, badge PARTICULAR",
+    "tipo": "PARTICULAR",
+    "auditavel": false,
+    "lista": [
+      {
+        "obrigacao": "AUTENTICAÇÃO LIVROS FISCAIS - GERAL",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "CEIPIM",
+        "mininome": "Estad AM",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "CERTIDÃO NEGATIVA DE DÉBITOS - MUNICIPAL",
+        "mininome": "Municipal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "CERTIDÃO NEGATIVO DE DÉBITOS - ESTADUAL",
+        "mininome": "Estadual",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "Contestação ICMS Fronteiras - 28",
+        "mininome": "Estad PE",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "CONTRATO OU ADITIVO DE ALUGUEL  PESSOA FÍSICA - ANUALMENTE",
+        "mininome": "Federal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DAM - 7º DIA UTIL",
+        "mininome": "Estad PE",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DAPI - 15",
+        "mininome": "Estad MG",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DARF IRRF - APLICAÇÕES FINANCEIRAS - CÓD 3426",
+        "mininome": "Federal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DARF IRRF - Cód 3208",
+        "mininome": "Federal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DCIP - SC",
+        "mininome": "Estad SC",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DDE",
+        "mininome": "Estad SC",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DECLAN - RJ",
+        "mininome": "Estad RJ",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "Declaração do Produzir DIP",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "Declaração SIC Goias Fomentar",
+        "mininome": "",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DIA - AM - 10",
+        "mininome": "Estad AM",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DIMOB",
+        "mininome": "Federal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DIPAM-A",
+        "mininome": "Municipal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DIRBI",
+        "mininome": "Federal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DMED",
+        "mininome": "Federal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DOT - ES",
+        "mininome": "Estad ES",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "FDI - Agro",
+        "mininome": "Estad PI",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "FETHAB",
+        "mininome": "Estad MT",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GIA SP",
+        "mininome": "Estad SP",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ADICIONAL DE PROTEGE - Cód 4146",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA COMPETE - 18",
+        "mininome": "Estad ES",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA CONTRIB PROGR INCENT BOLSA UNIVERSITÁRIA - 20",
+        "mininome": "Estad DF",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA CONTRIBUIÇÃO ADICIONAL AO PRO-DESENVOLVE - MS - 15 - Cód 936",
+        "mininome": "Estad MS",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA CONTRIBUIÇÃO AO PRO-DESENVOLVE - MS - 15 - Cód 935",
+        "mininome": "Estad MS",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA DIA - SE - 25",
+        "mininome": "Estad SE",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA DIFAL 1658 - 1ª Quinzena - 5",
+        "mininome": "Estad RO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA DIFAL 1658 - 2ª Quinzena - 20",
+        "mininome": "Estad RO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA DIFAL CONSUMIDOR FINAL - MG - 15",
+        "mininome": "Estad ST",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA DIFAL CONSUMO - 06",
+        "mininome": "Estadual",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA DIFAL CONSUMO - 18",
+        "mininome": "Estadual",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA DIFAL CONSUMO - 25",
+        "mininome": "Estadual",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA EMOLUMENTOS - FUNDEF - Cód 7482",
+        "mininome": "Estad DF",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA EMOLUMENTOS - PRO RECEITA - Cód 7481",
+        "mininome": "Estad DF",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA FADEFE - MS - 15",
+        "mininome": "Estad MS",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA FDE- 09",
+        "mininome": "Estad TO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA FEEF - 20",
+        "mininome": "Estad ES",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA FETHAB - 06",
+        "mininome": "Estad MT",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA FOMENTO - COMPLEMENTO JUROS DE EMPRÉSTIMO - 12",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "Guia FTI 9851 - 20",
+        "mininome": "Estad AM",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "Guia FTI 9854 - 15",
+        "mininome": "Estad AM",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "Guia FTI 9856 - 15",
+        "mininome": "Estad AM",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA FUNDO DE FOMENTO A INDÚSTRIA DO TURISMO DO DF",
+        "mininome": "Estad DF",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA FUNEF - 15",
+        "mininome": "Estad PI",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA FUNRURAL - 20",
+        "mininome": "Federal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS Antecipado - 10",
+        "mininome": "Estadual",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS Antecipado - 20",
+        "mininome": "Estadual",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS Antecipado - 25",
+        "mininome": "Estadual",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS ANTECIPADO SN - 20",
+        "mininome": "Estadual",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS ENERGIA ELÉTRICA CONTRATAÇÃO LIVRE - 09",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS FRONTEIRA - 15 - Cód 1154",
+        "mininome": "Estad PB",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS FRONTEIRA - 28 - Cód 00058-2",
+        "mininome": "Estad PE",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS Normal - 10",
+        "mininome": "Estad DF",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS Normal - 25",
+        "mininome": "Estadual",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - AM - 5º dia",
+        "mininome": "Estad ST",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - BA - 15",
+        "mininome": "Estad BA",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - CE - 20",
+        "mininome": "Estad CE",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - PA - 09",
+        "mininome": "Estad PA",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS ST - SP - 20",
+        "mininome": "Estad ST",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS ST ANTECIPADO - 25",
+        "mininome": "Estadual",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ICMS ST RETIDO FONTE - AM - 05",
+        "mininome": "Estad AM",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA IPI - 25",
+        "mininome": "Federal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ISS FIXO - 20",
+        "mininome": "Municipal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ISS PRÓPRIO - 11",
+        "mininome": "Municipal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA ISS RETIDO - 11",
+        "mininome": "Municipal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA PRODEIC-FEEF FES - MT - 06 - Cód 7201",
+        "mininome": "Estad MT",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA PRODEIC-FUNDED - MT - 06 - Cód 5606",
+        "mininome": "Estad MT",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA PRODEIC-FUNDES - MT - 06 - Cód 9816",
+        "mininome": "Estad MT",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA PRODUZIR 4928 - 20",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA PROGOIÁS - PROTEGE - 20 - Cód 4990",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GUIA PROTEGE - 20 - Cód  4014",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "Guia Taxa de Antecipação Produzir",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "IAGRO",
+        "mininome": "Estad MT",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "IAGRO - 06",
+        "mininome": "Estad MT",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "ICMS REGIME ESPECIAL - ANTECIPADO 15",
+        "mininome": "Estad PI",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "ICMS ST 1231- 1ª Quinzena - 30",
+        "mininome": "Estad RO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "ICMS ST 1231- 2ª Quinzena - 15",
+        "mininome": "Estad RO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "ICMS ST 1ª Quinzena",
+        "mininome": "Estad DF",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "ICMS ST 1ª Quinzena - 25",
+        "mininome": "Estad MS",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "ICMS ST 2ª Quinzena",
+        "mininome": "Estad DF",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "ICMS ST 2ª Quinzena - 10",
+        "mininome": "Estad MS",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "Juros PRODUZIR",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "PROTEGE - FOMENTAR e PRODUZIR",
+        "mininome": "Estad GO",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "SCP - SPED Contribuições - EFD Contribuição",
+        "mininome": "Federal",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "SEF - 15",
+        "mininome": "Estad PE",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "SMEPA",
+        "mininome": "Estad MS",
+        "observacao": "PARTICULARIDADE",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "PROGOIÁS - PROTEGE - 20",
+        "mininome": "Estad GO",
+        "observacao": "Particularidade",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "PROTEGE",
+        "mininome": "Estad GO",
+        "observacao": "Particularidade",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "PROTEGE - FOMENTAR e PRODUZIR",
+        "mininome": "Estad GO",
+        "observacao": "Particularidade",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "SCP - SPED Contribuições - EFD Contribuição",
+        "mininome": "Federal",
+        "observacao": "Particularidade",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "SEF - 15",
+        "mininome": "Estad PE",
+        "observacao": "Particularidade",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "SMEPA",
+        "mininome": "Estad MS",
+        "observacao": "Particularidade",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "SPED SEFA-SERRA",
+        "mininome": "Munic ES",
+        "observacao": "Particularidade",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "GIAM - 09 - TO",
+        "mininome": "Estad TO",
+        "observacao": "Particularidade",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DIFAL SN - 15",
+        "mininome": "ESTADUAL AC",
+        "observacao": "Particularidade - Aquisições Interestaduais destinadas a comercialização",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DIFAL SN - 20",
+        "mininome": "ESTADUAL DF",
+        "observacao": "Particularidade - Aquisições Interestaduais destinadas a comercialização",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DIFAL SN - 10",
+        "mininome": "ESTADUAL GO",
+        "observacao": "Particularidade - Aquisições Interestaduais destinadas a comercialização",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DIFAL SN - 15",
+        "mininome": "ESTADUAL PB",
+        "observacao": "Particularidade - Aquisições Interestaduais destinadas a comercialização",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DIFAL SN - 15",
+        "mininome": "ESTADUAL PI",
+        "observacao": "Particularidade - Aquisições Interestaduais destinadas a comercialização",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      },
+      {
+        "obrigacao": "DIFAL SN - 15",
+        "mininome": "ESTADUAL RO",
+        "observacao": "Particularidade - Aquisições Interestaduais destinadas a comercialização",
+        "tipo": "PARTICULAR",
+        "auditavel": false
+      }
+    ]
+  },
+  "produtor_rural": {
+    "descricao": "Pack CAEPF - Produtor Rural — substitui blocos padrão quando regime = Produtor Rural",
+    "federal": {
+      "FISCAL": [
+        {
+          "obrigacao": "EFD REINF",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FISCAL"
+        },
+        {
+          "obrigacao": "RECIBO - DCTF Web Fiscal",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FISCAL"
+        },
+        {
+          "obrigacao": "GUIA FUNRURAL - 20",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FISCAL"
+        }
+      ],
+      "FOLHA": [
+        {
+          "obrigacao": "DP DARF DCTF WEB - PESSOAL",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "DP DARF DCTF WEB 13º",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "DP FGTS DIGITAL",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "DP Folha 13º - 1º Parcela",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        },
+        {
+          "obrigacao": "DP Folha 13º - 2º Parcela",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "FOLHA"
+        }
+      ],
+      "CONTABIL": [
+        {
+          "obrigacao": "RECIBO LCDPR",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "CONTÁBIL"
+        },
+        {
+          "obrigacao": "DECLARAÇÃO AMBIENTAL IBAMA -ADA",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "CONTÁBIL"
+        },
+        {
+          "obrigacao": "DECLARAÇÃO DE CERTIFICADO DE CADASTRO DE IMÓVEL RURAL - CCIR",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "CONTÁBIL"
+        },
+        {
+          "obrigacao": "IMPOSTO SOBRE A PROPRIEDADE TERRITORIAL RURAL - ITR",
+          "somente_matriz": false,
+          "inclui_filial": true,
+          "dept_original": "CONTÁBIL"
+        }
+      ]
+    },
+    "estadual_por_uf": {
+      "AC": [
+        "Sped ICMS - EFD ICMS-IPI - 15",
+        "GUIA DIFAL CONSUMO - 15",
+        "GUIA ICMS Normal - 20"
+      ],
+      "AL": [
+        "GUIA DIFAL CONSUMO - 09",
+        "GUIA ICMS Normal - 09",
+        "Sped ICMS - EFD ICMS-IPI - 25"
+      ],
+      "AM": [
+        "Sped ICMS - EFD ICMS-IPI - 12",
+        "GUIA ICMS Normal - 20"
+      ],
+      "AP": [
+        "GUIA DIFAL CONSUMO - 10",
+        "GUIA ICMS Normal - 10",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "BA": [
+        "GUIA DIFAL CONSUMO - 09",
+        "GUIA ICMS Normal - 09",
+        "Sped ICMS - EFD ICMS-IPI - 25"
+      ],
+      "CE": [
+        "GUIA DIFAL CONSUMO - 10",
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "GUIA ICMS Normal - 20"
+      ],
+      "DF": [
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "GUIA ICMS Normal - 20",
+        "GUIA DIFAL CONSUMO - 20"
+      ],
+      "ES": [
+        "GUIA ICMS Normal - 18",
+        "GUIA ICMS Normal - 18",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "GO": [
+        "Sped ICMS - EFD ICMS-IPI - 15",
+        "GUIA ICMS Normal - 20"
+      ],
+      "MA": [
+        "GUIA DIFAL CONSUMO - 20",
+        "GUIA ICMS Normal - 20",
+        "Sped ICMS - EFD ICMS-IPI - 25",
+        "DIEF -  20"
+      ],
+      "MG": [
+        "GUIA DIFAL CONSUMO - 08",
+        "GUIA ICMS Normal - 08",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "MS": [
+        "GUIA DIFAL CONSUMO - 15",
+        "GUIA ICMS Normal - 15",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "MT": [
+        "GUIA ICMS Normal - 06",
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "GUIA DIFAL CONSUMO - 20",
+        "FETHAB - 06"
+      ],
+      "PA": [
+        "GUIA DIFAL CONSUMO - 10",
+        "GUIA ICMS Normal - 10",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "PB": [
+        "GUIA ICMS Normal - 15",
+        "GUIA DIFAL CONSUMO - 15",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "PE": [
+        "GUIA ICMS Normal - 15",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "PI": [
+        "GUIA DIFAL CONSUMO - 15",
+        "GUIA ICMS Normal - 15",
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "DIEF - CRIAR"
+      ],
+      "PR": [
+        "GUIA DIFAL CONSUMO - 12",
+        "GUIA ICMS Normal - 12",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "RJ": [
+        "GUIA ICMS Normal - 10",
+        "GUIA DIFAL CONSUMO - 10",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "RN": [
+        "GUIA DIFAL CONSUMO - 15",
+        "GUIA ICMS Normal - 15",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "RO": [
+        "Sped ICMS - EFD ICMS-IPI - 14",
+        "GUIA DIFAL CONSUMO - 15",
+        "GUIA ICMS Normal - 20"
+      ],
+      "RR": [
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "GUIA DIFAL CONSUMO - 20",
+        "GUIA ICMS Normal - 20"
+      ],
+      "RS": [
+        "GUIA ICMS Normal - 12",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "SC": [
+        "GUIA DIFAL CONSUMO - 10",
+        "GUIA ICMS Normal - 10",
+        "Sped ICMS - EFD ICMS-IPI - 20"
+      ],
+      "SE": [
+        "GUIA DIFAL CONSUMO - 09",
+        "GUIA ICMS Normal - 09",
+        "Sped ICMS - EFD ICMS-IPI - 15"
+      ],
+      "SP": [
+        "Sped ICMS - EFD ICMS-IPI - 20",
+        "GUIA ICMS Normal - 20",
+        "GIA SP"
+      ],
+      "TO": [
+        "GUIA ICMS Normal - 09",
+        "GUIA DIFAL CONSUMO - 09",
+        "Sped ICMS - EFD ICMS-IPI - 15",
+        "DIF",
+        "FET - CRIAR"
+      ]
+    },
+    "municipal_por_municipio": {
+      "TERESINA/PI": [
+        "GUIA ISS PRÓPRIO - 08",
+        "GUIA ISS RETIDO - 08"
+      ],
+      "URUCUI/PI": [
+        "GUIA ISS PRÓPRIO - 08",
+        "GUIA ISS RETIDO - 08"
+      ]
+    },
+    "particularidades": [
+      {
+        "obrigatoriedade": "ANUAL",
+        "departamento": "CONTÁBIL",
+        "particularidade": "RECIBO IRPF"
+      },
+      {
+        "obrigatoriedade": "MENSAL",
+        "departamento": "FOLHA",
+        "particularidade": "FECHAMENTO DA FOLHA DE PAGAMENTO"
+      }
+    ]
+  }
+}
