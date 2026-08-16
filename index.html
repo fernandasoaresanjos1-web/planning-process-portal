@@ -771,7 +771,7 @@ function rEmpresas(){
   '<select id="euf" onchange="fE()" style="min-width:80px"><option value="">UF</option></select>'+
   '<select id="ereg" onchange="fE()" style="min-width:130px"><option value="">Regime</option></select>'+
   '</div>'+
-  '<div class="panel"><table><thead><tr><th>CNPJ</th><th>Empresa</th><th>Grupo</th><th>Regime</th><th>Cidade</th><th>UF</th><th>Status</th></tr></thead><tbody id="etb"><tr><td colspan="6" style="text-align:center;padding:24px;color:#475569">Carregando...</td></tr></tbody></table></div>';
+  '<div class="panel"><table><thead><tr><th>CNPJ</th><th>Empresa</th><th>Grupo</th><th>TAG</th><th>Regime</th><th>UF</th><th>Status</th></tr></thead><tbody id="etb"><tr><td colspan="7" style="text-align:center;padding:24px;color:#475569">Carregando...</td></tr></tbody></table></div>';
 
   // carrega do banco
   Promise.all([carregarEmpresas(), carregarTags()]).then(function(results){
@@ -800,7 +800,7 @@ function rEmpresas(){
 }
 
 function eRows(a){
-  if(!a||a.length===0)return'<tr><td colspan="6" style="text-align:center;padding:20px;color:#475569">Nenhuma empresa encontrada</td></tr>';
+  if(!a||a.length===0)return'<tr><td colspan="7" style="text-align:center;padding:20px;color:#475569">Nenhuma empresa encontrada</td></tr>';
   return a.map(function(e){
     var cnpj=e.cnpj||'';
     var fmt=cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5');
