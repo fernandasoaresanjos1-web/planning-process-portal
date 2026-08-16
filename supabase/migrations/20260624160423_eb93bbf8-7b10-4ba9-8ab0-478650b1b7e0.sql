@@ -1,0 +1,1 @@
+GRANT UPDATE, DELETE ON public.okr_estado TO anon, authenticated;
