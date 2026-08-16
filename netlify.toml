@@ -6,13 +6,16 @@
 [build.environment]
   NODE_VERSION = "20"
 
-# Cron diário às 06:00 (horário Netlify = UTC-0, Brasil = -3)
-[[plugins]]
-  package = "@netlify/plugin-functions-install-core"
-
 [functions."sync-acessorias"]
   schedule = "0 9 * * *"
 
+# Netlify Functions ficam em /.netlify/functions/* — não redirecionar
+[[redirects]]
+  from   = "/.netlify/functions/*"
+  to     = "/.netlify/functions/:splat"
+  status = 200
+
+# SPA fallback — tudo mais vai para index.html
 [[redirects]]
   from   = "/*"
   to     = "/index.html"
