@@ -1,0 +1,1 @@
+GRANT UPDATE, DELETE, INSERT, SELECT ON public.okr_estado TO PUBLIC;
