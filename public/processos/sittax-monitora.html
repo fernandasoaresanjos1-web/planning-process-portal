@@ -1,0 +1,885 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Agilizza — Cadastral</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --green:#0AE18C;--green-dark:#00BF63;--green-lt:#EAFBF4;
+  --black:#0C0C0C;--charcoal:#1A1A1A;--ink:#2C2C2C;
+  --gray-70:#4A4A4A;--gray-50:#646464;--gray-30:#CDCDCD;
+  --gray-10:#E8E8E8;--gray-05:#F2F2F2;--off-white:#FAFAFA;
+  --white:#FFFFFF;--border:#E2E2E2;
+  --red:#DC2626;--red-lt:#FEE2E2;
+  --amber:#FA6914;--amber-lt:#FFF3E0;
+  --blue:#14C8FA;--blue-lt:#DDF6FF;
+  --purple:#7C3AED;--purple-lt:#F5F3FF;
+  --radius:10px;--radius-lg:16px;
+  --font:'Poppins',sans-serif;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--off-white);color:var(--ink);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased}
+.topbar{background:var(--black);height:54px;display:flex;align-items:center;padding:0 22px;gap:10px;position:sticky;top:0;z-index:100}
+.logo{width:30px;height:30px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--black)}
+.bc{display:flex;align-items:center;gap:5px;color:rgba(255,255,255,.4);font-size:11px;font-weight:500}
+.bc strong{color:#fff}.bc span{color:rgba(255,255,255,.2)}
+.tabs-bar{background:var(--white);border-bottom:2px solid var(--border);display:flex;padding:0 22px;overflow-x:auto}
+.tb{font-family:var(--font);font-size:12px;font-weight:600;padding:13px 16px;border:none;background:none;color:var(--gray-50);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:6px;transition:all .18s;white-space:nowrap;flex-shrink:0}
+.tb:hover{color:var(--ink)}.tb.act{color:var(--green-dark);border-bottom-color:var(--green)}
+.tb:disabled{opacity:.4;cursor:default}
+.tbadge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:12px;background:var(--gray-10);color:var(--gray-50)}
+.tb.act .tbadge{background:var(--green-lt);color:var(--green-dark)}
+.tbr{background:var(--red-lt);color:var(--red)}
+.tba{background:var(--amber-lt);color:var(--amber)}
+.main{max-width:1280px;margin:0 auto;padding:22px 22px 80px}
+.tc{display:none}.tc.act{display:block}
+.ey{font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.pt{font-size:19px;font-weight:800;color:var(--charcoal);margin-bottom:3px}
+.ps{font-size:12px;color:var(--gray-50);margin-bottom:16px}
+/* UPLOAD */
+.up-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.up-card{background:var(--white);border:2px dashed var(--border);border-radius:var(--radius-lg);padding:28px 24px;text-align:center;cursor:pointer;transition:all .18s}
+.up-card:hover,.up-card.drag{border-color:var(--green);background:var(--green-lt)}
+.up-card.done{border-style:solid;border-color:var(--green);background:var(--green-lt)}
+.up-card input{display:none}
+.up-card strong{display:block;font-size:13px;color:var(--charcoal);margin:10px 0 3px}
+.up-card span{font-size:11px;color:var(--gray-50)}
+.up-card.done strong{color:var(--green-dark)}
+.up-status{font-size:11px;font-weight:600;color:var(--green-dark);margin-top:8px;min-height:18px}
+.up-proc{text-align:center;margin-top:16px}
+.btn-proc{font-family:var(--font);font-size:13px;font-weight:700;padding:12px 40px;border-radius:var(--radius);border:none;background:var(--green);color:var(--black);cursor:pointer}
+.btn-proc:disabled{opacity:.4;cursor:default}
+/* STATS */
+.stats-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.sc{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;min-width:130px;flex:1}
+.sc-top{padding:10px 13px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sc-ico{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sc-t{font-size:11px;font-weight:700;color:var(--charcoal)}.sc-s{font-size:10px;color:var(--gray-50)}
+.sc-n{font-size:20px;font-weight:800;padding:9px 13px}
+.sc.ok .sc-n{color:var(--green-dark)}.sc.warn .sc-n{color:var(--red)}
+.sc.amb .sc-n{color:var(--amber)}.sc.all .sc-n{color:var(--charcoal)}.sc.info .sc-n{color:#0284C7}
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:180px;max-width:380px}
+.sw svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
+.si{width:100%;font-family:var(--font);font-size:12px;padding:8px 10px 8px 32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none}
+.si:focus{border-color:var(--green)}
+.si::placeholder{color:var(--gray-30)}
+.sel{font-family:var(--font);font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none;cursor:pointer}
+.tsp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:5px;font-family:var(--font);font-size:11px;font-weight:600;padding:7px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--white);color:var(--gray-70);cursor:pointer}
+.btn:hover{border-color:var(--gray-30);color:var(--ink)}
+/* TABLE */
+.tw{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.th-row{display:grid;padding:0 14px;background:var(--gray-05);border-bottom:1px solid var(--border)}
+.th{padding:9px 7px;font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.5px}
+.tb-body{display:flex;flex-direction:column}
+.tr{display:grid;padding:0 14px;border-bottom:1px solid var(--border);align-items:center}
+.tr:last-child{border-bottom:none}.tr:hover{background:#FAFFFD}
+.td{padding:8px 7px;font-size:11px;color:var(--ink)}
+.cnpj{font-family:monospace;font-size:10.5px;font-weight:600;color:var(--charcoal)}
+.razao{font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:10px;color:var(--gray-50);margin-top:1px}
+.chip{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block}
+.ch-ok{background:var(--green-lt);color:var(--green-dark)}
+.ch-r{background:var(--red-lt);color:var(--red)}
+.ch-a{background:var(--amber-lt);color:var(--amber)}
+.ch-b{background:var(--blue-lt);color:#0284C7}
+.ch-gr{background:var(--gray-10);color:var(--gray-70)}
+.ch-p{background:var(--purple-lt);color:var(--purple)}
+/* CERT EXPAND */
+.cert-wrap{border-bottom:1px solid var(--border)}
+.cert-wrap:last-child{border-bottom:none}
+.cert-main{display:grid;padding:0 14px;align-items:center;cursor:pointer;transition:background .1s}
+.cert-main:hover{background:#FAFFFD}
+.cert-detail{display:none;background:var(--gray-05);border-top:1px solid var(--border);padding:8px 14px 12px}
+.cert-detail.open{display:block}
+.cert-detail table{width:100%;border-collapse:collapse;font-size:11px}
+.cert-detail th{font-size:9px;font-weight:700;color:var(--gray-50);text-transform:uppercase;padding:5px 8px;border-bottom:1px solid var(--border);text-align:left;background:var(--white)}
+.cert-detail td{padding:6px 8px;border-bottom:1px solid var(--gray-10)}
+.cert-detail tr:last-child td{border-bottom:none}
+.cert-detail tr:hover td{background:#f0fff8}
+.arr{font-size:10px;color:var(--gray-30);transition:transform .2s;display:inline-block}
+.cert-main.open .arr{transform:rotate(180deg)}
+/* PAGER */
+.pager{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:var(--gray-05)}
+.pg-info{font-size:11px;color:var(--gray-50)}
+.pg-btns{display:flex;gap:3px}
+.pg-btn{font-family:var(--font);font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:var(--white);color:var(--gray-70);cursor:pointer}
+.pg-btn:hover{border-color:var(--green);color:var(--green-dark)}
+.pg-btn.cur{background:var(--charcoal);color:var(--white);border-color:var(--charcoal)}
+.pg-btn:disabled{opacity:.35;cursor:default;pointer-events:none}
+.empty{display:flex;flex-direction:column;align-items:center;padding:44px;gap:9px;color:var(--gray-50)}
+.empty strong{font-size:13px;color:var(--charcoal)}
+.alert-box{border:1px solid;border-radius:var(--radius);padding:10px 14px;font-size:12px;margin-bottom:14px;display:flex;gap:9px;align-items:flex-start}
+.al-info{background:var(--blue-lt);border-color:#bae6fd;color:#0369a1}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--charcoal);color:var(--white);padding:11px 16px;border-radius:var(--radius);font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s}
+.toast.show{transform:translateY(0);opacity:1}
+.toast svg{width:13px;height:13px;color:var(--green)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">A</div>
+  <div class="bc"><span>Portal</span><span>&#8250;</span><span>Agilizza</span><span>&#8250;</span><strong>Cadastral</strong></div>
+</div>
+<div class="tabs-bar">
+  <button class="tb act" onclick="setTab('upload',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Carregar Planilhas
+  </button>
+  <button class="tb" id="tb-cruzamento" onclick="setTab('cruzamento',this)" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+    Cruzamento S3D <span class="tbadge tbr" id="bCruz">&#8212;</span>
+  </button>
+  <button class="tb" id="tb-cert" onclick="setTab('cert',this)" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="8" r="6"/><path d="M15.477 12.89L17 22l-5-3-5 3 1.523-9.11"/></svg>
+    Certificados Federais <span class="tbadge tbr" id="bCert">&#8212;</span>
+  </button>
+  <button class="tb" id="tb-cpf" onclick="setTab('cpf',this)" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Pessoas F&#237;sicas (CPF) <span class="tbadge" id="bCPF" style="background:var(--gray-10);color:var(--gray-50)">&#8212;</span>
+  </button>
+  <button class="tb" id="tb-extra" onclick="setTab('extra',this)" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M16 3h5v5M4 20L21 3M21 16v5h-5M15 15l6 6M4 4l5 5"/></svg>
+    No Agilizza, n&#227;o no Acess&#243;rias <span class="tbadge tba" id="bExtra">&#8212;</span>
+  </button>
+  <button class="tb" id="tb-cc" onclick="setTab('cc',this)" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    Constru&#231;&#227;o Civil <span class="tbadge" id="bCCAg" style="background:var(--purple-lt);color:var(--purple)">&#8212;</span>
+  </button>
+</div>
+
+<div class="main">
+
+<!-- ABA UPLOAD -->
+<div class="tc act" id="tab-upload">
+  <div class="ey">Agilizza &middot; Cadastral</div>
+  <div class="pt">Carregar Planilhas</div>
+  <div class="ps">Carregue as duas planilhas para cruzar os dados do Acess&#243;rias (S3D) com o Agilizza.</div>
+  <div class="up-grid">
+    <label class="up-card" id="cardS3D" ondragover="onDrag(event,'cardS3D',true)" ondragleave="onDrag(event,'cardS3D',false)" ondrop="onDrop(event,'s3d')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40" opacity=".3"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+      <strong>1. Planilha S3D (Acess&#243;rias)</strong>
+      <span>S3D_empresas_....xlsx</span>
+      <div class="up-status" id="stS3D"></div>
+      <input type="file" accept=".xlsx,.xls" onchange="handleS3D(this.files[0])"/>
+    </label>
+    <label class="up-card" id="cardAg" ondragover="onDrag(event,'cardAg',true)" ondragleave="onDrag(event,'cardAg',false)" ondrop="onDrop(event,'ag')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="40" height="40" opacity=".3"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+      <strong>2. Planilha Agilizza</strong>
+      <span>empresas_2026-....xlsx</span>
+      <div class="up-status" id="stAg"></div>
+      <input type="file" accept=".xlsx,.xls" onchange="handleAg(this.files[0])"/>
+    </label>
+  </div>
+  <div class="up-proc">
+    <button class="btn-proc" id="btnProc" disabled onclick="processar()">Processar e cruzar dados</button>
+  </div>
+</div>
+
+<!-- ABA CRUZAMENTO -->
+<div class="tc" id="tab-cruzamento">
+  <div class="ey">Agilizza &middot; Cruzamento</div>
+  <div class="pt">Cruzamento S3D × Agilizza</div>
+  <div class="ps">Empresas cadastradas no Acess&#243;rias que n&#227;o est&#227;o no Agilizza</div>
+  <div class="stats-row" id="statsCruz"></div>
+  <div class="alert-box al-info">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Regra federal:</strong> Empresas com TAG Cont&#225;bil ou DP precisam de acompanhamento federal. Empresas somente com TAG Fiscal n&#227;o fecham nada do federal — ser&#227;o sinalizadas como <em>sem acompanhamento federal</em>.</span>
+  </div>
+  <div class="toolbar">
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcCruz" placeholder="Buscar CNPJ ou raz&#227;o..." oninput="renderCruz()"/></div>
+    <select class="sel" id="filtCruz" onchange="renderCruz()">
+      <option value="acomp">Com acompanhamento federal (DP/Cont&#225;bil)</option>
+      <option value="sem_acomp">Sem acompanhamento federal (s&#243; Fiscal)</option>
+      <option value="sem_tag">Sem TAG</option>
+      <option value="all">Todos</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportar('cruzamento')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:150px 1fr 90px 1fr 140px">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o Social</div>
+      <div class="th">Regime</div><div class="th">Equipes (S3D)</div>
+      <div class="th">Status Federal</div>
+    </div>
+    <div class="tb-body" id="bodyCruz"></div>
+    <div class="pager" id="pagerCruz"></div>
+  </div>
+</div>
+
+<!-- ABA CERTIFICADOS -->
+<div class="tc" id="tab-cert">
+  <div class="ey">Agilizza &middot; Certificados</div>
+  <div class="pt">Certificados Digitais Federais</div>
+  <div class="ps">1 linha por certificado — clique para ver as empresas vinculadas</div>
+  <div class="stats-row" id="statsCert"></div>
+  <div class="toolbar">
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcCert" placeholder="Buscar certificado..." oninput="renderCert()"/></div>
+    <select class="sel" id="filtCert" onchange="renderCert()">
+      <option value="prob">Vencidos e a vencer em 90 dias</option>
+      <option value="vencido">Vencidos</option>
+      <option value="d30">A vencer em 30 dias</option>
+      <option value="d90">A vencer em 90 dias</option>
+      <option value="ok">OK (&gt; 90 dias)</option>
+      <option value="sem">Sem certificado / Outros</option>
+      <option value="all">Todos</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportar('cert')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:1fr 80px 100px 110px 110px 20px">
+      <div class="th">Certificado / Responsável</div>
+      <div class="th" style="text-align:center">Empresas</div>
+      <div class="th">Tipo</div>
+      <div class="th">Vencimento</div>
+      <div class="th">Situa&#231;&#227;o</div>
+      <div class="th"></div>
+    </div>
+    <div class="tb-body" id="bodyCert"></div>
+    <div class="pager" id="pagerCert"></div>
+  </div>
+</div>
+
+
+<!-- ABA CPF -->
+<div class="tc" id="tab-cpf">
+  <div class="ey">Agilizza &middot; Pessoas F&#237;sicas</div>
+  <div class="pt">CPFs Cadastrados (sem consulta federal)</div>
+  <div class="ps">Registros de pessoa f&#237;sica (Produtor Rural, Dom&#233;stica/CEI) &#8212; n&#227;o h&#225; consulta/acompanhamento federal para esses casos, listados aqui apenas para refer&#234;ncia</div>
+  <div class="stats-row" id="statsCPF"></div>
+  <div class="toolbar">
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcCPF" placeholder="Buscar CPF ou raz&#227;o..." oninput="renderCPF()"/></div>
+    <select class="sel" id="filtCPF" onchange="renderCPF()">
+      <option value="">Todos</option>
+      <option value="no_ag">No Agilizza</option>
+      <option value="sem_ag">Sem cadastro no Agilizza</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportar('cpf')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:150px 1fr 130px 1fr 140px">
+      <div class="th">CPF</div><div class="th">Raz&#227;o Social</div>
+      <div class="th">Regime</div><div class="th">Equipes (S3D)</div>
+      <div class="th">No Agilizza?</div>
+    </div>
+    <div class="tb-body" id="bodyCPF"></div>
+    <div class="pager" id="pagerCPF"></div>
+  </div>
+</div>
+
+<!-- ABA EXTRA (Agilizza não no S3D) -->
+<div class="tc" id="tab-extra">
+  <div class="ey">Agilizza &middot; Cruzamento</div>
+  <div class="pt">No Agilizza, n&#227;o no Acess&#243;rias</div>
+  <div class="ps">Empresas cadastradas no Agilizza que n&#227;o constam no S3D &#8212; podem ser clientes que sa&#237;ram, CNPJs encerrados ou cadastro desatualizado</div>
+  <div class="stats-row" id="statsExtra"></div>
+  <div class="alert-box al-info">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15" style="flex-shrink:0;margin-top:1px"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Aten&#231;&#227;o:</strong> empresas aqui podem indicar cancelamento n&#227;o refletido no Agilizza (custo de certificado/procura&#231;&#227;o sendo mantido sem necessidade) ou diverg&#234;ncia de cadastro entre os sistemas.</span>
+  </div>
+  <div class="toolbar">
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcExtra" placeholder="Buscar CNPJ ou raz&#227;o..." oninput="renderExtra()"/></div>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportar('extra')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:150px 1fr 130px 130px">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o Social</div>
+      <div class="th">Equipe (Agilizza)</div><div class="th">Certificado</div>
+    </div>
+    <div class="tb-body" id="bodyExtra"></div>
+    <div class="pager" id="pagerExtra"></div>
+  </div>
+</div>
+
+<!-- ABA CC (Construção Civil) -->
+<div class="tc" id="tab-cc">
+  <div class="ey">Agilizza &middot; Constru&#231;&#227;o Civil</div>
+  <div class="pt">Acompanhamento &#8212; Constru&#231;&#227;o Civil</div>
+  <div class="ps">TAGs: DP 4, CC 1, CC 2, CC 4, Dedicada Canopus &#8212; controle separado das demais equipes</div>
+  <div class="stats-row" id="statsCCAg"></div>
+  <div class="toolbar">
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcCCAg" placeholder="Buscar CNPJ/CPF ou raz&#227;o..." oninput="renderCCAg()"/></div>
+    <select class="sel" id="filtCCAg" onchange="renderCCAg()">
+      <option value="faltam">Faltam cadastrar no Agilizza</option>
+      <option value="cadastrados">J&#225; cadastrados no Agilizza</option>
+      <option value="cpf">Pessoas f&#237;sicas (CPF) CC</option>
+      <option value="all">Todos</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportar('cc')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:150px 1fr 1fr 140px">
+      <div class="th">CNPJ/CPF</div><div class="th">Raz&#227;o Social</div>
+      <div class="th">Equipes (S3D)</div><div class="th">Status Agilizza</div>
+    </div>
+    <div class="tb-body" id="bodyCCAg"></div>
+    <div class="pager" id="pagerCCAg"></div>
+  </div>
+</div>
+</div><!-- /main -->
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">OK</span>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+var S3D={}, AG={}, CPFS={}, HOJE=new Date();
+HOJE.setHours(0,0,0,0);
+var PER=50, pages={cruzamento:1,cert:1,cpf:1,extra:1,cc:1};
+var filtCruz=[], filtCert=[], filtCPF=[], filtExtra=[], filtCCAg=[], EXTRA=[], CCAG=[], CERTS=[];
+var CC_TAGS={"Equipe DP 4":1,"Equipe CC 1":1,"Equipe CC 2":1,"Equipe CC 4":1,"Equipe Dedicada Canopus":1};
+
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+
+function parseDate(v){
+  if(!v)return null;
+  if(v instanceof Date)return v;
+  var s=String(v).trim();
+  var m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);
+  if(m)return new Date(+m[3],+m[2]-1,+m[1]);
+  var m2=s.match(/^(\d{4})-(\d{2})-(\d{2})/);
+  if(m2)return new Date(+m2[1],+m2[2]-1,+m2[3]);
+  return null;
+}
+
+function normCNPJ(s){return String(s||"").replace(/\D/g,"").padStart(14,"0");}
+function isCNPJValido(cnpj){
+  if(!cnpj||cnpj.length!==14)return false;
+  if(/^(\d)\1{13}$/.test(cnpj))return false; // todos dígitos iguais (00000000000000, 11111111111111, etc)
+  return true;
+}
+function isCPF(raw){
+  var digits=String(raw||"").replace(/\D/g,"");
+  return digits.length===11;
+}
+function fmtDate(d){if(!d)return"—";return String(d.getDate()).padStart(2,"0")+"/"+String(d.getMonth()+1).padStart(2,"0")+"/"+d.getFullYear();}
+function diffDias(d){if(!d)return null;return Math.round((d-HOJE)/(864e5));}
+
+function statusCert(dias){
+  if(dias===null)return"sem";
+  if(dias<0)return"vencido";
+  if(dias<=30)return"d30";
+  if(dias<=90)return"d90";
+  return"ok";
+}
+
+function diasChip(dias){
+  if(dias===null)return'<span class="chip ch-gr">Sem data</span>';
+  if(dias<0)return'<span class="chip ch-r">Vencido '+Math.abs(dias)+'d</span>';
+  if(dias<=30)return'<span class="chip ch-r">'+dias+'d</span>';
+  if(dias<=90)return'<span class="chip ch-a">'+dias+'d</span>';
+  return'<span class="chip ch-ok">'+dias+'d</span>';
+}
+
+// UPLOAD
+function onDrag(e,id,on){e.preventDefault();document.getElementById(id).classList.toggle("drag",on);}
+function onDrop(e,tipo){e.preventDefault();var id=tipo==="s3d"?"cardS3D":"cardAg";onDrag(e,id,false);var fn=tipo==="s3d"?handleS3D:handleAg;fn(e.dataTransfer.files[0]);}
+
+function handleS3D(file){
+  if(!file)return;
+  showToast("Lendo S3D...");
+  var r=new FileReader();
+  r.onload=function(ev){
+    try{
+      var wb=XLSX.read(ev.target.result,{type:"binary"});
+      var raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:""});
+      var hdr=raw[0].map(function(h){return String(h||"").trim();});
+      var ci=function(n){return hdr.indexOf(n);};
+      var cCNPJ=ci("CNPJ"),cRazao=ci("Razão social"),cRegime=ci("Regime"),cTags=ci("Tags"),cGrupo=ci("Grupo de Empresas");
+      if(cGrupo<0)cGrupo=ci("Grupo");
+      if(cGrupo<0){
+        for(var gi=0;gi<hdr.length;gi++){
+          if(hdr[gi].toLowerCase().indexOf("grupo")>-1){cGrupo=gi;break;}
+        }
+      }
+      console.log("[DEBUG] Coluna Grupo encontrada no índice:", cGrupo, cGrupo>=0?("'"+hdr[cGrupo]+"'"):"NÃO ENCONTRADA");
+      S3D={};CPFS={};
+      for(var i=1;i<raw.length;i++){
+        var row=raw[i];
+        var rawDoc=row[cCNPJ];
+        var tags_raw=String(row[cTags]||"").trim();
+        var tags=tags_raw?tags_raw.split(",").map(function(t){return t.trim();}).filter(function(t){return t&&t!=="CX"&&t.indexOf("Teste")<0;}):[];
+
+        if(isCPF(rawDoc)){
+          // Pessoa física: separa em CPFS, não entra no cálculo federal
+          var cpfNorm=String(rawDoc||"").replace(/\D/g,"");
+          var cpfIsCC=tags.some(function(t){return CC_TAGS[t];});
+          CPFS[cpfNorm]={
+            cpf:String(rawDoc||"").trim(),
+            razao:String(row[cRazao]||"").trim().substring(0,70),
+            regime:String(row[cRegime]||"").trim(),
+            grupo:cGrupo>=0?String(row[cGrupo]||"").trim():"",
+            tags:tags,is_cc:cpfIsCC,
+          };
+          continue;
+        }
+
+        var cnpj=normCNPJ(rawDoc);
+        if(!isCNPJValido(cnpj))continue;
+        var is_cc=tags.some(function(t){return CC_TAGS[t];});
+        var has_dp=tags.some(function(t){return t.indexOf("DP")>-1&&!CC_TAGS[t];});
+        var has_cont=tags.some(function(t){return t.indexOf("Cont")>-1;});
+        var has_fisc=tags.some(function(t){return t.indexOf("Fiscal")>-1;});
+        var fed_status=is_cc?"cc":((has_dp||has_cont)?"acomp":(has_fisc?"sem_acomp":"sem_tag"));
+        S3D[cnpj]={
+          cnpj:String(rawDoc||"").trim(),
+          razao:String(row[cRazao]||"").trim().substring(0,70),
+          regime:String(row[cRegime]||"").trim(),
+          tags:tags,is_cc:is_cc,has_dp:has_dp,has_cont:has_cont,has_fisc:has_fisc,
+          fed_status:fed_status,
+          grupo:cGrupo>=0?String(row[cGrupo]||"").trim():"",
+        };
+      }
+      document.getElementById("cardS3D").classList.add("done");
+      document.getElementById("stS3D").textContent="✓ "+Object.keys(S3D).length.toLocaleString("pt-BR")+" empresas ("+Object.keys(CPFS).length+" CPF)"+(cGrupo<0?" — ⚠ coluna Grupo não encontrada":"");
+      checkReady();
+      showToast("S3D carregado!");
+    }catch(ex){showToast("Erro S3D: "+ex.message);console.error(ex);}
+  };
+  r.readAsBinaryString(file);
+}
+
+function handleAg(file){
+  if(!file)return;
+  showToast("Lendo Agilizza...");
+  var r=new FileReader();
+  r.onload=function(ev){
+    try{
+      var wb=XLSX.read(ev.target.result,{type:"binary",cellDates:true});
+      var raw=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:"",raw:false});
+      // Acha header (linha com "Razão Social")
+      var hdrIdx=-1;
+      for(var i=0;i<raw.length;i++){if(raw[i][0]==="Razão Social"){hdrIdx=i;break;}}
+      if(hdrIdx<0)throw new Error("Header não encontrado");
+      var hdr=raw[hdrIdx];
+      var ci=function(n){for(var j=0;j<hdr.length;j++)if(hdr[j]===n)return j;return -1;};
+      var cCNPJ=ci("CNPJ"),cRazao=ci("Razão Social");
+      var cProc=ci("Utilizar como procuração?"),cCert=ci("Certificado Digital");
+      var cVal=ci("Validade Certificado Digital"),cEquipe=ci("Grupos");
+      AG={};
+      for(var i=hdrIdx+1;i<raw.length;i++){
+        var row=raw[i];
+        var cnpj=normCNPJ(row[cCNPJ]);
+        if(!isCNPJValido(cnpj))continue;
+        var cert_raw=String(row[cCert]||"").trim();
+        var val=parseDate(row[cVal]);
+        var dias=val?diffDias(val):null;
+        AG[cnpj]={
+          cnpj:String(row[cCNPJ]||"").trim(),
+          razao:String(row[cRazao]||"").trim().substring(0,70),
+          equipe:String(row[cEquipe]||"").trim(),
+          usa_proc:String(row[cProc]||"").trim()==="Sim",
+          cert_raw:cert_raw,
+          cert_nome:cert_raw?cert_raw.split(":")[0].trim():"",
+          val_fed:val,dias_fed:dias,
+          status_cert:cert_raw?statusCert(dias):"sem",
+        };
+      }
+      document.getElementById("cardAg").classList.add("done");
+      document.getElementById("stAg").textContent="✓ "+Object.keys(AG).length.toLocaleString("pt-BR")+" empresas";
+      checkReady();
+      showToast("Agilizza carregado!");
+    }catch(ex){showToast("Erro Agilizza: "+ex.message);console.error(ex);}
+  };
+  r.readAsBinaryString(file);
+}
+
+function checkReady(){
+  var ok=Object.keys(S3D).length>0&&Object.keys(AG).length>0;
+  document.getElementById("btnProc").disabled=!ok;
+}
+
+function buildExtra(){
+  EXTRA=[];
+  var s3d_cnpjs=new Set(Object.keys(S3D));
+  Object.keys(AG).forEach(function(cnpj){
+    if(!s3d_cnpjs.has(cnpj)){
+      EXTRA.push(AG[cnpj]);
+    }
+  });
+}
+
+function buildCCAg(){
+  CCAG=[];
+  var ag_cnpjs=new Set(Object.keys(AG));
+  // CNPJs CC do S3D
+  Object.keys(S3D).forEach(function(cnpj){
+    var e=S3D[cnpj];
+    if(!e.is_cc)return;
+    CCAG.push({
+      doc:e.cnpj,docNorm:cnpj,razao:e.razao,tags:e.tags,
+      no_ag:ag_cnpjs.has(cnpj),tipo:"cnpj"
+    });
+  });
+  // CPFs CC do S3D
+  Object.keys(CPFS).forEach(function(cpf){
+    var e=CPFS[cpf];
+    if(!e.is_cc)return;
+    CCAG.push({
+      doc:e.cpf,docNorm:cpf,razao:e.razao,tags:e.tags,
+      no_ag:ag_cnpjs.has(cpf),tipo:"cpf"
+    });
+  });
+  // Ordena: faltam cadastrar primeiro
+  CCAG.sort(function(a,b){return (a.no_ag?1:0)-(b.no_ag?1:0);});
+}
+
+function processar(){
+  buildCruzamento();
+  buildCerts();
+  buildExtra();
+  buildCCAg();
+  renderCPF();
+  renderExtra();
+  renderCCAg();
+  ["cruzamento","cert","cpf","extra","cc"].forEach(function(id){document.getElementById("tb-"+id).disabled=false;});
+  setTab("cruzamento",document.getElementById("tb-cruzamento"));
+  showToast("Cruzamento concluído!");
+}
+
+// ── CRUZAMENTO ──
+var CRUZ=[];
+function buildCruzamento(){
+  CRUZ=[];
+  var ag_cnpjs=new Set(Object.keys(AG));
+  Object.keys(S3D).forEach(function(cnpj){
+    var e=S3D[cnpj];
+    if(e.fed_status==="cc")return; // Construção Civil desconsiderada da análise federal
+    if(!ag_cnpjs.has(cnpj)){
+      CRUZ.push(e);
+    }
+  });
+  // Ordena: acomp primeiro, depois sem_acomp, sem_tag
+  var ordem={acomp:0,sem_acomp:1,sem_tag:2};
+  CRUZ.sort(function(a,b){return (ordem[a.fed_status]||9)-(ordem[b.fed_status]||9);});
+}
+
+function renderCruz(){
+  pages.cruzamento=1;
+  var q=(document.getElementById("srcCruz").value||"").toLowerCase();
+  var modo=document.getElementById("filtCruz").value;
+
+  var acomp=CRUZ.filter(function(e){return e.fed_status==="acomp";});
+  var sem_acomp=CRUZ.filter(function(e){return e.fed_status==="sem_acomp";});
+  var sem_tag=CRUZ.filter(function(e){return e.fed_status==="sem_tag";});
+
+  document.getElementById("bCruz").textContent=acomp.length;
+  document.getElementById("statsCruz").innerHTML=
+    sc("warn","Pendentes no Agilizza","DP/Cont&#225;bil sem cadastro",acomp.length)+
+    sc("info","Sem acomp. federal","S&#243; Fiscal",sem_acomp.length)+
+    sc("all","Sem TAG","",sem_tag.length)+
+    sc("all","Total faltando","No S3D, n&#227;o no Agilizza (excl. CC e CPF)",CRUZ.length);
+
+  var pool=modo==="acomp"?acomp:modo==="sem_acomp"?sem_acomp:modo==="sem_tag"?sem_tag:CRUZ;
+  if(q)pool=pool.filter(function(e){return e.cnpj.toLowerCase().indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1;});
+  filtCruz=pool;
+  draw("bodyCruz","pagerCruz",filtCruz,rowCruz,"cruzamento");
+}
+
+function renderCPF(){
+  pages.cpf=1;
+  var q=(document.getElementById("srcCPF").value||"").toLowerCase();
+  var modo=document.getElementById("filtCPF").value;
+  var ag_cnpjs=new Set(Object.keys(AG));
+
+  var lista=Object.keys(CPFS).filter(function(cpf){return !CPFS[cpf].is_cc;}).map(function(cpf){
+    var e=CPFS[cpf];
+    return Object.assign({},e,{no_ag:ag_cnpjs.has(cpf)});
+  });
+
+  var noAg=lista.filter(function(e){return e.no_ag;});
+  var semAg=lista.filter(function(e){return !e.no_ag;});
+
+  document.getElementById("bCPF").textContent=lista.length;
+  document.getElementById("statsCPF").innerHTML=
+    sc("all","Total de CPFs","Pessoa f&#237;sica no S3D",lista.length)+
+    sc("info","No Agilizza",lista.length?Math.round(noAg.length/lista.length*100)+"%":"0%",noAg.length)+
+    sc("all","Sem cadastro no Agilizza","",semAg.length);
+
+  var pool=modo==="no_ag"?noAg:modo==="sem_ag"?semAg:lista;
+  if(q)pool=pool.filter(function(e){return e.cpf.toLowerCase().indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1;});
+  filtCPF=pool;
+  draw("bodyCPF","pagerCPF",filtCPF,rowCPF,"cpf");
+}
+
+function rowCPF(e){
+  var ag=e.no_ag?'<span class="chip ch-ok">&#10003; Cadastrado</span>':'<span class="chip ch-gr">N&#227;o cadastrado</span>';
+  var tags=e.tags.length?e.tags.map(function(t){return'<span class="chip ch-b" style="font-size:9px;margin:1px">'+esc(t.replace("Equipe ",""))+'</span>';}).join(" "):'<span style="color:var(--gray-30)">—</span>';
+  return'<div class="tr" style="grid-template-columns:150px 1fr 130px 1fr 140px">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cpf)+'</span>'+(e.grupo?'<div class="sub">'+esc(e.grupo)+'</div>':'')+'</div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div></div>'
+    +'<div class="td"><span style="font-size:10px;color:var(--gray-70)">'+esc((e.regime||"—").substring(0,22))+'</span></div>'
+    +'<div class="td">'+tags+'</div>'
+    +'<div class="td">'+ag+'</div>'
+    +'</div>';
+}
+
+function renderExtra(){
+  pages.extra=1;
+  var q=(document.getElementById("srcExtra").value||"").toLowerCase();
+  var pool=EXTRA;
+  if(q)pool=pool.filter(function(e){return e.cnpj.toLowerCase().indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1;});
+  filtExtra=pool;
+
+  var comCert=EXTRA.filter(function(e){return e.cert_raw;}).length;
+  document.getElementById("bExtra").textContent=EXTRA.length;
+  document.getElementById("statsExtra").innerHTML=
+    sc("amb","Total","No Agilizza, n&#227;o no S3D",EXTRA.length)+
+    sc("warn","Com certificado/procura&#231;&#227;o","Custo potencialmente desnecess&#225;rio",comCert)+
+    sc("all","Sem certificado","",EXTRA.length-comCert);
+
+  draw("bodyExtra","pagerExtra",filtExtra,rowExtra,"extra");
+}
+
+function rowExtra(e){
+  var cert=e.cert_raw?'<span class="chip ch-p" style="font-size:9px">'+esc(e.cert_nome.substring(0,20))+'</span>':'<span style="color:var(--gray-30);font-size:10px">&#8212;</span>';
+  return'<div class="tr" style="grid-template-columns:150px 1fr 130px 130px">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div></div>'
+    +'<div class="td"><span class="chip ch-gr" style="font-size:9px">'+esc(e.equipe||"&#8212;")+'</span></div>'
+    +'<div class="td">'+cert+'</div>'
+    +'</div>';
+}
+
+function renderCCAg(){
+  pages.cc=1;
+  var q=(document.getElementById("srcCCAg").value||"").toLowerCase();
+  var modo=document.getElementById("filtCCAg").value;
+
+  var faltam=CCAG.filter(function(e){return !e.no_ag;});
+  var cadastrados=CCAG.filter(function(e){return e.no_ag;});
+  var cpfCC=CCAG.filter(function(e){return e.tipo==="cpf";});
+
+  document.getElementById("bCCAg").textContent=faltam.length;
+  document.getElementById("statsCCAg").innerHTML=
+    sc("all","Total CC","CNPJ + CPF",CCAG.length)+
+    sc("warn","Faltam no Agilizza","",faltam.length)+
+    sc("ok","J&#225; cadastrados","",cadastrados.length)+
+    sc("info","Pessoas f&#237;sicas (CPF)","",cpfCC.length);
+
+  var pool=modo==="faltam"?faltam:modo==="cadastrados"?cadastrados:modo==="cpf"?cpfCC:CCAG;
+  if(q)pool=pool.filter(function(e){return e.doc.toLowerCase().indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1;});
+  filtCCAg=pool;
+  draw("bodyCCAg","pagerCCAg",filtCCAg,rowCCAg,"cc");
+}
+
+function rowCCAg(e){
+  var st=e.no_ag?'<span class="chip ch-ok">&#10003; No Agilizza</span>':'<span class="chip ch-r">&#9888; Falta cadastrar</span>';
+  var tipo=e.tipo==="cpf"?'<span class="chip ch-gr" style="font-size:9px;margin-right:3px">CPF</span>':'';
+  var tags=e.tags.length?e.tags.map(function(t){return'<span class="chip ch-p" style="font-size:9px;margin:1px">'+esc(t.replace("Equipe ",""))+'</span>';}).join(" "):'<span style="color:var(--gray-30)">—</span>';
+  return'<div class="tr" style="grid-template-columns:150px 1fr 1fr 140px">'
+    +'<div class="td">'+tipo+'<span class="cnpj">'+esc(e.doc)+'</span></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div></div>'
+    +'<div class="td">'+tags+'</div>'
+    +'<div class="td">'+st+'</div>'
+    +'</div>';
+}
+
+function rowCruz(e){
+  var st=e.fed_status==="acomp"?'<span class="chip ch-r">&#9888; Incluir no Agilizza</span>'
+    :e.fed_status==="sem_acomp"?'<span class="chip ch-gr">Sem acomp. federal</span>'
+    :e.fed_status==="cc"?'<span class="chip ch-p">Constru&#231;&#227;o Civil</span>'
+    :'<span class="chip ch-gr">Sem TAG</span>';
+  var tags=e.tags.length?e.tags.map(function(t){return'<span class="chip ch-b" style="font-size:9px;margin:1px">'+esc(t.replace("Equipe ",""))+'</span>';}).join(" "):'<span style="color:var(--gray-30)">—</span>';
+  return'<div class="tr" style="grid-template-columns:150px 1fr 90px 1fr 140px">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span>'+(e.grupo?'<div class="sub">'+esc(e.grupo)+'</div>':'')+'</div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div></div>'
+    +'<div class="td"><span style="font-size:10px;color:var(--gray-70)">'+esc((e.regime||"—").substring(0,20))+'</span></div>'
+    +'<div class="td">'+tags+'</div>'
+    +'<div class="td">'+st+'</div>'
+    +'</div>';
+}
+
+// ── CERTIFICADOS ──
+function buildCerts(){
+  var map={};
+  Object.keys(AG).forEach(function(cnpj){
+    var e=AG[cnpj];
+    var s3dInfo=S3D[cnpj];
+    var grupo=s3dInfo?s3dInfo.grupo:"";
+    var raw=e.cert_raw;
+    var key=raw?e.cert_nome:"__SEM__";
+    if(!map[key]){
+      map[key]={
+        nome:raw?e.cert_nome:"(Sem certificado / pendência)",
+        tipo:raw?(e.usa_proc?"procuracao":"certificado"):"sem",
+        val:e.val_fed,dias:e.dias_fed,status:e.status_cert,
+        empresas:[],
+      };
+    }
+    map[key].empresas.push(Object.assign({},e,{grupo:grupo}));
+  });
+  CERTS=Object.values(map).sort(function(a,b){
+    var da=a.dias!==null?a.dias:99999, db=b.dias!==null?b.dias:99999;
+    return da-db;
+  });
+}
+
+function renderCert(){
+  pages.cert=1;
+  var q=(document.getElementById("srcCert").value||"").toLowerCase();
+  var modo=document.getElementById("filtCert").value;
+
+  var venc=CERTS.filter(function(c){return c.status==="vencido";});
+  var d30=CERTS.filter(function(c){return c.status==="d30";});
+  var d90=CERTS.filter(function(c){return c.status==="d90";});
+  var ok=CERTS.filter(function(c){return c.status==="ok";});
+  var sem=CERTS.filter(function(c){return c.status==="sem";});
+
+  var nEmpVenc=venc.reduce(function(s,c){return s+c.empresas.length;},0);
+  var nEmpD30=d30.reduce(function(s,c){return s+c.empresas.length;},0);
+
+  document.getElementById("bCert").textContent=venc.length+d30.length;
+  document.getElementById("statsCert").innerHTML=
+    sc("warn","Vencidos",nEmpVenc+" empresa(s)",venc.length)+
+    sc("warn","A vencer &#8804;30d",nEmpD30+" empresa(s)",d30.length)+
+    sc("amb","A vencer &#8804;90d",d90.reduce(function(s,c){return s+c.empresas.length;},0)+" empresa(s)",d90.length)+
+    sc("ok","OK",ok.reduce(function(s,c){return s+c.empresas.length;},0)+" empresa(s)",ok.length)+
+    sc("all","Sem cert/outros",sem.reduce(function(s,c){return s+c.empresas.length;},0)+" empresa(s)",sem.length)+
+    sc("all","Total certificados","",CERTS.length);
+
+  var pool=modo==="prob"?venc.concat(d30).concat(d90)
+    :modo==="vencido"?venc:modo==="d30"?d30:modo==="d90"?d90
+    :modo==="ok"?ok:modo==="sem"?sem:CERTS;
+  if(q)pool=pool.filter(function(c){return c.nome.toLowerCase().indexOf(q)>-1;});
+  filtCert=pool;
+  draw("bodyCert","pagerCert",filtCert,rowCert,"cert");
+}
+
+function rowCert(c,idx){
+  var uid="cert-"+idx;
+  var tipo=c.tipo==="procuracao"?'<span class="chip ch-ok">Procura&#231;&#227;o</span>'
+    :c.tipo==="sem"?'<span class="chip ch-gr">&#8212;</span>'
+    :'<span class="chip ch-p">Certificado</span>';
+  var venc=c.val?'<strong>'+fmtDate(c.val)+'</strong>':'<span style="color:var(--gray-30)">—</span>';
+  var expand='<div class="cert-detail" id="'+uid+'">'
+    +'<table><thead><tr><th>CNPJ</th><th>Raz&#227;o Social</th><th>Grupo</th><th>Equipe</th><th>Usa Proc.?</th></tr></thead><tbody>'
+    +c.empresas.map(function(e){
+      return'<tr><td><span class="cnpj">'+esc(e.cnpj)+'</span></td>'
+        +'<td>'+esc(e.razao)+'</td>'
+        +'<td><span style="font-size:10px;color:var(--gray-70)">'+esc(e.grupo||"&#8212;")+'</span></td>'
+        +'<td><span class="chip ch-gr" style="font-size:9px">'+esc(e.equipe||"—")+'</span></td>'
+        +'<td>'+(e.usa_proc?'<span class="chip ch-ok" style="font-size:9px">Sim</span>':'<span class="chip ch-gr" style="font-size:9px">N&#227;o</span>')+'</td>'
+        +'</tr>';
+    }).join("")
+    +'</tbody></table></div>';
+  return'<div class="cert-wrap">'
+    +'<div class="cert-main" data-uid="'+uid+'" style="grid-template-columns:1fr 80px 100px 110px 110px 20px" onclick="toggleCert(this.dataset.uid)">'
+    +'<div class="td"><div class="razao" title="'+esc(c.nome)+'">'+esc(c.nome)+'</div></div>'
+    +'<div class="td" style="text-align:center"><strong style="font-size:14px;color:var(--charcoal)">'+c.empresas.length+'</strong><div class="sub">empresa(s)</div></div>'
+    +'<div class="td">'+tipo+'</div>'
+    +'<div class="td" style="font-size:11px">'+venc+'</div>'
+    +'<div class="td">'+diasChip(c.dias)+'</div>'
+    +'<div class="td"><span class="arr">&#9660;</span></div>'
+    +'</div>'+expand+'</div>';
+}
+
+function toggleCert(uid){
+  var el=document.getElementById(uid);
+  if(!el)return;
+  el.classList.toggle("open");
+  el.previousElementSibling.classList.toggle("open");
+}
+
+// HELPERS
+function sc(cls,t,s,n){
+  var bg=cls==="warn"?"var(--red-lt)":cls==="ok"?"var(--green-lt)":cls==="amb"?"var(--amber-lt)":cls==="info"?"var(--blue-lt)":"var(--gray-05)";
+  var ic=cls==="warn"?"var(--red)":cls==="ok"?"var(--green-dark)":cls==="amb"?"var(--amber)":cls==="info"?"#0284C7":"var(--gray-50)";
+  return'<div class="sc '+cls+'"><div class="sc-top"><div class="sc-ico" style="background:'+bg+'">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="'+ic+'" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    +'</div><div><div class="sc-t">'+t+'</div><div class="sc-s">'+s+'</div></div></div>'
+    +'<div class="sc-n">'+Number(n||0).toLocaleString("pt-BR")+'</div></div>';
+}
+
+function draw(bodyId,pagerId,data,rowFn,tabKey){
+  var p=pages[tabKey],total=data.length,slice=data.slice((p-1)*PER,p*PER);
+  var body=document.getElementById(bodyId),pager=document.getElementById(pagerId);
+  if(!slice.length){
+    body.innerHTML='<div class="empty"><strong>Nenhum resultado</strong></div>';
+    pager.innerHTML="";return;
+  }
+  body.innerHTML=slice.map(function(item,i){return rowFn(item,(p-1)*PER+i);}).join("");
+  var pt=Math.ceil(total/PER),s=(p-1)*PER+1,en=Math.min(p*PER,total);
+  var btns="";
+  for(var pp=Math.max(1,p-3);pp<=Math.min(pt,p+3);pp++)
+    btns+='<button class="pg-btn'+(pp===p?" cur":"")+'" onclick="goPage(\''+tabKey+'\','+pp+')">'+pp+'</button>';
+  pager.innerHTML='<span class="pg-info">'+s.toLocaleString("pt-BR")+"–"+en.toLocaleString("pt-BR")+" de "+total.toLocaleString("pt-BR")+'</span>'
+    +'<div class="pg-btns"><button class="pg-btn" onclick="goPage(\''+tabKey+'\','+(p-1)+')" '+(p<=1?"disabled":"")+'>&#8249;</button>'+btns+'<button class="pg-btn" onclick="goPage(\''+tabKey+'\','+(p+1)+')" '+(p>=pt?"disabled":"")+'>&#8250;</button></div>';
+}
+
+function goPage(tab,p){
+  var f=tab==="cruzamento"?filtCruz:tab==="cert"?filtCert:tab==="cpf"?filtCPF:tab==="extra"?filtExtra:filtCCAg;
+  var pt=Math.ceil(f.length/PER);
+  if(p<1||p>pt)return;
+  pages[tab]=p;
+  if(tab==="cruzamento")draw("bodyCruz","pagerCruz",filtCruz,rowCruz,"cruzamento");
+  else if(tab==="cert")draw("bodyCert","pagerCert",filtCert,rowCert,"cert");
+  else if(tab==="cpf")draw("bodyCPF","pagerCPF",filtCPF,rowCPF,"cpf");
+  else if(tab==="extra")draw("bodyExtra","pagerExtra",filtExtra,rowExtra,"extra");
+  else draw("bodyCCAg","pagerCCAg",filtCCAg,rowCCAg,"cc");
+}
+
+function exportar(tab){
+  var hdr,rows;
+  if(tab==="cruzamento"){
+    hdr=["CNPJ","Razao Social","Regime","Equipes","Status Federal","Grupo"];
+    rows=filtCruz.map(function(e){return[e.cnpj,e.razao,e.regime,e.tags.join("; "),e.fed_status,e.grupo];});
+  }else if(tab==="cpf"){
+    hdr=["CPF","Razao Social","Regime","Equipes","No Agilizza"];
+    rows=filtCPF.map(function(e){return[e.cpf,e.razao,e.regime,e.tags.join("; "),e.no_ag?"Sim":"Não"];});
+  }else if(tab==="extra"){
+    hdr=["CNPJ","Razao Social","Equipe Agilizza","Certificado"];
+    rows=filtExtra.map(function(e){return[e.cnpj,e.razao,e.equipe,e.cert_nome||""];});
+  }else if(tab==="cc"){
+    hdr=["Documento","Tipo","Razao Social","Equipes S3D","No Agilizza"];
+    rows=filtCCAg.map(function(e){return[e.doc,e.tipo,e.razao,e.tags.join("; "),e.no_ag?"Sim":"Não"];});
+  }else{
+    hdr=["Certificado","Empresas","Tipo","Vencimento","Dias","Status"];
+    rows=filtCert.map(function(c){return[c.nome,c.empresas.length,c.tipo,c.val?fmtDate(c.val):"",c.dias!==null?c.dias:"",c.status];});
+  }
+  var csv=[hdr].concat(rows).map(function(r){
+    return r.map(function(v){return'"'+String(v||"").replace(/"/g,'""')+'"';}).join(",");
+  }).join("\n");
+  var blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);
+  a.download="agilizza_"+tab+".csv";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  showToast("CSV exportado!");
+}
+
+function setTab(id,btn){
+  document.querySelectorAll(".tc").forEach(function(t){t.classList.remove("act");t.style.display="none";});
+  document.querySelectorAll(".tb").forEach(function(b){b.classList.remove("act");});
+  var t=document.getElementById("tab-"+id);
+  t.classList.add("act");t.style.display="block";
+  btn.classList.add("act");
+  if(id==="cruzamento")renderCruz();
+  if(id==="cert")renderCert();
+}
+
+var _tt;
+function showToast(msg){
+  var t=document.getElementById("toast");
+  document.getElementById("toastMsg").textContent=msg;
+  t.classList.add("show");clearTimeout(_tt);
+  _tt=setTimeout(function(){t.classList.remove("show");},2800);
+}
+</script>
+</body>
+</html>
