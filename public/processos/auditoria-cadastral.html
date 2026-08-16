@@ -1,0 +1,1569 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Auditoria Cadastral — Acess&#243;rias</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --green:#0AE18C;--green-dark:#00BF63;--green-lt:#EAFBF4;
+  --black:#0C0C0C;--charcoal:#1A1A1A;--ink:#2C2C2C;
+  --gray-70:#4A4A4A;--gray-50:#646464;--gray-30:#CDCDCD;
+  --gray-10:#E8E8E8;--gray-05:#F2F2F2;--off-white:#FAFAFA;
+  --white:#FFFFFF;--border:#E2E2E2;
+  --red:#DC2626;--red-lt:#FEE2E2;
+  --amber:#FA6914;--amber-lt:#FFF3E0;
+  --blue:#14C8FA;--blue-lt:#DDF6FF;
+  --purple:#7C3AED;--purple-lt:#F5F3FF;
+  --radius:10px;--radius-lg:16px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);
+  --font:'Poppins',sans-serif;--tr:all .18s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--off-white);color:var(--ink);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased}
+.topbar{background:var(--black);height:54px;display:flex;align-items:center;padding:0 22px;gap:10px;position:sticky;top:0;z-index:100}
+.logo{width:30px;height:30px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--black)}
+.bc{display:flex;align-items:center;gap:5px;color:rgba(255,255,255,.4);font-size:11px;font-weight:500}
+.bc strong{color:#fff}.bc span{color:rgba(255,255,255,.2)}
+.tabs-bar{background:var(--white);border-bottom:2px solid var(--border);display:flex;padding:0 22px;overflow-x:auto}
+.tb{font-family:var(--font);font-size:12px;font-weight:600;padding:13px 16px;border:none;background:none;color:var(--gray-50);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:6px;transition:var(--tr);white-space:nowrap;flex-shrink:0}
+.tb:hover{color:var(--ink)}.tb.act{color:var(--green-dark);border-bottom-color:var(--green)}
+.tb:disabled{opacity:.4;cursor:default}
+.tbadge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:12px;background:var(--gray-10);color:var(--gray-50)}
+.tb.act .tbadge{background:var(--green-lt);color:var(--green-dark)}
+.tbr{background:var(--red-lt);color:var(--red)}
+.tba{background:var(--amber-lt);color:var(--amber)}
+.tbp{background:var(--purple-lt);color:var(--purple)}
+.main{max-width:1220px;margin:0 auto;padding:22px 22px 80px}
+.tc{display:none}.tc.act{display:block}
+.ey{font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.pt{font-size:19px;font-weight:800;color:var(--charcoal);margin-bottom:3px}
+.ps{font-size:12px;color:var(--gray-50);margin-bottom:16px}
+.up-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px}
+.up-card{background:var(--white);border:2px dashed var(--border);border-radius:var(--radius-lg);padding:32px 24px;text-align:center;cursor:pointer;transition:var(--tr)}
+.up-card:hover,.up-card.drag{border-color:var(--green);background:var(--green-lt)}
+.up-card.done{border-style:solid;border-color:var(--green);background:var(--green-lt)}
+.up-card input{display:none}
+.up-card .up-ico{width:48px;height:48px;border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 12px;background:var(--gray-10)}
+.up-card.done .up-ico{background:var(--green-lt)}
+.up-card strong{display:block;font-size:13px;color:var(--charcoal);margin-bottom:4px}
+.up-card span{font-size:11px;color:var(--gray-50)}
+.up-card.done strong{color:var(--green-dark)}
+.up-status{font-size:11px;font-weight:600;color:var(--green-dark);margin-top:8px;min-height:18px}
+.up-proc{text-align:center;margin-top:8px}
+.btn-proc{font-family:var(--font);font-size:13px;font-weight:700;padding:12px 40px;border-radius:var(--radius);border:none;background:var(--green);color:var(--black);cursor:pointer;transition:var(--tr)}
+.btn-proc:hover{background:var(--green-dark)}
+.btn-proc:disabled{opacity:.4;cursor:default}
+.up-hint{font-size:11px;color:var(--gray-50);margin-top:8px}
+.stats-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.sc{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;min-width:140px;flex:1}
+.sc-top{padding:10px 13px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sc-ico{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sc-t{font-size:11px;font-weight:700;color:var(--charcoal)}.sc-s{font-size:10px;color:var(--gray-50)}
+.sc-n{font-size:20px;font-weight:800;padding:9px 13px}
+.sc.ok .sc-n{color:var(--green-dark)}.sc.warn .sc-n{color:var(--red)}
+.sc.amb .sc-n{color:var(--amber)}.sc.all .sc-n{color:var(--charcoal)}
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:180px;max-width:360px}
+.sw svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
+.si{width:100%;font-family:var(--font);font-size:12px;padding:8px 10px 8px 32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none;transition:var(--tr)}
+.si:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(10,225,140,.1)}
+.si::placeholder{color:var(--gray-30)}
+.sel{font-family:var(--font);font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none;cursor:pointer}
+.tsp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:5px;font-family:var(--font);font-size:11px;font-weight:600;padding:7px 12px;border-radius:var(--radius);border:1px solid var(--border);background:var(--white);color:var(--gray-70);cursor:pointer;transition:var(--tr)}
+.btn:hover{border-color:var(--gray-30);color:var(--ink)}
+.btn svg{width:12px;height:12px}
+.tw{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.th-row{display:grid;padding:0 14px;background:var(--gray-05);border-bottom:1px solid var(--border)}
+.th{padding:9px 7px;font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.5px}
+.tb-body{display:flex;flex-direction:column}
+.tr-ie-main{display:grid;padding:0 14px;border-bottom:none;align-items:center;transition:background .1s}
+.tr-ie-main:hover{background:#FAFFFD}
+.tr{display:grid;padding:8px 14px;border-bottom:1px solid var(--border);align-items:start;transition:background .1s;min-height:48px}
+.tr:last-child{border-bottom:none}.tr:hover{background:#FAFFFD}
+.td{padding:0 7px;font-size:11px;color:var(--ink)}
+.cnpj{font-family:monospace;font-size:10.5px;font-weight:600;color:var(--charcoal)}
+.razao{font-weight:600;color:var(--charcoal);white-space:normal;word-break:break-word;line-height:1.3}
+.sub{font-size:10px;color:var(--gray-50);margin-top:1px}
+.chip{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;display:inline-block}
+.ch-ok{background:var(--green-lt);color:var(--green-dark)}
+.ch-r{background:var(--red-lt);color:var(--red)}
+.ch-a{background:var(--amber-lt);color:var(--amber)}
+.ch-b{background:var(--blue-lt);color:#0284C7}
+.ch-p{background:var(--purple-lt);color:var(--purple)}
+.ch-gr{background:var(--gray-10);color:var(--gray-70)}
+.uf-badge{display:inline-block;font-size:9px;font-weight:700;padding:1px 6px;border-radius:10px;background:var(--gray-10);color:var(--gray-70);min-width:24px;text-align:center}
+.ie-sub-wrap{border-bottom:1px solid var(--border);background:var(--gray-05)}
+.pager{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:var(--gray-05)}
+.pg-info{font-size:11px;color:var(--gray-50)}
+.pg-btns{display:flex;gap:3px}
+.pg-btn{font-family:var(--font);font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:var(--white);color:var(--gray-70);cursor:pointer;transition:var(--tr)}
+.pg-btn:hover{border-color:var(--green);color:var(--green-dark)}
+.pg-btn.cur{background:var(--charcoal);color:var(--white);border-color:var(--charcoal)}
+.pg-btn:disabled{opacity:.35;cursor:default;pointer-events:none}
+.empty{display:flex;flex-direction:column;align-items:center;padding:44px;gap:9px;color:var(--gray-50)}
+.empty svg{opacity:.3}.empty strong{font-size:13px;color:var(--charcoal)}
+.alert{border:1px solid;border-radius:var(--radius);padding:10px 14px;display:flex;gap:9px;margin-bottom:14px;font-size:12px;align-items:flex-start}
+.alert svg{flex-shrink:0;margin-top:1px}
+.al-a{background:var(--amber-lt);border-color:#fed7aa;color:#92400e}
+/* RESUMO POR EQUIPE */
+.resumo-dept{margin-bottom:24px}
+.resumo-dept-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:6px 12px;border-radius:var(--radius);display:inline-block;margin-bottom:10px}
+.resumo-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.resumo-table th{padding:9px 12px;font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.5px;background:var(--gray-05);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.resumo-table th.num{text-align:right}
+.resumo-table td{padding:9px 12px;font-size:12px;border-bottom:1px solid var(--gray-10);color:var(--ink)}
+.resumo-table tr:last-child td{border-bottom:none}
+.resumo-table tr:hover td{background:#FAFFFD;cursor:pointer}
+.resumo-table td.num{text-align:right;font-weight:700;font-family:monospace;font-size:13px}
+.resumo-table td.num.zero{color:var(--gray-30);font-weight:400}
+.resumo-table td.num.warn{color:var(--red)}
+.resumo-table td.num.amb{color:var(--amber)}
+.resumo-table td.num.ok{color:var(--green-dark)}
+.resumo-equipe{font-weight:600;color:var(--charcoal)}
+.resumo-bar-wrap{width:60px;height:6px;background:var(--gray-10);border-radius:3px;display:inline-block;vertical-align:middle;margin-left:6px}
+.resumo-bar{height:6px;border-radius:3px;transition:width .3s}
+.toast{position:fixed;bottom:22px;right:22px;background:var(--charcoal);color:var(--white);padding:11px 16px;border-radius:var(--radius);font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;z-index:999;transform:translateY(80px);opacity:0;transition:all .3s ease}
+.toast.show{transform:translateY(0);opacity:1}
+.toast svg{width:13px;height:13px;color:var(--green)}
+</style>
+</head>
+<body>
+<div class="topbar">
+  <div class="logo">P</div>
+  <div class="bc"><span>Portal</span><span>&#8250;</span><span>Acess&#243;rias</span><span>&#8250;</span><strong>Auditoria Cadastral</strong></div>
+</div>
+<div class="tabs-bar">
+  <button class="tb act" onclick="setTab('upload',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    Carregar Planilhas
+  </button>
+  <button class="tb" id="tb-sit" onclick="setTab('sit',this)" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg>
+    Situa&#231;&#227;o Cadastral <span class="tbadge tbr" id="bSit">&#8212;</span>
+  </button>
+  <button class="tb" id="tb-ie" onclick="setTab('ie',this)" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+    Inscri&#231;&#227;o Estadual <span class="tbadge tbr" id="bIE">&#8212;</span>
+  </button>
+  <button class="tb" id="tb-simples" onclick="setTab('simples',this)" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
+    Simples Nacional <span class="tbadge tba" id="bSimples">&#8212;</span>
+  </button>
+  <button class="tb" id="tb-resumo" onclick="setTab('resumo',this)" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    Resumo por Equipe
+  </button>
+  <button class="tb" id="tb-cnae" onclick="setTab('cnae',this);if(DADOS&&DADOS.length>0)renderCnae();" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+    Valida&#231;&#227;o CNAE <span class="tbadge tbr" id="bCnae">&#8212;</span>
+  </button>
+  <button class="tb" id="tb-cnaebase" onclick="setTab('cnaebase',this);if(DADOS&&DADOS.length>0)renderCnaeBase();" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    Base de CNAE <span class="tbadge" id="bCnaeBase" style="background:var(--purple-lt);color:var(--purple)">&#8212;</span>
+  </button>
+  <button class="tb" id="tb-socios" onclick="setTab('socios',this);if(DADOS&&DADOS.length>0)renderSocios();" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+    Movimenta&#231;&#227;o de S&#243;cios <span class="tbadge tba" id="bSocios">&#8212;</span>
+  </button>
+  <button class="tb" id="tb-cc" onclick="setTab('cc',this)" disabled>
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    Constru&#231;&#227;o Civil <span class="tbadge tbp" id="bCC">&#8212;</span>
+  </button>
+</div>
+<div class="main">
+<!-- ABA UPLOAD -->
+<div class="tc act" id="tab-upload">
+  <div class="ey">Auditoria Cadastral &middot; Setup</div>
+  <div class="pt">Carregar Planilhas</div>
+  <div class="ps">Carregue as duas planilhas para cruzar os dados. A ordem n&#227;o importa.</div>
+  <div class="up-grid">
+    <label class="up-card" id="cardS3D" ondragover="onDrag(event,'cardS3D',true)" ondragleave="onDrag(event,'cardS3D',false)" ondrop="onDrop(event,'s3d')">
+      <div class="up-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg></div>
+      <strong>1. Planilha S3D (Empresas)</strong>
+      <span>S3D_empresas_....xlsx</span>
+      <div class="up-status" id="statusS3D"></div>
+      <input type="file" accept=".xlsx,.xls" onchange="handleS3D(this.files[0])"/>
+    </label>
+    <label class="up-card" id="cardCNPJa" ondragover="onDrag(event,'cardCNPJa',true)" ondragleave="onDrag(event,'cardCNPJa',false)" ondrop="onDrop(event,'cnpja')">
+      <div class="up-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="24" height="24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+      <strong>2. Planilha CNPJá (Auditoria)</strong>
+      <span>CNPJá_-_Consulta_em_Massa.xlsx</span>
+      <div class="up-status" id="statusCNPJa"></div>
+      <input type="file" accept=".xlsx,.xls" onchange="handleCNPJa(this.files[0])"/>
+    </label>
+  </div>
+  <div class="up-proc">
+    <button class="btn-proc" id="btnProc" disabled onclick="processar()">Processar dados</button>
+    <div class="up-hint" id="hintProc">Carregue as duas planilhas para habilitar</div>
+  </div>
+</div>
+<!-- ABA SITUAÇÃO -->
+<div class="tc" id="tab-sit">
+  <div class="ey">CNPJá &middot; Situa&#231;&#227;o Cadastral</div>
+  <div class="pt">Situa&#231;&#227;o Cadastral das Empresas</div>
+  <div class="ps">Empresas com situa&#231;&#227;o diferente de <strong>Ativa</strong> na Receita Federal &#8212; exclu&#237; Constru&#231;&#227;o Civil</div>
+  <div class="stats-row" id="statsSit"></div>
+  <div class="toolbar">
+    <select class="sel" id="filtTag" onchange="applyTagFilter()"><option value="">Todas as equipes</option><optgroup label="DP"><option value="Equipe DP 1">Equipe DP 1</option><option value="Equipe DP 2">Equipe DP 2</option></optgroup><optgroup label="Fiscal"><option value="Equipe Fiscal 1">Equipe Fiscal 1</option><option value="Equipe Fiscal 2">Equipe Fiscal 2</option><option value="Equipe Fiscal 3">Equipe Fiscal 3</option><option value="Equipe Fiscal 4">Equipe Fiscal 4</option><option value="Equipe Fiscal 5">Equipe Fiscal 5</option><option value="Equipe Fiscal 6">Equipe Fiscal 6</option><option value="Equipe Fiscal 7">Equipe Fiscal 7</option><option value="Equipe Fiscal 8">Equipe Fiscal 8</option></optgroup><optgroup label="Cont&#225;bil"><option value="Equipe Cont&#225;bil 1">Equipe Cont&#225;bil 1</option><option value="Equipe Cont&#225;bil 2">Equipe Cont&#225;bil 2</option><option value="Equipe Cont&#225;bil 3">Equipe Cont&#225;bil 3</option><option value="Equipe Cont&#225;bil 4">Equipe Cont&#225;bil 4</option><option value="Equipe Cont&#225;bil 5">Equipe Cont&#225;bil 5</option><option value="Equipe Cont&#225;bil 6">Equipe Cont&#225;bil 6</option><option value="Equipe Cont&#225;bil 7">Equipe Cont&#225;bil 7</option><option value="Equipe Cont&#225;bil 8">Equipe Cont&#225;bil 8</option><option value="Equipe Cont&#225;bil 9">Equipe Cont&#225;bil 9</option><option value="Equipe Cont&#225;bil 10">Equipe Cont&#225;bil 10</option><option value="Equipe Dedicada Uniggel">Equipe Dedicada Uniggel</option></optgroup></select>
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcSit" placeholder="Buscar CNPJ, raz&#227;o ou grupo..." oninput="renderSit()"/></div>
+    <select class="sel" id="filtSit" onchange="renderSit()">
+      <option value="prob">S&#243; Suspensas e Inaptas</option>
+      <option value="Suspensa">S&#243; Suspensas</option>
+      <option value="Inapta">S&#243; Inaptas</option>
+      <option value="Ativa">S&#243; Ativas</option>
+      <option value="all">Todas</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportar('sit')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:145px 1fr 70px 110px 100px 1fr">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o / Grupo</div><div class="th">UF</div>
+      <div class="th">Situa&#231;&#227;o RF</div><div class="th">Data</div><div class="th">Motivo</div>
+    </div>
+    <div class="tb-body" id="bodySit"></div><div class="pager" id="pagerSit"></div>
+  </div>
+</div>
+<!-- ABA IE -->
+<div class="tc" id="tab-ie">
+  <div class="ey">CNPJá &middot; Inscri&#231;&#245;es Estaduais</div>
+  <div class="pt">Valida&#231;&#227;o de Inscri&#231;&#245;es Estaduais</div>
+  <div class="ps">Cruza IE do S3D com a situa&#231;&#227;o real no CNPJá &#8212; exclu&#237; Constru&#231;&#227;o Civil</div>
+  <div class="alert al-a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Regras:</strong> (1) Isento: Sim no S3D = IE dispensada. (2) IEs com situa&#231;&#227;o diferente de Sem restri&#231;&#227;o s&#227;o sinalizadas. (3) N&#227;o isenta sem IE = pendente.</span></div>
+  <div class="stats-row" id="statsIE"></div>
+  <div class="toolbar">
+    <select class="sel" id="filtTag" onchange="applyTagFilter()"><option value="">Todas as equipes</option><optgroup label="DP"><option value="Equipe DP 1">Equipe DP 1</option><option value="Equipe DP 2">Equipe DP 2</option></optgroup><optgroup label="Fiscal"><option value="Equipe Fiscal 1">Equipe Fiscal 1</option><option value="Equipe Fiscal 2">Equipe Fiscal 2</option><option value="Equipe Fiscal 3">Equipe Fiscal 3</option><option value="Equipe Fiscal 4">Equipe Fiscal 4</option><option value="Equipe Fiscal 5">Equipe Fiscal 5</option><option value="Equipe Fiscal 6">Equipe Fiscal 6</option><option value="Equipe Fiscal 7">Equipe Fiscal 7</option><option value="Equipe Fiscal 8">Equipe Fiscal 8</option></optgroup><optgroup label="Cont&#225;bil"><option value="Equipe Cont&#225;bil 1">Equipe Cont&#225;bil 1</option><option value="Equipe Cont&#225;bil 2">Equipe Cont&#225;bil 2</option><option value="Equipe Cont&#225;bil 3">Equipe Cont&#225;bil 3</option><option value="Equipe Cont&#225;bil 4">Equipe Cont&#225;bil 4</option><option value="Equipe Cont&#225;bil 5">Equipe Cont&#225;bil 5</option><option value="Equipe Cont&#225;bil 6">Equipe Cont&#225;bil 6</option><option value="Equipe Cont&#225;bil 7">Equipe Cont&#225;bil 7</option><option value="Equipe Cont&#225;bil 8">Equipe Cont&#225;bil 8</option><option value="Equipe Cont&#225;bil 9">Equipe Cont&#225;bil 9</option><option value="Equipe Cont&#225;bil 10">Equipe Cont&#225;bil 10</option><option value="Equipe Dedicada Uniggel">Equipe Dedicada Uniggel</option></optgroup></select>
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcIE" placeholder="Buscar CNPJ, raz&#227;o ou grupo..." oninput="renderIE()"/></div>
+    <select class="sel" id="filtIE" onchange="renderIE()">
+      <option value="prob">Todos os problemas</option>
+      <option value="nao_consultado">N&#227;o consultado no CNPJ&#225;</option>
+      <option value="faltando">IE no CNPJá sem v&#237;nculo no Acess&#243;rias</option>
+      <option value="nao_hab">IE do Acess&#243;rias n&#227;o habilitada no CNPJá</option>
+      <option value="isenta_ok">Isentos OK</option>
+      <option value="ie_ok">Inscri&#231;&#227;o OK</option>
+      <option value="all">Todas as empresas</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportar('ie')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:145px 1fr 55px 55px 130px 100px">
+      <div class="th">CNPJ / Grupo</div><div class="th">Raz&#227;o Social</div>
+      <div class="th">Isento</div><div class="th">UF</div>
+      <div class="th">Regime</div><div class="th">Situa&#231;&#227;o</div>
+    </div>
+    <div class="tb-body" id="bodyIE"></div><div class="pager" id="pagerIE"></div>
+  </div>
+</div>
+<!-- ABA SIMPLES -->
+<div class="tc" id="tab-simples">
+  <div class="ey">CNPJá &middot; Simples Nacional</div>
+  <div class="pt">Valida&#231;&#227;o do Simples Nacional</div>
+  <div class="ps">Diverg&#234;ncias entre o regime no S3D e o status de optante no CNPJá &#8212; exclu&#237; Constru&#231;&#227;o Civil</div>
+  <div class="alert al-a"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Regra:</strong> Se o regime no S3D é Simples Nacional mas o CNPJá diz que n&#227;o é optante (ou vice-versa), é uma diverg&#234;ncia.</span></div>
+  <div class="stats-row" id="statsSimples"></div>
+  <div class="toolbar">
+    <select class="sel" id="filtTag" onchange="applyTagFilter()"><option value="">Todas as equipes</option><optgroup label="DP"><option value="Equipe DP 1">Equipe DP 1</option><option value="Equipe DP 2">Equipe DP 2</option></optgroup><optgroup label="Fiscal"><option value="Equipe Fiscal 1">Equipe Fiscal 1</option><option value="Equipe Fiscal 2">Equipe Fiscal 2</option><option value="Equipe Fiscal 3">Equipe Fiscal 3</option><option value="Equipe Fiscal 4">Equipe Fiscal 4</option><option value="Equipe Fiscal 5">Equipe Fiscal 5</option><option value="Equipe Fiscal 6">Equipe Fiscal 6</option><option value="Equipe Fiscal 7">Equipe Fiscal 7</option><option value="Equipe Fiscal 8">Equipe Fiscal 8</option></optgroup><optgroup label="Cont&#225;bil"><option value="Equipe Cont&#225;bil 1">Equipe Cont&#225;bil 1</option><option value="Equipe Cont&#225;bil 2">Equipe Cont&#225;bil 2</option><option value="Equipe Cont&#225;bil 3">Equipe Cont&#225;bil 3</option><option value="Equipe Cont&#225;bil 4">Equipe Cont&#225;bil 4</option><option value="Equipe Cont&#225;bil 5">Equipe Cont&#225;bil 5</option><option value="Equipe Cont&#225;bil 6">Equipe Cont&#225;bil 6</option><option value="Equipe Cont&#225;bil 7">Equipe Cont&#225;bil 7</option><option value="Equipe Cont&#225;bil 8">Equipe Cont&#225;bil 8</option><option value="Equipe Cont&#225;bil 9">Equipe Cont&#225;bil 9</option><option value="Equipe Cont&#225;bil 10">Equipe Cont&#225;bil 10</option><option value="Equipe Dedicada Uniggel">Equipe Dedicada Uniggel</option></optgroup></select>
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcSimples" placeholder="Buscar CNPJ, raz&#227;o ou grupo..." oninput="renderSimples()"/></div>
+    <select class="sel" id="filtSimples" onchange="renderSimples()">
+      <option value="nao_consultado">N&#227;o consultado no CNPJ&#225;</option>
+      <option value="div">S&#243; diverg&#234;ncias</option>
+      <option value="reentrou">Reentrou no Simples (saiu e voltou)</option>
+      <option value="com_hist">Com hist&#243;rico de altera&#231;&#227;o</option>
+      <option value="ok">Simples OK</option>
+      <option value="all">Todos</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportar('simples')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:145px 1fr 130px 90px 100px 100px 1fr">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o / Grupo</div>
+      <div class="th">Regime S3D</div><div class="th">Optante</div>
+      <div class="th">Inclus&#227;o</div><div class="th">Situa&#231;&#227;o</div>
+      <div class="th">&#218;ltima Altera&#231;&#227;o (hist&#243;rico)</div>
+    </div>
+    <div class="tb-body" id="bodySimples"></div><div class="pager" id="pagerSimples"></div>
+  </div>
+</div>
+<!-- ABA RESUMO -->
+<div class="tc" id="tab-resumo">
+  <div class="ey">Auditoria Cadastral</div>
+  <div class="pt">Resumo por Equipe</div>
+  <div class="ps">Vis&#227;o consolidada das pend&#234;ncias de auditoria por equipe &#8212; exclu&#237; Constru&#231;&#227;o Civil</div>
+  <div id="resumoGrid"></div>
+</div>
+
+<!-- ABA BASE DE CNAE -->
+<div class="tc" id="tab-cnaebase">
+  <div class="ey">Auditoria Cadastral &middot; DP</div>
+  <div class="pt">Base de CNAE por Empresa</div>
+  <div class="ps">Todos os CNAEs (principal e secund&#225;rios) por CNPJ &#8212; use para identificar a conven&#231;&#227;o coletiva aplic&#225;vel. Salve um snapshot para ser avisado quando uma empresa incluir ou excluir uma atividade.</div>
+  <div class="stats-row" id="statsCnaeBase"></div>
+  <div class="alert al-a">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Como funciona:</strong> clique em "Salvar snapshot atual" para guardar os CNAEs de hoje. Da pr&#243;xima vez que processar uma nova consulta do CNPJ&#225;, o sistema compara contra o snapshot salvo e sinaliza CNAEs inclu&#237;dos ou exclu&#237;dos.</span>
+  </div>
+  <div class="toolbar">
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcCnaeBase" placeholder="Buscar CNPJ, raz&#227;o ou CNAE..." oninput="renderCnaeBase()"/></div>
+    <select class="sel" id="filtCnaeBase" onchange="renderCnaeBase()">
+      <option value="alterado">CNAE alterado desde o snapshot</option>
+      <option value="novas">Empresas novas desde o snapshot</option>
+      <option value="saidas">Empresas que sa&#237;ram da base</option>
+      <option value="all">Todas as empresas</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="salvarSnapshotCnae()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Salvar snapshot atual</button>
+    <button class="btn" onclick="exportar('cnaebase')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:145px 1fr 1fr 130px">
+      <div class="th">CNPJ / Grupo</div><div class="th">Raz&#227;o Social</div>
+      <div class="th">CNAEs (principal + secund&#225;rios)</div><div class="th">Status</div>
+    </div>
+    <div class="tb-body" id="bodyCnaeBase"></div>
+    <div class="pager" id="pagerCnaeBase"></div>
+  </div>
+</div>
+
+<!-- ABA MOVIMENTAÇÃO DE SÓCIOS -->
+<div class="tc" id="tab-socios">
+  <div class="ey">Auditoria Cadastral &middot; DP</div>
+  <div class="pt">Movimenta&#231;&#227;o de S&#243;cios</div>
+  <div class="ps">Compara o quadro societ&#225;rio atual contra o &#250;ltimo snapshot salvo &#8212; entradas e sa&#237;das para comunicar ao DP</div>
+  <div class="stats-row" id="statsSocios"></div>
+  <div class="alert al-a">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Como funciona:</strong> clique em "Salvar snapshot atual" para guardar o quadro societ&#225;rio de hoje. Na pr&#243;xima consulta, o sistema compara e mostra quem entrou e quem saiu de cada empresa.</span>
+  </div>
+  <div class="toolbar">
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcSocios" placeholder="Buscar CNPJ, raz&#227;o ou s&#243;cio..." oninput="renderSocios()"/></div>
+    <select class="sel" id="filtSocios" onchange="renderSocios()">
+      <option value="mov">S&#243; com movimenta&#231;&#227;o (entrada/sa&#237;da)</option>
+      <option value="entrada">S&#243; entradas de s&#243;cios</option>
+      <option value="saida">S&#243; sa&#237;das de s&#243;cios</option>
+      <option value="novas">Empresas novas desde o snapshot</option>
+      <option value="saidas_empresa">Empresas que sa&#237;ram da base</option>
+      <option value="all">Todas as empresas</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="salvarSnapshotSocios()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>Salvar snapshot atual</button>
+    <button class="btn" onclick="exportar('socios')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:145px 1fr 1fr 1fr 1fr">
+      <div class="th">CNPJ / Grupo</div><div class="th">Raz&#227;o Social</div>
+      <div class="th">Quadro Atual</div><div class="th">Entraram</div><div class="th">Sa&#237;ram</div>
+    </div>
+    <div class="tb-body" id="bodySocios"></div>
+    <div class="pager" id="pagerSocios"></div>
+  </div>
+</div>
+</div>
+<!-- ABA CC -->
+<div class="tc" id="tab-cc">
+  <div class="ey">Constru&#231;&#227;o Civil &middot; Separado</div>
+  <div class="pt">Empresas da Constru&#231;&#227;o Civil</div>
+  <div class="ps">TAGs: CC 1, CC 2, CC 4, DP 4, Dedicada Canopus &#8212; auditoria separada</div>
+  <div class="stats-row" id="statsCC"></div>
+  <div class="toolbar">
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcCC" placeholder="Buscar CNPJ, raz&#227;o ou grupo..." oninput="renderCC()"/></div>
+    <select class="sel" id="filtCC" onchange="renderCC()">
+      <option value="all">Todas</option>
+      <option value="Suspensa">Suspensas</option>
+      <option value="Inapta">Inaptas</option>
+      <option value="Ativa">Ativas</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportar('cc')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:145px 1fr 110px 140px 1fr">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o / Grupo</div>
+      <div class="th">Situa&#231;&#227;o RF</div><div class="th">Regime S3D</div><div class="th">TAGs CC</div>
+    </div>
+    <div class="tb-body" id="bodyCC"></div><div class="pager" id="pagerCC"></div>
+  </div>
+</div>
+<!-- ABA VALIDAÇÃO CNAE -->
+<div class="tc" id="tab-cnae">
+  <div class="ey">Auditoria Cadastral &middot; CNAE</div>
+  <div class="pt">Valida&#231;&#227;o de IE por CNAE</div>
+  <div class="ps">Cruza a atividade principal (CNAE) com a obrigatoriedade oficial de Inscri&#231;&#227;o Estadual &#8212; exclu&#237; Constru&#231;&#227;o Civil</div>
+  <div class="alert al-a">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Regra:</strong> Tabela oficial de CNAEs define quais atividades exigem IE. Se o CNAE principal exige IE (SIM) e a empresa n&#227;o tem nenhuma IE habilitada, &#233; uma pend&#234;ncia real &#8212; independente do que o S3D diz sobre isen&#231;&#227;o.</span>
+  </div>
+  <div class="stats-row" id="statsCnae"></div>
+  <div class="toolbar">
+    <div class="sw"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="srcCnae" placeholder="Buscar CNPJ, raz&#227;o ou CNAE..." oninput="renderCnae()"/></div>
+    <select class="sel" id="filtCnae" onchange="renderCnae()">
+      <option value="pendente_sem_ie">Sem IE nenhuma (abrir inscri&#231;&#227;o)</option>
+      <option value="pendente_inativa">IE cadastrada, mas inativa (regularizar)</option>
+      <option value="pendente">Todas as pend&#234;ncias (sem IE + inativa)</option>
+      <option value="condicional">CNAE condicional (verificar manualmente)</option>
+      <option value="nao_mapeado">CNAE n&#227;o mapeado na tabela</option>
+      <option value="ok">CNAE exige IE e tem ativa &#8212; OK</option>
+      <option value="nao_exige">CNAE n&#227;o exige IE</option>
+      <option value="all">Todos</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportar('cnae')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar CSV</button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:145px 1fr 75px 110px 1fr 130px">
+      <div class="th">CNPJ / Grupo</div><div class="th">Raz&#227;o Social</div>
+      <div class="th">UF</div><div class="th">CNAE</div>
+      <div class="th">Atividade</div><div class="th">Situa&#231;&#227;o</div>
+    </div>
+    <div class="tb-body" id="bodyCnae"></div>
+    <div class="pager" id="pagerCnae"></div>
+  </div>
+</div>
+</div>
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">OK</span>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+
+var TAGS_RESUMO = ["Equipe DP 1","Equipe DP 2","Equipe Fiscal 1","Equipe Fiscal 2","Equipe Fiscal 3","Equipe Fiscal 4","Equipe Fiscal 5","Equipe Fiscal 6","Equipe Fiscal 7","Equipe Fiscal 8","Equipe Contábil 1","Equipe Contábil 2","Equipe Contábil 3","Equipe Contábil 4","Equipe Contábil 5","Equipe Contábil 6","Equipe Contábil 7","Equipe Contábil 8","Equipe Contábil 9","Equipe Contábil 10","Equipe Dedicada Uniggel","Equipe DP 4","Equipe CC 1","Equipe CC 2","Equipe CC 4","Equipe Dedicada Canopus"];
+var TAG_DEPT_MAP = {};
+TAG_DEPT_MAP["Equipe DP 1"] = "DP"; TAG_DEPT_MAP["Equipe DP 2"] = "DP"; TAG_DEPT_MAP["Equipe Fiscal 1"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 2"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 3"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 4"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 5"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 6"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 7"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 8"] = "Fiscal"; TAG_DEPT_MAP["Equipe Contábil 1"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 2"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 3"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 4"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 5"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 6"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 7"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 8"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 9"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 10"] = "Contábil"; TAG_DEPT_MAP["Equipe Dedicada Uniggel"] = "Contábil"; TAG_DEPT_MAP["Equipe DP 4"] = "CC"; TAG_DEPT_MAP["Equipe CC 1"] = "CC"; TAG_DEPT_MAP["Equipe CC 2"] = "CC"; TAG_DEPT_MAP["Equipe CC 4"] = "CC"; TAG_DEPT_MAP["Equipe Dedicada Canopus"] = "CC"; 
+
+
+var TAGS_BASE=[{"key": "Equipe DP 1", "label": "DP 1", "dept": "DP", "coord": "Mariana Rezende"}, {"key": "Equipe DP 2", "label": "DP 2", "dept": "DP", "coord": "Renata Soares"}, {"key": "Equipe Fiscal 1", "label": "Fiscal 1", "dept": "Fiscal", "coord": "Nathaly Alves"}, {"key": "Equipe Fiscal 2", "label": "Fiscal 2", "dept": "Fiscal", "coord": "Yuri Bessa"}, {"key": "Equipe Fiscal 3", "label": "Fiscal 3", "dept": "Fiscal", "coord": "Jessica Amaral"}, {"key": "Equipe Fiscal 4", "label": "Fiscal 4", "dept": "Fiscal", "coord": "Rejane Morais"}, {"key": "Equipe Fiscal 5", "label": "Fiscal 5", "dept": "Fiscal", "coord": "Ingrid Bernardi"}, {"key": "Equipe Fiscal 6", "label": "Fiscal 6", "dept": "Fiscal", "coord": "Jusely Prado"}, {"key": "Equipe Fiscal 7", "label": "Fiscal 7", "dept": "Fiscal", "coord": "Cristiana Barbosa"}, {"key": "Equipe Fiscal 8", "label": "Fiscal 8", "dept": "Fiscal", "coord": "Arynna Marques"}, {"key": "Equipe Contábil 1", "label": "Contábil 1", "dept": "Contábil", "coord": "Lusanna Melo"}, {"key": "Equipe Contábil 2", "label": "Contábil 2", "dept": "Contábil", "coord": "Maysa Caixeta"}, {"key": "Equipe Contábil 3", "label": "Contábil 3", "dept": "Contábil", "coord": "Tatyanne Carvalho"}, {"key": "Equipe Contábil 4", "label": "Contábil 4", "dept": "Contábil", "coord": "Rodney Silva"}, {"key": "Equipe Contábil 5", "label": "Contábil 5", "dept": "Contábil", "coord": "Rodney Silva"}, {"key": "Equipe Contábil 6", "label": "Contábil 6", "dept": "Contábil", "coord": "Natalia Xaves"}, {"key": "Equipe Contábil 7", "label": "Contábil 7", "dept": "Contábil", "coord": "Gisely Alves"}, {"key": "Equipe Contábil 8", "label": "Contábil 8", "dept": "Contábil", "coord": "Matheus Mendonça"}, {"key": "Equipe Contábil 9", "label": "Contábil 9", "dept": "Contábil", "coord": "Hugo Leonardo"}, {"key": "Equipe Contábil 10", "label": "Contábil 10", "dept": "Contábil", "coord": "Delmira Marques"}, {"key": "Equipe Dedicada Uniggel", "label": "Ded. Uniggel", "dept": "Contábil", "coord": "Roberta Oliveira"}];
+
+
+// ══ BASE DE CNAE (snapshot + comparação) ══
+var SNAP_CNAE_KEY="acessorias_snapshot_cnae_v1";
+var SNAP_SOCIOS_KEY="acessorias_snapshot_socios_v1";
+var filtCnaeBase=[],filtSocios=[];
+
+function loadSnapCnae(){
+  try{var raw=localStorage.getItem(SNAP_CNAE_KEY);return raw?JSON.parse(raw):null;}catch(e){return null;}
+}
+function saveSnapCnae(data){
+  try{localStorage.setItem(SNAP_CNAE_KEY,JSON.stringify(data));}catch(e){}
+}
+function loadSnapSocios(){
+  try{var raw=localStorage.getItem(SNAP_SOCIOS_KEY);return raw?JSON.parse(raw):null;}catch(e){return null;}
+}
+function saveSnapSocios(data){
+  try{localStorage.setItem(SNAP_SOCIOS_KEY,JSON.stringify(data));}catch(e){}
+}
+
+function salvarSnapshotCnae(){
+  if(!DADOS.length){showToast("Processe os dados primeiro");return;}
+  var snap={};
+  DADOS.forEach(function(e){
+    if(e.is_cc)return;
+    snap[e.cnpj]=(e.atividades_all||[]).map(function(a){return a.cod;}).sort();
+  });
+  saveSnapCnae({data:new Date().toISOString(),empresas:snap});
+  renderCnaeBase();
+  showToast("Snapshot de CNAE salvo! ("+Object.keys(snap).length+" empresas)");
+}
+
+function salvarSnapshotSocios(){
+  if(!DADOS.length){showToast("Processe os dados primeiro");return;}
+  var snap={};
+  DADOS.forEach(function(e){
+    if(e.is_cc)return;
+    snap[e.cnpj]=(e.socios_atuais||[]).map(function(s){return s.doc||s.nome;}).sort();
+  });
+  saveSnapSocios({data:new Date().toISOString(),empresas:snap});
+  renderSocios();
+  showToast("Snapshot de S&#243;cios salvo! ("+Object.keys(snap).length+" empresas)");
+}
+
+function compararCnae(e){
+  var snap=loadSnapCnae();
+  if(!snap)return{temSnap:false,incluidos:[],excluidos:[]};
+  var antigos=snap.empresas[e.cnpj]||null;
+  if(antigos===null)return{temSnap:true,novo:true,incluidos:[],excluidos:[]};
+  var atuaisCods=(e.atividades_all||[]).map(function(a){return a.cod;});
+  var incluidos=atuaisCods.filter(function(c){return antigos.indexOf(c)<0;});
+  var excluidos=antigos.filter(function(c){return atuaisCods.indexOf(c)<0;});
+  return{temSnap:true,novo:false,incluidos:incluidos,excluidos:excluidos};
+}
+
+function compararSocios(e){
+  var snap=loadSnapSocios();
+  if(!snap)return{temSnap:false,entraram:[],sairam:[]};
+  var antigos=snap.empresas[e.cnpj]||null;
+  var atuais=(e.socios_atuais||[]).map(function(s){return s.doc||s.nome;});
+  if(antigos===null)return{temSnap:true,novo:true,entraram:[],sairam:[]};
+  var entraram=(e.socios_atuais||[]).filter(function(s){return antigos.indexOf(s.doc||s.nome)<0;});
+  var sairamDocs=antigos.filter(function(d){return atuais.indexOf(d)<0;});
+  return{temSnap:true,novo:false,entraram:entraram,sairam:sairamDocs};
+}
+
+function empresasSaidasCnae(){
+  var snap=loadSnapCnae();
+  if(!snap)return[];
+  var atuaisSet={};
+  DADOS.forEach(function(e){if(!e.is_cc)atuaisSet[e.cnpj]=true;});
+  return Object.keys(snap.empresas).filter(function(cnpj){return !atuaisSet[cnpj];});
+}
+
+function empresasSaidasSocios(){
+  var snap=loadSnapSocios();
+  if(!snap)return[];
+  var atuaisSet={};
+  DADOS.forEach(function(e){if(!e.is_cc)atuaisSet[e.cnpj]=true;});
+  return Object.keys(snap.empresas).filter(function(cnpj){return !atuaisSet[cnpj];});
+}
+
+function renderCnaeBase(){
+  pages.cnaebase=1;
+  var q=(document.getElementById("srcCnaeBase").value||"").toLowerCase();
+  var modo=document.getElementById("filtCnaeBase").value;
+  var all=DADOS.filter(function(e){return !e.is_cc;});
+  var snap=loadSnapCnae();
+
+  var comparados=all.map(function(e){
+    var cmp=compararCnae(e);
+    return Object.assign({},e,{_cmp:cmp});
+  });
+
+  var alterados=comparados.filter(function(e){return e._cmp.temSnap&&!e._cmp.novo&&(e._cmp.incluidos.length>0||e._cmp.excluidos.length>0);});
+  var novas=comparados.filter(function(e){return e._cmp.temSnap&&e._cmp.novo;});
+  var saidasCnpjs=empresasSaidasCnae();
+  var saidas=saidasCnpjs.map(function(cnpj){
+    return {cnpj:cnpj,razao:"(N&#227;o consta mais no S3D/CNPJ&#225;)",grupo:"",_saiu:true,atividades_all:[]};
+  });
+
+  document.getElementById("bCnaeBase").textContent=alterados.length;
+  document.getElementById("statsCnaeBase").innerHTML=
+    sc(snap?"warn":"all",snap?"Com altera&#231;&#227;o":"Sem snapshot ainda",snap?"CNAE incluido/excluido":"Clique em Salvar snapshot",alterados.length)+
+    sc("info","Novas empresas","Desde o snapshot",novas.length)+
+    sc("amb","Empresas que sa&#237;ram","N&#227;o constam mais",saidas.length)+
+    sc("all","Total de empresas","",all.length)+
+    sc("all","&#218;ltimo snapshot",snap?fmtDataHist(new Date(snap.data).getTime()/86400000+25569):"Nenhum","");
+
+  var pool=
+    modo==="alterado"?alterados:
+    modo==="novas"?novas:
+    modo==="saidas"?saidas:
+    comparados;
+  if(q)pool=pool.filter(function(e){
+    return e.cnpj.indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1||
+      (e.atividades_all||[]).some(function(a){return a.cod.indexOf(q)>-1||a.desc.toLowerCase().indexOf(q)>-1;});
+  });
+  filtCnaeBase=pool;
+  draw("bodyCnaeBase","pagerCnaeBase",filtCnaeBase,rowCnaeBase,"cnaebase");
+}
+
+function rowCnaeBase(e){
+  if(e._saiu){
+    return '<div class="tr" style="grid-template-columns:145px 1fr 1fr 130px;background:rgba(220,38,38,.03)">'
+      +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+      +'<div class="td"><span style="color:var(--gray-50);font-style:italic">'+e.razao+'</span></div>'
+      +'<div class="td"><span style="color:var(--gray-30);font-size:10px">&#8212;</span></div>'
+      +'<div class="td"><span class="chip ch-r">&#10007; Saiu da base</span></div>'
+      +'</div>';
+  }
+  var cmp=e._cmp||{temSnap:false,incluidos:[],excluidos:[]};
+  var lista=(e.atividades_all||[]).map(function(a){
+    var inc=cmp.incluidos&&cmp.incluidos.indexOf(a.cod)>-1;
+    var cls=a.principal?"ch-b":"ch-gr";
+    var extra=inc?' style="background:var(--green-lt);color:var(--green-dark)"':"";
+    return '<span class="chip '+cls+'"'+extra+' title="'+esc(a.desc)+'">'+(a.principal?"&#9733; ":"")+esc(fmtCnae(a.cod))+(inc?" &#10003;":"")+'</span>';
+  }).join(" ");
+  if(!lista)lista='<span style="color:var(--gray-30);font-size:10px">Sem CNAE</span>';
+
+  var excluidosHtml="";
+  if(cmp.excluidos&&cmp.excluidos.length>0){
+    excluidosHtml='<div class="sub" style="color:var(--red);margin-top:3px">&#10007; Removido(s): '+cmp.excluidos.map(fmtCnae).join(", ")+'</div>';
+  }
+
+  var status;
+  if(!cmp.temSnap){status='<span class="chip ch-gr">Sem snapshot</span>';}
+  else if(cmp.novo){status='<span class="chip ch-b">Novo desde snapshot</span>';}
+  else if(cmp.incluidos.length>0||cmp.excluidos.length>0){status='<span class="chip ch-a">&#9888; Alterado</span>';}
+  else{status='<span class="chip ch-ok">Sem altera&#231;&#227;o</span>';}
+
+  return '<div class="tr" style="grid-template-columns:145px 1fr 1fr 130px">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span><div class="sub">'+esc(e.grupo)+'</div></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div></div>'
+    +'<div class="td">'+lista+excluidosHtml+'</div>'
+    +'<div class="td">'+status+'</div>'
+    +'</div>';
+}
+
+function renderSocios(){
+  pages.socios=1;
+  var q=(document.getElementById("srcSocios").value||"").toLowerCase();
+  var modo=document.getElementById("filtSocios").value;
+  var all=DADOS.filter(function(e){return !e.is_cc;});
+  var snap=loadSnapSocios();
+
+  var comparados=all.map(function(e){
+    var cmp=compararSocios(e);
+    return Object.assign({},e,{_cmp:cmp});
+  });
+
+  var comMov=comparados.filter(function(e){return e._cmp.temSnap&&!e._cmp.novo&&(e._cmp.entraram.length>0||e._cmp.sairam.length>0);});
+  var comEntrada=comparados.filter(function(e){return e._cmp.entraram&&e._cmp.entraram.length>0;});
+  var comSaida=comparados.filter(function(e){return e._cmp.sairam&&e._cmp.sairam.length>0;});
+  var novas=comparados.filter(function(e){return e._cmp.temSnap&&e._cmp.novo;});
+  var saidasCnpjs=empresasSaidasSocios();
+  var saidasEmp=saidasCnpjs.map(function(cnpj){
+    return {cnpj:cnpj,razao:"(N&#227;o consta mais no S3D/CNPJ&#225;)",grupo:"",_saiu:true,socios_atuais:[]};
+  });
+
+  document.getElementById("bSocios").textContent=comMov.length;
+  document.getElementById("statsSocios").innerHTML=
+    sc(snap?"warn":"all",snap?"Com movimenta&#231;&#227;o":"Sem snapshot ainda",snap?"Entrada ou sa&#237;da":"Clique em Salvar snapshot",comMov.length)+
+    sc("ok","Entradas","",comEntrada.length)+
+    sc("amb","Sa&#237;das","",comSaida.length)+
+    sc("info","Empresas novas","Desde o snapshot",novas.length)+
+    sc("warn","Empresas que sa&#237;ram","N&#227;o constam mais",saidasEmp.length)+
+    sc("all","Total de empresas","",all.length);
+
+  var pool=
+    modo==="mov"?comMov:
+    modo==="entrada"?comEntrada:
+    modo==="saida"?comSaida:
+    modo==="novas"?novas:
+    modo==="saidas_empresa"?saidasEmp:
+    comparados;
+  if(q)pool=pool.filter(function(e){
+    return e.cnpj.indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1||
+      (e.socios_atuais||[]).some(function(s){return s.nome.toLowerCase().indexOf(q)>-1;});
+  });
+  filtSocios=pool;
+  draw("bodySocios","pagerSocios",filtSocios,rowSocios,"socios");
+}
+
+function rowSocios(e){
+  if(e._saiu){
+    return '<div class="tr" style="grid-template-columns:145px 1fr 1fr 1fr 1fr;background:rgba(220,38,38,.03)">'
+      +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+      +'<div class="td"><span style="color:var(--gray-50);font-style:italic">'+e.razao+'</span></div>'
+      +'<div class="td"><span style="color:var(--gray-30);font-size:10px">&#8212;</span></div>'
+      +'<div class="td"><span style="color:var(--gray-30);font-size:10px">&#8212;</span></div>'
+      +'<div class="td"><span class="chip ch-r">&#10007; Empresa saiu da base</span></div>'
+      +'</div>';
+  }
+  var cmp=e._cmp||{temSnap:false,entraram:[],sairam:[]};
+  var quadroHtml;
+  if(!e.consultado){
+    quadroHtml='<span class="chip ch-r" style="font-size:9px">&#9888; N&#227;o consultado no CNPJ&#225;</span>';
+  } else if(e.socios_atuais&&e.socios_atuais.length>0){
+    quadroHtml=e.socios_atuais.map(function(s){return '<span class="chip ch-gr" style="margin:1px;display:inline-block" title="'+esc(s.qualif||"")+'">'+esc(s.nome)+'</span>';}).join(" ");
+  } else {
+    quadroHtml='<span style="color:var(--gray-30);font-size:10px">Consultado, sem s&#243;cios na base</span>';
+  }
+  var entrouHtml=cmp.entraram&&cmp.entraram.length>0
+    ?cmp.entraram.map(function(s){return '<div class="chip ch-ok" style="margin:1px;display:inline-block">&#10003; '+esc(s.nome)+'</div>';}).join(" ")
+    :'<span style="color:var(--gray-30);font-size:10px">&#8212;</span>';
+  var saiuHtml=cmp.sairam&&cmp.sairam.length>0
+    ?cmp.sairam.map(function(doc){return '<div class="chip ch-r" style="margin:1px;display:inline-block">&#10007; '+esc(doc)+'</div>';}).join(" ")
+    :'<span style="color:var(--gray-30);font-size:10px">&#8212;</span>';
+  return '<div class="tr" style="grid-template-columns:145px 1fr 1fr 1fr 1fr">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span><div class="sub">'+esc(e.grupo)+'</div></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div></div>'
+    +'<div class="td">'+quadroHtml+'</div>'
+    +'<div class="td">'+entrouHtml+'</div>'
+    +'<div class="td">'+saiuHtml+'</div>'
+    +'</div>';
+}
+
+function renderCnae(){
+  pages.cnae=1;
+  var q=(document.getElementById("srcCnae").value||"").toLowerCase();
+  var modo=document.getElementById("filtCnae").value;
+  var all=DADOS.filter(function(e){return !e.is_cc&&e.consultado;});
+
+  var pendenteTotal=all.filter(function(e){return e.cnae_obrig==="S"&&!e.ie_habilitada;});
+  // Separa: tem IE cadastrada mas inativa/não habilitada vs sem IE nenhuma
+  var pendente_inativa=pendenteTotal.filter(function(e){return e.ies&&e.ies.length>0;});
+  var pendente_sem_ie=pendenteTotal.filter(function(e){return !e.ies||e.ies.length===0;});
+  var condicional=all.filter(function(e){return e.cnae_obrig==="C";});
+  var nao_mapeado=all.filter(function(e){return e.cnae&&!e.cnae_obrig;});
+  var ok=all.filter(function(e){return e.cnae_obrig==="S"&&e.ie_habilitada;});
+  var nao_exige=all.filter(function(e){return e.cnae_obrig==="N";});
+
+  document.getElementById("bCnae").textContent=pendenteTotal.length;
+  document.getElementById("statsCnae").innerHTML=
+    sc("warn","Sem IE nenhuma","CNAE exige e n&#227;o tem cadastro",pendente_sem_ie.length)+
+    sc("warn","IE cadastrada, inativa","Precisa regularizar na SEFAZ",pendente_inativa.length)+
+    sc("amb","Condicional","Verificar manualmente",condicional.length)+
+    sc("all","N&#227;o mapeado","CNAE fora da tabela",nao_mapeado.length)+
+    sc("ok","OK","CNAE exige e tem IE ativa",ok.length)+
+    sc("all","N&#227;o exige IE","",nao_exige.length);
+
+  var pool=
+    modo==="pendente_sem_ie"?pendente_sem_ie:
+    modo==="pendente_inativa"?pendente_inativa:
+    modo==="pendente"?pendenteTotal:
+    modo==="condicional"?condicional:
+    modo==="nao_mapeado"?nao_mapeado:
+    modo==="ok"?ok:
+    modo==="nao_exige"?nao_exige:
+    all;
+  if(q) pool=pool.filter(function(e){
+    return e.cnpj.indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1||(e.cnae||"").indexOf(q)>-1;
+  });
+  filtCnae=pool;
+  draw("bodyCnae","pagerCnae",filtCnae,rowCnae,"cnae");
+}
+
+function fmtCnae(c){
+  if(!c||c.length!==7)return c||"—";
+  return c.substring(0,4)+"-"+c.substring(4,5)+"/"+c.substring(5,7);
+}
+
+function rowCnae(e){
+  var st;
+  if(!e.cnae){
+    st='<span class="chip ch-gr">Sem CNAE</span>';
+  }else if(e.cnae_obrig==="S"&&!e.ie_habilitada&&e.ies&&e.ies.length>0){
+    st='<span class="chip ch-r">&#9888; IE inativa</span>';
+  }else if(e.cnae_obrig==="S"&&!e.ie_habilitada){
+    st='<span class="chip ch-r">&#9888; Sem IE</span>';
+  }else if(e.cnae_obrig==="S"&&e.ie_habilitada){
+    st='<span class="chip ch-ok">OK</span>';
+  }else if(e.cnae_obrig==="C"){
+    st='<span class="chip ch-a">Condicional</span>';
+  }else if(e.cnae_obrig==="N"){
+    st='<span class="chip ch-gr">N&#227;o exige</span>';
+  }else{
+    st='<span class="chip ch-gr">N&#227;o mapeado</span>';
+  }
+  return '<div class="tr" style="grid-template-columns:145px 1fr 75px 110px 1fr 130px">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span><div class="sub">'+esc(e.grupo)+'</div></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div></div>'
+    +'<div class="td"><span class="chip ch-gr">'+esc(e.uf||"—")+'</span></div>'
+    +'<div class="td"><span style="font-family:monospace;font-size:11px">'+esc(fmtCnae(e.cnae))+'</span></div>'
+    +'<div class="td"><span style="font-size:10px;color:var(--gray-70)" title="'+esc(e.cnae_desc||"")+'">'+esc((e.cnae_desc||"—").substring(0,40))+'</span></div>'
+    +'<div class="td">'+st+'</div>'
+    +'</div>';
+}
+
+function renderResumo(){
+  if(!DADOS.length){document.getElementById("resumoGrid").innerHTML='<div class="empty"><strong>Processe as planilhas para ver o resumo</strong></div>';return;}
+  var deptOrder=["Fiscal"];
+  var deptColor={"DP":["#E0F2FE","#0284C7"],"Fiscal":["#FFF7ED","#FA6914"],"Contábil":["#EAFBF4","#00BF63"]};
+  var deptCols={"DP":["susp"],"Fiscal":["susp","ie_prob","sn_div"],"Contábil":["susp"]};
+  var colLabel={"susp":"Susp./Inapta","ie_prob":"IE Pendente","sn_div":"Simples Div."};
+  var colWarn={"susp":"warn","ie_prob":"warn","sn_div":"amb"};
+  var depts={};
+  TAGS_BASE.forEach(function(t){
+    var tag=t.key,dept=t.dept;
+    if(dept==="CC")return;
+    var emp=DADOS.filter(function(e){return e.tags_arr&&e.tags_arr.indexOf(tag)>-1&&!e.is_cc;});
+    var total=emp.length; if(total===0)return;
+    var susp=emp.filter(function(e){return e.sit==="Suspensa"||e.sit==="Inapta";}).length;
+    var ie_prob=emp.filter(function(e){return e.ie_probs&&e.ie_probs.length>0;}).length;
+    var sn_div=emp.filter(function(e){return e.sn_div;}).length;
+    if(!depts[dept])depts[dept]=[];
+    depts[dept].push({tag:tag,label:t.label,coord:t.coord,total:total,susp:susp,ie_prob:ie_prob,sn_div:sn_div});
+  });
+  var h="";
+  deptOrder.forEach(function(dept){
+    var rows=depts[dept]; if(!rows||!rows.length)return;
+    var co=deptColor[dept]||["#f5f5f5","#333"];
+    var cols=deptCols[dept]||["susp"];
+    h+='<div class="resumo-dept"><div class="resumo-dept-title" style="background:'+co[0]+';color:'+co[1]+'">'+esc(dept)+'</div>';
+    h+='<table class="resumo-table"><thead><tr><th>Equipe</th><th>Coordenador</th><th class="num">Empresas</th>';
+    cols.forEach(function(c){h+='<th class="num">'+colLabel[c]+'</th>';});
+    h+='</tr></thead><tbody>';
+    rows.forEach(function(r){
+      h+='<tr data-tag="'+esc(r.tag)+'" onclick="goToTag(this.dataset.tag)" style="cursor:pointer">'
+        +'<td class="resumo-equipe">'+esc(r.label)+'</td>'
+        +'<td style="font-size:11px;color:var(--gray-70)">'+esc(r.coord)+'</td>'
+        +'<td class="num ok">'+r.total.toLocaleString("pt-BR")+'</td>';
+      cols.forEach(function(c){h+='<td class="num '+(r[c]>0?colWarn[c]:"zero")+'">'+r[c]+'</td>';});
+      h+='</tr>';
+    });
+    h+='</tbody></table></div>';
+  });
+  document.getElementById("resumoGrid").innerHTML=h||'<div class="empty"><strong>Nenhuma equipe encontrada</strong></div>';
+}
+
+function goToTag(tag){
+  var selTag = document.getElementById("filtTag");
+  if(selTag){ selTag.value = tag; TAG_FILTER = tag; }
+  var tbSit = document.querySelector('.tb[onclick*="sit"]');
+  if(tbSit) { tbSit.click(); }
+}
+
+
+
+
+var CC_TAGS=["Equipe DP 4","Equipe CC 1","Equipe CC 2","Equipe CC 4","Equipe Dedicada Canopus"];
+var PER=50;
+var pages={sit:1,ie:1,simples:1,cc:1,cnae:1,cnaebase:1,socios:1};
+var rawS3D=null,rawCNPJa=null;
+var CNAE_MAP={"0111301":"S","0111302":"S","0111303":"S","0111399":"S","0112101":"S","0112102":"S","0112199":"S","0113000":"S","0114800":"S","0115600":"S","0116401":"S","0116402":"S","0116403":"S","0116499":"S","0119901":"S","0119902":"S","0119903":"S","0119904":"S","0119905":"S","0119906":"S","0119907":"S","0119908":"S","0119909":"S","0119999":"S","0121101":"S","0121102":"S","0122900":"S","0131800":"S","0132600":"S","0133401":"S","0133402":"S","0133403":"S","0133404":"S","0133405":"S","0133406":"S","0133407":"S","0133408":"S","0133409":"S","0133410":"S","0133411":"S","0133499":"S","0134200":"S","0135100":"S","0139301":"S","0139302":"S","0139303":"S","0139304":"S","0139305":"S","0139306":"S","0139399":"S","0141501":"S","0141502":"S","0142300":"S","0151201":"S","0151202":"S","0151203":"S","0152101":"S","0152102":"S","0152103":"S","0153901":"S","0153902":"S","0154700":"S","0155501":"S","0155502":"S","0155503":"S","0155504":"S","0155505":"S","0159801":"S","0159802":"S","0159803":"S","0159804":"S","0159899":"S","0161001":"N","0161002":"N","0161003":"N","0161099":"N","0162801":"N","0162802":"N","0162803":"N","0162899":"N","0163600":"N","0170900":"S","0210101":"S","0210102":"S","0210103":"S","0210104":"S","0210105":"S","0210106":"S","0210107":"S","0210108":"S","0210109":"S","0210199":"S","0220901":"S","0220902":"S","0220903":"S","0220904":"S","0220905":"S","0220906":"N","0220999":"S","0230600":"N","0311601":"S","0311602":"S","0311603":"S","0311604":"N","0312401":"S","0312402":"S","0312403":"S","0312404":"N","0321301":"S","0321302":"S","0321303":"S","0321304":"S","0321305":"N","0321399":"S","0322101":"S","0322102":"S","0322103":"S","0322104":"S","0322105":"S","0322106":"S","0322107":"N","0322199":"S","0500301":"S","0500302":"S","0600001":"S","0600002":"S","0600003":"S","0710301":"S","0710302":"S","0721901":"S","0721902":"S","0722701":"S","0722702":"S","0723501":"S","0723502":"S","0724301":"S","0724302":"S","0725100":"S","0729401":"S","0729402":"S","0729403":"S","0729404":"S","0729405":"S","0810001":"S","0810002":"S","0810003":"S","0810004":"S","0810005":"S","0810006":"S","0810007":"S","0810008":"S","0810009":"S","0810010":"S","0810099":"S","0891600":"S","0892401":"S","0892402":"S","0892403":"S","0893200":"S","0899101":"S","0899102":"S","0899103":"S","0899199":"S","0910600":"N","0990401":"S","0990402":"S","0990403":"S","1011201":"S","1011202":"S","1011203":"S","1011204":"S","1011205":"S","1012101":"S","1012102":"S","1012103":"S","1012104":"S","1013901":"S","1013902":"S","1020101":"S","1020102":"S","1031700":"S","1032501":"S","1032599":"S","1033301":"S","1033302":"S","1041400":"S","1042200":"S","1043100":"S","1051100":"S","1052000":"S","1053800":"S","1061901":"S","1061902":"S","1062700":"S","1063500":"S","1064300":"S","1065101":"S","1065102":"S","1065103":"S","1066000":"S","1069400":"S","1071600":"S","1072401":"S","1072402":"S","1081301":"S","1081302":"S","1082100":"S","1091101":"S","1091102":"S","1092900":"S","1093701":"S","1093702":"S","1094500":"S","1095300":"S","1096100":"S","1099601":"S","1099602":"S","1099603":"S","1099604":"S","1099605":"S","1099606":"S","1099607":"S","1099699":"S","1111901":"S","1111902":"S","1112700":"S","1113501":"S","1113502":"S","1121600":"S","1122401":"S","1122402":"S","1122403":"S","1122404":"S","1122499":"S","1210700":"S","1220401":"S","1220402":"S","1220403":"S","1220499":"S","1311100":"S","1312000":"S","1313800":"S","1314600":"S","1321900":"S","1322700":"S","1323500":"S","1330800":"S","1340501":"N","1340502":"N","1340599":"N","1351100":"S","1352900":"S","1353700":"S","1354500":"S","1359600":"S","1411801":"S","1411802":"S","1412601":"S","1412602":"C","1412603":"S","1413401":"S","1413402":"C","1413403":"S","1414200":"S","1421500":"S","1422300":"S","1510600":"S","1521100":"S","1529700":"S","1531901":"S","1531902":"S","1532700":"S","1533500":"S","1539400":"S","1540800":"S","1610201":"S","1610202":"S","1621800":"S","1622601":"S","1622602":"S","1622699":"S","1623400":"S","1629301":"S","1629302":"S","1710900":"S","1721400":"S","1722200":"S","1731100":"S","1732000":"S","1733800":"S","1741901":"S","1741902":"S","1742701":"S","1742702":"S","1742799":"S","1749400":"S","1811301":"S","1811302":"S","1812100":"S","1813001":"S","1813099":"S","1821100":"N","1822901":"N","1822999":"N","1830001":"N","1830002":"N","1830003":"N","1910100":"S","1921700":"S","1922501":"S","1922502":"S","1922599":"S","1931400":"S","1932200":"S","2011800":"S","2012600":"S","2013401":"S","2013402":"S","2014200":"S","2019301":"S","2019399":"S","2021500":"S","2022300":"S","2029100":"S","2031200":"S","2032100":"S","2033900":"S","2040100":"S","2051700":"S","2052500":"S","2061400":"S","2062200":"S","2063100":"S","2071100":"S","2072000":"S","2073800":"S","2091600":"S","2092401":"S","2092402":"S","2092403":"S","2093200":"S","2094100":"S","2099101":"S","2099199":"S","2110600":"S","2121101":"S","2121102":"S","2121103":"S","2122000":"S","2123800":"S","2211100":"S","2212900":"N","2219600":"S","2221800":"S","2222600":"S","2223400":"S","2229301":"S","2229302":"S","2229303":"S","2229399":"S","2311700":"S","2312500":"S","2319200":"S","2320600":"S","2330301":"S","2330302":"S","2330303":"S","2330304":"S","2330305":"S","2330399":"S","2341900":"S","2342701":"S","2342702":"S","2349401":"S","2349499":"S","2391501":"S","2391502":"S","2391503":"S","2392300":"S","2399101":"S","2399102":"S","2399199":"S","2411300":"S","2412100":"S","2421100":"S","2422901":"S","2422902":"S","2423701":"S","2423702":"S","2424501":"S","2424502":"S","2431800":"S","2439300":"S","2441501":"S","2441502":"S","2442300":"S","2443100":"S","2449101":"S","2449102":"S","2449103":"S","2449199":"S","2451200":"S","2452100":"S","2511000":"S","2512800":"S","2513600":"S","2521700":"S","2522500":"S","2531401":"S","2531402":"S","2532201":"S","2532202":"S","2539001":"S","2539002":"S","2541100":"S","2542000":"S","2543800":"S","2550101":"S","2550102":"S","2591800":"S","2592601":"S","2592602":"S","2593400":"S","2599301":"S","2599302":"S","2599399":"S","2610800":"S","2621300":"S","2622100":"S","2631100":"S","2632900":"S","2640000":"S","2651500":"S","2652300":"S","2660400":"S","2670101":"S","2670102":"S","2680900":"S","2710401":"S","2710402":"S","2710403":"S","2721000":"S","2722801":"S","2722802":"N","2731700":"S","2732500":"S","2733300":"S","2740601":"S","2740602":"S","2751100":"S","2759701":"S","2759799":"S","2790201":"S","2790202":"S","2790299":"S","2811900":"S","2812700":"S","2813500":"S","2814301":"S","2814302":"S","2815101":"S","2815102":"S","2821601":"S","2821602":"S","2822401":"S","2822402":"S","2823200":"S","2824101":"S","2824102":"S","2825900":"S","2829101":"S","2829199":"S","2831300":"S","2832100":"S","2833000":"S","2840200":"S","2851800":"S","2852600":"S","2853400":"S","2854200":"S","2861500":"S","2862300":"S","2863100":"S","2864000":"S","2865800":"S","2866600":"S","2869100":"S","2910701":"S","2910702":"S","2910703":"S","2920401":"S","2920402":"S","2930101":"S","2930102":"S","2930103":"S","2941700":"S","2942500":"S","2943300":"S","2944100":"S","2945000":"S","2949201":"S","2949299":"S","2950600":"C","3011301":"S","3011302":"S","3012100":"S","3031800":"S","3032600":"S","3041500":"S","3042300":"S","3050400":"S","3091101":"S","3091102":"S","3092000":"S","3099700":"S","3101200":"S","3102100":"S","3103900":"S","3104700":"S","3211601":"S","3211602":"S","3211603":"S","3212400":"S","3220500":"S","3230200":"S","3240001":"S","3240002":"S","3240003":"S","3240099":"S","3250701":"S","3250702":"S","3250703":"S","3250704":"S","3250705":"S","3250706":"N","3250707":"S","3250709":"N","3291400":"S","3292201":"S","3292202":"S","3299001":"S","3299002":"S","3299003":"S","3299004":"S","3299005":"S","3299006":"S","3299099":"S","3311200":"C","3312102":"C","3312103":"C","3312104":"C","3313901":"C","3313902":"C","3313999":"C","3314701":"C","3314702":"C","3314703":"C","3314704":"C","3314705":"C","3314706":"C","3314707":"C","3314708":"C","3314709":"C","3314710":"C","3314711":"C","3314712":"C","3314713":"C","3314714":"C","3314715":"C","3314716":"C","3314717":"C","3314718":"C","3314719":"C","3314720":"C","3314721":"C","3314722":"C","3314799":"C","3315500":"C","3316301":"C","3316302":"C","3317101":"C","3317102":"C","3319800":"C","3321000":"S","3329501":"C","3329599":"S","3511501":"S","3511502":"N","3512300":"S","3513100":"S","3514000":"S","3520401":"S","3520402":"S","3530100":"S","3600601":"S","3600602":"S","3701100":"N","3702900":"N","3811400":"N","3812200":"N","3821100":"N","3822000":"N","3831901":"S","3831999":"S","3832700":"S","3839401":"S","3839499":"S","3900500":"N","4110700":"N","4120400":"S","4211101":"S","4211102":"S","4212000":"S","4213800":"N","4221901":"S","4221902":"S","4221903":"C","4221904":"S","4221905":"C","4222701":"S","4222702":"S","4223500":"S","4291000":"S","4292801":"S","4292802":"C","4299501":"S","4299599":"S","4311801":"S","4311802":"S","4312600":"N","4313400":"S","4319300":"S","4321500":"S","4322301":"S","4322302":"C","4322303":"C","4329101":"N","4329102":"C","4329103":"C","4329104":"C","4329105":"N","4329199":"N","4330401":"S","4330402":"S","4330403":"S","4330404":"N","4330405":"S","4330499":"S","4391600":"S","4399101":"N","4399102":"N","4399103":"S","4399104":"N","4399105":"S","4399199":"S","4511101":"S","4511102":"S","4511103":"S","4511104":"S","4511105":"S","4511106":"S","4512901":"N","4512902":"N","4520001":"C","4520002":"C","4520003":"C","4520004":"C","4520005":"N","4520006":"N","4520007":"C","4520008":"C","4530701":"S","4530702":"S","4530703":"S","4530704":"S","4530705":"S","4530706":"N","4541201":"S","4541202":"S","4541203":"S","4541204":"S","4541205":"S","4542101":"N","4542102":"N","4543900":"C","4611700":"N","4612500":"N","4613300":"N","4614100":"N","4615000":"N","4616800":"N","4617600":"N","4618401":"N","4618402":"N","4618403":"N","4618499":"N","4619200":"N","4621400":"S","4622200":"S","4623101":"S","4623102":"S","4623103":"S","4623104":"S","4623105":"S","4623106":"S","4623107":"S","4623108":"S","4623109":"S","4623199":"S","4631100":"S","4632001":"S","4632002":"S","4632003":"S","4633801":"S","4633802":"S","4633803":"S","4634601":"S","4634602":"S","4634603":"S","4634699":"S","4635401":"S","4635402":"S","4635403":"S","4635499":"S","4636201":"S","4636202":"S","4637101":"S","4637102":"S","4637103":"S","4637104":"S","4637105":"S","4637106":"S","4637107":"S","4637199":"S","4639701":"S","4639702":"S","4641901":"S","4641902":"S","4641903":"S","4642701":"S","4642702":"S","4643501":"S","4643502":"S","4644301":"S","4644302":"S","4645101":"S","4645102":"S","4645103":"S","4646001":"S","4646002":"S","4647801":"S","4647802":"S","4649401":"S","4649402":"S","4649403":"S","4649404":"S","4649405":"S","4649406":"S","4649407":"S","4649408":"S","4649409":"S","4649410":"S","4649499":"S","4651601":"S","4651602":"S","4652400":"S","4661300":"S","4662100":"S","4663000":"S","4664800":"S","4665600":"S","4669901":"S","4669999":"S","4671100":"S","4672900":"S","4673700":"S","4674500":"S","4679601":"S","4679602":"S","4679603":"S","4679604":"S","4679699":"S","4681801":"S","4681802":"S","4681803":"S","4681804":"S","4681805":"S","4682600":"S","4683400":"S","4684201":"S","4684202":"S","4684299":"S","4685100":"S","4686901":"S","4686902":"S","4687701":"S","4687702":"S","4687703":"S","4689301":"S","4689302":"S","4689399":"S","4691500":"S","4692300":"S","4693100":"S","4711301":"S","4711302":"S","4712100":"S","4713001":"S","4713002":"S","4713003":"N","4721102":"S","4721103":"S","4721104":"S","4722901":"S","4722902":"S","4723700":"S","4724500":"S","4729601":"S","4729602":"S","4729699":"S","4731800":"S","4732600":"S","4741500":"S","4742300":"S","4743100":"S","4744001":"S","4744002":"S","4744003":"S","4744004":"S","4744005":"S","4744006":"S","4744099":"S","4751201":"S","4751202":"S","4752100":"S","4753900":"S","4754701":"S","4754702":"S","4754703":"S","4755501":"S","4755502":"S","4755503":"S","4756300":"S","4757100":"S","4759801":"S","4759899":"S","4761001":"S","4761002":"S","4761003":"S","4762800":"S","4763601":"S","4763602":"S","4763603":"S","4763604":"S","4763605":"S","4771701":"S","4771702":"S","4771703":"S","4771704":"S","4772500":"S","4773300":"S","4774100":"S","4781400":"S","4782201":"S","4782202":"S","4783101":"S","4783102":"S","4784900":"S","4785701":"S","4785799":"S","4789001":"S","4789002":"S","4789003":"S","4789004":"S","4789005":"S","4789006":"S","4789007":"S","4789008":"S","4789009":"S","4789099":"S","4911600":"S","4912401":"S","4912402":"S","4912403":"N","4921301":"N","4921302":"S","4922101":"S","4922102":"S","4922103":"N","4923001":"N","4923002":"N","4924800":"C","4929901":"N","4929902":"S","4929903":"N","4929904":"S","4929999":"S","4930201":"N","4930202":"S","4930203":"S","4930204":"S","4940000":"S","4950700":"N","5011401":"S","5011402":"S","5012201":"S","5012202":"S","5021101":"N","5021102":"S","5022001":"N","5022002":"S","5030101":"N","5030102":"N","5030103":"N","5091201":"N","5091202":"S","5099801":"C","5099899":"C","5111100":"S","5112901":"S","5112999":"S","5120000":"S","5130700":"N","5211701":"S","5211702":"N","5211799":"S","5212500":"N","5221400":"N","5222200":"N","5223100":"N","5229001":"N","5229002":"N","5229099":"N","5231101":"N","5231102":"N","5232000":"N","5239701":"N","5239799":"N","5240101":"N","5240199":"N","5250801":"N","5250802":"N","5250803":"N","5250804":"N","5250805":"N","5310501":"S","5310502":"S","5320201":"N","5320202":"N","5510801":"N","5510802":"N","5510803":"N","5590601":"N","5590602":"N","5590603":"N","5590699":"N","5611201":"S","5611202":"S","5611203":"S","5612100":"S","5620101":"S","5620102":"C","5620103":"S","5620104":"S","5811500":"N","5812301":"N","5812302":"N","5813100":"N","5819100":"S","5821200":"S","5822101":"S","5822102":"S","5823900":"S","5829800":"S","5911101":"N","5911102":"N","5911199":"N","5912001":"N","5912002":"N","5912099":"N","5913800":"N","5914600":"N","5920100":"N","6010100":"C","6021700":"C","6022501":"S","6022502":"S","6110801":"S","6110802":"S","6110803":"S","6110899":"S","6120501":"S","6120502":"S","6120599":"S","6130200":"S","6141800":"S","6142600":"S","6143400":"S","6190601":"S","6190602":"S","6190699":"S","6201501":"C","6201502":"N","6202300":"C","6203100":"C","6204000":"N","6209100":"N","6311900":"C","6319400":"C","6391700":"N","6399200":"N","6410700":"N","6421200":"N","6422100":"N","6423900":"N","6424701":"N","6424702":"N","6424703":"N","6424704":"N","6431000":"N","6432800":"N","6433600":"N","6434400":"N","6435201":"N","6435202":"N","6435203":"N","6436100":"N","6437900":"N","6438701":"N","6438702":"N","6440900":"S","6450600":"N","6461100":"N","6462000":"N","6463800":"N","6470101":"N","6470102":"N","6470103":"N","6491300":"N","6492100":"N","6493000":"N","6499901":"N","6499902":"N","6499903":"N","6499904":"N","6499905":"N","6499999":"N","6511101":"N","6511102":"N","6512000":"N","6520100":"N","6530800":"N","6541300":"N","6542100":"N","6550200":"N","6611801":"N","6611802":"N","6611803":"N","6611804":"N","6612601":"N","6612602":"N","6612603":"N","6612604":"N","6612605":"N","6613400":"N","6619301":"N","6619302":"N","6619303":"N","6619304":"N","6619305":"N","6619399":"N","6621501":"N","6621502":"N","6622300":"N","6629100":"N","6630400":"N","6810201":"N","6810202":"C","6810203":"N","6821801":"N","6821802":"N","6822600":"N","6911701":"N","6911702":"N","6911703":"N","6912500":"N","6920601":"N","6920602":"N","7020400":"N","7111100":"N","7112000":"N","7119701":"N","7119702":"N","7119703":"N","7119704":"N","7119799":"N","7120100":"N","7210000":"N","7220700":"N","7311400":"N","7312200":"N","7319001":"N","7319002":"N","7319003":"N","7319004":"N","7319099":"N","7320300":"N","7410203":"N","7410299":"N","7410202":"N","7420001":"N","7420002":"N","7420003":"N","7420004":"N","7420005":"N","7490101":"N","7490102":"N","7490103":"N","7490104":"N","7490105":"N","7490199":"N","7500100":"N","7711000":"N","7719501":"N","7719502":"N","7719599":"N","7721700":"N","7722500":"N","7723300":"N","7729201":"N","7729202":"N","7729203":"N","7729299":"N","7731400":"N","7732201":"N","7732202":"N","7733100":"N","7739001":"N","7739002":"N","7739003":"N","7739099":"N","7740300":"N","7810800":"N","7820500":"N","7830200":"N","7911200":"N","7912100":"N","7990200":"N","8011101":"N","8011102":"N","8012900":"S","8020001":"N","8020002":"N","8030700":"N","8111700":"N","8112500":"N","8121400":"N","8122200":"N","8129000":"N","8130300":"N","8211300":"N","8219901":"N","8219999":"N","8220200":"N","8230001":"N","8230002":"N","8291100":"N","8292000":"N","8299701":"N","8299702":"N","8299703":"N","8299704":"N","8299705":"N","8299706":"N","8299707":"N","8299799":"N","8411600":"N","8412400":"N","8413200":"N","8421300":"N","8422100":"N","8423000":"N","8424800":"N","8425600":"N","8430200":"N","8511200":"N","8512100":"N","8513900":"N","8520100":"N","8531700":"N","8532500":"N","8533300":"N","8541400":"N","8542200":"N","8550301":"N","8550302":"N","8591100":"N","8592901":"N","8592902":"N","8592903":"N","8592999":"N","8593700":"N","8599601":"N","8599602":"N","8599603":"N","8599604":"N","8599605":"N","8599699":"N","8610101":"N","8610102":"N","8621601":"N","8621602":"N","8622400":"N","8630501":"N","8630502":"N","8630503":"N","8630504":"N","8630506":"N","8630507":"N","8630599":"N","8640201":"N","8640202":"N","8640203":"N","8640204":"N","8640205":"N","8640206":"N","8640207":"N","8640208":"N","8640209":"N","8640210":"N","8640211":"N","8640212":"N","8640213":"N","8640214":"N","8640299":"N","8650001":"N","8650002":"N","8650003":"N","8650004":"N","8650005":"N","8650006":"N","8650007":"N","8650099":"N","8660700":"N","8690901":"N","8690902":"N","8690903":"N","8690904":"N","8690999":"N","8711501":"N","8711502":"N","8711503":"N","8711504":"N","8711505":"N","8712300":"N","8720401":"N","8720499":"N","8730101":"N","8730102":"N","8730199":"N","8800600":"N","9001901":"N","9001902":"N","9001903":"N","9001904":"N","9001905":"N","9001906":"N","9001999":"N","9002701":"N","9002702":"N","9003500":"N","9101500":"N","9102301":"N","9102302":"N","9103100":"N","9200301":"N","9200302":"N","9200399":"N","9311500":"N","9312300":"N","9313100":"N","9319101":"N","9319199":"N","9321200":"N","9329801":"N","9329802":"N","9329803":"N","9329804":"N","9329899":"N","9411100":"N","9412001":"N","9412099":"N","9420100":"N","9430800":"N","9491000":"N","9492800":"N","9493600":"N","9499500":"N","9511800":"C","9512600":"C","9521500":"C","9529101":"N","9529102":"N","9529103":"N","9529104":"C","9529105":"N","9529106":"N","9529199":"N","9601701":"N","9601702":"N","9601703":"N","9602501":"N","9602502":"N","9603301":"N","9603302":"N","9603303":"N","9603304":"N","9603305":"N","9603399":"N","9609202":"N","9609207":"N","9609208":"N","9609204":"N","9609205":"N","9609206":"N","9609299":"N","9700500":"N","9900800":"N"};
+var DADOS=[];
+var filtSit=[],filtIE=[],filtSimples=[],filtCC=[],filtCnae=[];
+
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function isSN(r){return r&&r.toLowerCase().indexOf("simples")>-1;}
+function isCC(tags){return tags&&tags.some(function(t){return CC_TAGS.indexOf(t)>-1;});}
+function isentoSim(v){return ["sim","s","yes"].indexOf((v||"").toLowerCase())>-1;}
+
+// ── UPLOAD ──
+function onDrag(e,id,on){e.preventDefault();document.getElementById(id).classList.toggle("drag",on);}
+function onDrop(e,tipo){e.preventDefault();var f=e.dataTransfer.files[0];if(f){if(tipo==="s3d")handleS3D(f);else handleCNPJa(f);}}
+
+function handleS3D(file){
+  if(!file)return;
+  showToast("Lendo S3D...");
+  var r=new FileReader();
+  r.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:"binary"});
+      rawS3D=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1,defval:""});
+      document.getElementById("cardS3D").classList.add("done");
+      document.getElementById("statusS3D").textContent="&#10003; "+file.name+" ("+(rawS3D.length-1)+" empresas)";
+      checkReady();showToast("S3D carregado!");
+    }catch(ex){showToast("Erro: "+ex.message);}
+  };
+  r.readAsBinaryString(file);
+}
+
+function handleCNPJa(file){
+  if(!file)return;
+  showToast("Lendo CNPJá...");
+  var r=new FileReader();
+  r.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:"binary"});
+      rawCNPJa={};
+      ["Estabelecimentos","Inscrições","Histórico","Atividades","Sócios"].forEach(function(sh){
+        if(wb.Sheets[sh])rawCNPJa[sh]=XLSX.utils.sheet_to_json(wb.Sheets[sh],{header:1,defval:""});
+      });
+      document.getElementById("cardCNPJa").classList.add("done");
+      document.getElementById("statusCNPJa").textContent="&#10003; "+file.name;
+      checkReady();showToast("CNPJá carregado!");
+    }catch(ex){showToast("Erro: "+ex.message);}
+  };
+  r.readAsBinaryString(file);
+}
+
+function checkReady(){
+  var ok=!!(rawS3D&&rawCNPJa);
+  document.getElementById("btnProc").disabled=!ok;
+  document.getElementById("hintProc").textContent=ok?"Clique em Processar para cruzar os dados":"Carregue as duas planilhas para habilitar";
+}
+
+// Normaliza número de IE (remove não-dígitos e zeros à esquerda)
+function normIE(s){var d=String(s||"").replace(/[^\d]/g,"");return d.replace(/^0+/,"")||"0";}
+
+function processar(){
+  showToast("Processando...");
+  document.getElementById("btnProc").disabled=true;
+  setTimeout(function(){
+    try{
+      // Lê S3D
+      var hS=rawS3D[0].map(function(h){return String(h).trim();});
+      var cS={};hS.forEach(function(h,i){cS[h]=i;});
+      var s3d={};
+      for(var i=1;i<rawS3D.length;i++){
+        var row=rawS3D[i];
+        var cnpj=String(row[cS["CNPJ"]]||"").trim();
+        if(!cnpj)continue;
+        var tr=String(row[cS["Tags"]]||"").trim();
+        var tags=tr?tr.split(",").map(function(t){return t.trim();}).filter(function(t){return t&&t!=="CX";}):[];
+        s3d[cnpj]={
+          razao:String(row[cS["Razão social"]]||"").trim().substring(0,60),
+          regime:String(row[cS["Regime"]]||"").trim(),
+          ie:String(row[cS["Inscrições Estaduais"]]||"").trim(),
+          isento:String(row[cS["Empresa Isenta"]]||"").trim(),
+          im:String(row[cS["Insc. Municipal"]]||"").trim(),
+          uf:String(row[cS["UF"]]||"").trim(),
+          grupo:String(row[cS["Grupo de Empresas"]]||"").trim().substring(0,40),
+          tags:tags,is_cc:isCC(tags)
+        };
+      }
+      // Lê CNPJá Estabelecimentos
+      var hE=rawCNPJa["Estabelecimentos"][1].map(function(h){return String(h||"").trim();});
+      var cE={};hE.forEach(function(h,i){cE[h]=i;});
+      // Mapeamento robusto por palavras-chave para colunas críticas
+      hE.forEach(function(h,i){
+        if(h.indexOf("Simples")>-1&&h.indexOf("Optante")>-1) cE["_simples"]=i;
+        if(h.indexOf("Simples")>-1&&h.indexOf("Inclus")>-1) cE["_simples_inc"]=i;
+        if(h==="Situação Cadastral"||h.indexOf("Situa")>-1&&h.indexOf("Cadastral")>-1&&h.indexOf("C")===0&&h.indexOf("Data")<0&&h.indexOf("Motivo")<0) cE["_sit"]=i;
+        if(h.indexOf("Situa")>-1&&h.indexOf("Data")>-1) cE["_sit_data"]=i;
+        if(h.indexOf("Motivo")>-1) cE["_sit_motivo"]=i;
+      });
+      var estab={};
+      for(var i=2;i<rawCNPJa["Estabelecimentos"].length;i++){
+        var row=rawCNPJa["Estabelecimentos"][i];
+        var cr=String(row[cE["CNPJ"]]||"").trim().replace(/\D/g,"").replace(/^0+(?=\d{14})/,"");
+        cr=cr.padStart?cr.padStart(14,"0"):cr;
+        var cnpj=cr.length===14?cr.substring(0,2)+"."+cr.substring(2,5)+"."+cr.substring(5,8)+"/"+cr.substring(8,12)+"-"+cr.substring(12):cr;
+        estab[cnpj]={
+          sit:String(row[cE["_sit"]!==undefined?cE["_sit"]:cE["Situação Cadastral"]]||"").trim(),
+          sit_data:String(row[cE["_sit_data"]!==undefined?cE["_sit_data"]:cE["Situação Cadastral Data"]]||"").substring(0,10),
+          sit_motivo:String(row[cE["_sit_motivo"]!==undefined?cE["_sit_motivo"]:cE["Situação Motivo"]]||"").trim(),
+          simples:String(row[cE["_simples"]!==undefined?cE["_simples"]:cE["Simples Nacional Optante"]]||"").trim(),
+          simples_inc:String(row[cE["_simples_inc"]!==undefined?cE["_simples_inc"]:cE["Simples Nacional Inclusão"]]||"").substring(0,10),
+          uf:String(row[cE["Estado"]]||"").trim(),
+          cnae:String(row[cE["Atividade Principal Código"]]||"").trim().padStart(7,"0"),
+          cnae_desc:String(row[cE["Atividade Principal"]]||"").trim()
+        };
+      }
+      // Lê CNPJá Inscrições
+      var hI=rawCNPJa["Inscrições"][1].map(function(h){return String(h).trim();});
+      var cI={};hI.forEach(function(h,i){cI[h]=i;});
+      var ies={};
+      for(var i=2;i<rawCNPJa["Inscrições"].length;i++){
+        var row=rawCNPJa["Inscrições"][i];
+        var cr=String(row[cI["CNPJ"]]||"").trim().replace(/\D/g,"");cr=cr.length<14?("00000000000000"+cr).slice(-14):cr;
+        var cnpj=cr.length===14?cr.substring(0,2)+"."+cr.substring(2,5)+"."+cr.substring(5,8)+"/"+cr.substring(8,12)+"-"+cr.substring(12):cr;
+        if(!ies[cnpj])ies[cnpj]=[];
+        var _ie_raw=String(row[cI["Inscrição Estadual"]]||"").trim();
+        ies[cnpj].push({
+          uf:String(row[cI["Estado"]]||"").trim(),
+          ie_raw:_ie_raw,
+          ie_num:normIE(_ie_raw),
+          tipo:String(row[cI["Tipo"]]||"").trim(),
+          hab:String(row[cI["Habilitada"]]||"").trim(),
+          sit:String(row[cI["Situação Cadastral"]]||"").trim()
+        });
+      }
+
+      // Processa Histórico do Simples Nacional
+      var historico={};
+      if(rawCNPJa["Histórico"]){
+        var hH=rawCNPJa["Histórico"][1]||[];
+        var cH={};
+        hH.forEach(function(h,i){cH[h]=i;});
+        for(var i=2;i<rawCNPJa["Histórico"].length;i++){
+          var row=rawCNPJa["Histórico"][i];
+          var cr=String(row[cH["CNPJ"]]||"").trim().replace(/\D/g,"");cr=cr.length<14?("00000000000000"+cr).slice(-14):cr;
+          var cnpj=cr.length===14?cr.substring(0,2)+"."+cr.substring(2,5)+"."+cr.substring(5,8)+"/"+cr.substring(8,12)+"-"+cr.substring(12):cr;
+          if(!cnpj||cnpj==="—")continue;
+          if(!historico[cnpj])historico[cnpj]=[];
+          historico[cnpj].push({
+            regime:String(row[cH["Regime Tributário"]]||"").trim(),
+            data_ini:row[cH["Data Inicial"]],
+            data_fim:row[cH["Data Final"]],
+            motivo:String(row[cH["Motivo de Encerramento"]]||"").trim()
+          });
+        }
+        // Ordena cada CNPJ por data_fim desc (mais recente primeiro)
+        Object.keys(historico).forEach(function(cnpj){
+          historico[cnpj].sort(function(a,b){
+            var da=typeof a.data_fim==="number"?a.data_fim:(a.data_fim?new Date(a.data_fim).getTime():0);
+            var db=typeof b.data_fim==="number"?b.data_fim:(b.data_fim?new Date(b.data_fim).getTime():0);
+            return db-da;
+          });
+        });
+      }
+
+      // Processa Atividades (CNAEs principal + secundários)
+      var atividades={};
+      if(rawCNPJa["Atividades"]){
+        var hA=rawCNPJa["Atividades"][1]||[];
+        var cA={};
+        hA.forEach(function(h,i){cA[h]=i;});
+        for(var i=2;i<rawCNPJa["Atividades"].length;i++){
+          var row=rawCNPJa["Atividades"][i];
+          var cr=String(row[cA["CNPJ"]]||"").trim().replace(/\D/g,"");cr=cr.length<14?("00000000000000"+cr).slice(-14):cr;
+          var cnpj=cr.length===14?cr.substring(0,2)+"."+cr.substring(2,5)+"."+cr.substring(5,8)+"/"+cr.substring(8,12)+"-"+cr.substring(12):cr;
+          if(!cnpj||cnpj==="—")continue;
+          if(!atividades[cnpj])atividades[cnpj]=[];
+          var codAt=String(row[cA["Atividade Econômica Código"]]||"").trim().padStart(7,"0");
+          atividades[cnpj].push({
+            principal:String(row[cA["Principal"]]||"").trim()==="Sim",
+            cod:codAt,
+            desc:String(row[cA["Atividade Econômica"]]||"").trim()
+          });
+        }
+      }
+
+      // Processa Sócios (snapshot atual)
+      var socios={};
+      if(rawCNPJa["Sócios"]){
+        var hSo=rawCNPJa["Sócios"][1]||[];
+        var cSo={};
+        hSo.forEach(function(h,i){cSo[h]=i;});
+        for(var i=2;i<rawCNPJa["Sócios"].length;i++){
+          var row=rawCNPJa["Sócios"][i];
+          var cr=String(row[cSo["CNPJ"]]||"").trim().replace(/\D/g,"");cr=cr.length<14?("00000000000000"+cr).slice(-14):cr;
+          var cnpj=cr.length===14?cr.substring(0,2)+"."+cr.substring(2,5)+"."+cr.substring(5,8)+"/"+cr.substring(8,12)+"-"+cr.substring(12):cr;
+          if(!cnpj||cnpj==="—")continue;
+          if(!socios[cnpj])socios[cnpj]=[];
+          var dtEntrada=row[cSo["Data de Entrada"]];
+          socios[cnpj].push({
+            nome:String(row[cSo["Nome"]]||"").trim(),
+            doc:String(row[cSo["CPF / CNPJ"]]||"").trim(),
+            tipo:String(row[cSo["Tipo"]]||"").trim(),
+            qualif:String(row[cSo["Qualificação"]]||"").trim(),
+            data_entrada:dtEntrada
+          });
+        }
+      }
+
+      // Monta DADOS
+      DADOS=[];
+      Object.keys(s3d).forEach(function(cnpj){
+        var s=s3d[cnpj];
+        var e=estab[cnpj]||{};
+        var consultado=!!estab[cnpj]; // CNPJ foi encontrado na consulta do CNPJá?
+        var ie_list=ies[cnpj]||[];
+        var isento=isentoSim(s.isento);
+        var ie_list_c=ie_list; // IEs do CNPJá
+
+        // Extrai IEs do S3D com UF e número normalizados
+        var ies_s3d=[];
+        if(s.ie){
+          // Padrão: "UF: GO - IE: 107072351"
+          var re_ie2=/UF:\s*(\S+)\s*-\s*IE:\s*(\S+)/g;
+          var m2;
+          while((m2=re_ie2.exec(s.ie))!==null){
+            ies_s3d.push({uf:m2[1].trim(),raw:m2[2].trim(),num:normIE(m2[2].trim())});
+          }
+          // Fallback: só número
+          if(ies_s3d.length===0){
+            var re_ie3=/IE:\s*([^\s,;\n]+)/g;
+            var m3;
+            while((m3=re_ie3.exec(s.ie))!==null){
+              ies_s3d.push({uf:"?",raw:m3[1].trim(),num:normIE(m3[1].trim())});
+            }
+          }
+        }
+
+        // Classifica problemas de IE
+        // Regras de negócio:
+        // ISENTA CORRETA   = S3D "Sim" E CNPJá sem IE
+        // ERRO CADASTRAL   = S3D "Sim" MAS CNPJá tem IE (deveria atualizar S3D para Não)
+        // SEM IE PENDENTE  = S3D "Não" E sem IE no S3D E sem IE no CNPJá
+        // IE FALTANDO S3D  = CNPJá tem IE mas não cadastrada no S3D
+        // IE NAO ENCONTRADA= S3D tem número mas CNPJá não tem esse número
+        // IE NAO HABILITADA= IE existe nos dois mas está inativa no CNPJá
+        // IE RESTRICAO     = IE existe nos dois mas com restrição no CNPJá
+
+        var ie_probs=[];
+
+        // 0. CNPJ não foi encontrado na consulta do CNPJá → não dá para confirmar isenção
+        if(!consultado){
+          ie_probs.push({tipo:"NAO_CONSULTADO",desc:"CNPJ não encontrado na consulta do CNPJá — não é possível confirmar isenção ou IE"});
+        }
+
+        // 1. S3D diz Isenta MAS CNPJá tem IE → erro cadastral
+        if(consultado && isento && ie_list_c.length>0){
+          ie_probs.push({
+            tipo:"ERRO_ISENTA_COM_IE",
+            desc:"S3D marcado como Isenta mas CNPJá tem "+ie_list_c.length+" IE(s) ativa(s) — verifique se isenção procede"
+          });
+        }
+
+        // 2. S3D diz Não isenta, sem IE nos dois lados → falta cadastrar
+        if(consultado && !isento && ies_s3d.length===0 && ie_list_c.length===0){
+          ie_probs.push({tipo:"SEM_IE",desc:"Não isenta e sem IE em nenhuma fonte — verificar obrigatoriedade"});
+        }
+
+        // 3. IE cadastrada no S3D → verifica no CNPJá
+        if(consultado) ies_s3d.forEach(function(ie_s){
+          var match=ie_list_c.find(function(x){return x.ie_num===ie_s.num;});
+          if(!match){
+            ie_probs.push({tipo:"IE_NAO_ENCONTRADA",desc:"IE "+ie_s.raw+" cadastrada no S3D não encontrada no CNPJá"});
+          } else if(match.hab==="Não"){
+            ie_probs.push({tipo:"IE_NAO_HABILITADA",desc:"IE "+ie_s.raw+" está não habilitada no CNPJá ("+match.sit+")"});
+          } else if(match.sit!=="Sem restrição"){
+            ie_probs.push({tipo:"IE_RESTRICAO",desc:"IE "+ie_s.raw+" com restrição no CNPJá: "+match.sit});
+          }
+        });
+
+        // 4. CNPJá tem IE habilitada que não está no S3D → falta cadastrar
+        // (IEs não habilitadas no CNPJá não precisam estar no S3D)
+        var nums_s3d=ies_s3d.map(function(x){return x.num;});
+        if(consultado) ie_list_c.forEach(function(ie_c){
+          if(nums_s3d.indexOf(ie_c.ie_num)<0 && !isento && ie_c.hab==="Sim"){
+            ie_probs.push({tipo:"IE_FALTANDO_S3D",desc:"IE "+ie_c.uf+": "+ie_c.ie_raw+" consta no CNPJá (habilitada) mas não está cadastrada no S3D"});
+          }
+        });
+
+        // Status geral
+        var ie_status=
+          !consultado?"nao_consultado":
+          // Isenta correta: S3D Sim e CNPJá sem IE
+          (isento && ie_list_c.length===0)?"isenta_ok":
+          // Erro: S3D Sim mas CNPJá tem IE
+          (isento && ie_list_c.length>0)?"erro_isenta":
+          ie_probs.length===0?"ok":"problema";
+        var sn_s3d=isSN(s.regime);
+        var sn_cnpja=(e.simples||"").toLowerCase()==="sim";
+        var cnae=e.cnae||"";
+        var cnae_obrig=CNAE_MAP[cnae]||null; // 'S','N','C' ou null se não mapeado
+        var ie_habilitada=ies_s3d.some(function(ie_s){
+          var match=ie_list_c.find(function(x){return x.ie_num===ie_s.num;});
+          return match&&match.hab==="Sim";
+        })||ie_list_c.some(function(x){return x.hab==="Sim";});
+
+        DADOS.push({
+          cnpj:cnpj,razao:s.razao,grupo:s.grupo,regime:s.regime,
+          uf_s3d:s.uf,
+          uf:s.uf||e.uf||"",isento:s.isento,ie_s3d:s.ie,im:s.im,
+          tags:s.tags,tags_arr:s.tags,is_cc:s.is_cc,
+          sit:e.sit||"Não encontrada",sit_data:e.sit_data||"",sit_motivo:e.sit_motivo||"",
+          simples_cnpja:e.simples||"Não",simples_inc:e.simples_inc||"",
+          ies:ie_list_c,ie_status:ie_status,ie_probs:ie_probs,ies_s3d:ies_s3d,
+          sn_s3d:sn_s3d,sn_cnpja:sn_cnpja,sn_div:(sn_s3d&&!sn_cnpja)||(sn_cnpja&&!sn_s3d),
+          cnae:cnae,cnae_desc:e.cnae_desc||"",cnae_obrig:cnae_obrig,ie_habilitada:ie_habilitada,
+          consultado:consultado,
+          hist:historico[cnpj]||[],
+          atividades_all:atividades[cnpj]||[],
+          socios_atuais:socios[cnpj]||[]
+        });
+      });
+      // Habilita abas
+      ["sit","ie","simples","cc","resumo","cnae","cnaebase","socios"].forEach(function(id){
+        document.getElementById("tb-"+id).disabled=false;
+      });
+      renderAll();
+      setTab("sit",document.getElementById("tb-sit"));
+      showToast(DADOS.length.toLocaleString("pt-BR")+" empresas processadas!");
+    }catch(ex){
+      showToast("Erro: "+ex.message);
+      console.error(ex);
+      document.getElementById("btnProc").disabled=false;
+    }
+  },50);
+}
+
+
+// ── FILTRO GLOBAL POR TAG ──
+var TAG_FILTER = "";
+function applyTagFilter(){
+  TAG_FILTER = document.getElementById("filtTag").value;
+  renderAll();
+}
+function tagMatch(e){
+  if(!TAG_FILTER) return true;
+  return e.tags_arr && e.tags_arr.indexOf(TAG_FILTER) > -1;
+}
+function renderAll(){renderSit();renderIE();renderSimples();renderCC();renderResumo();renderCnae();renderCnaeBase();renderSocios();}
+
+// ABA SITUAÇÃO
+function renderSit(){
+  pages.sit=1;
+  var q=(document.getElementById("srcSit").value||"").toLowerCase();
+  var modo=document.getElementById("filtSit").value;
+  var pool=DADOS.filter(function(e){return !e.is_cc&&tagMatch(e);});
+  if(modo==="prob") pool=pool.filter(function(e){return e.sit==="Suspensa"||e.sit==="Inapta";});
+  else if(modo!=="all") pool=pool.filter(function(e){return e.sit===modo;});
+  if(q) pool=pool.filter(function(e){return e.cnpj.indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1||e.grupo.toLowerCase().indexOf(q)>-1;});
+  filtSit=pool;
+  var all=DADOS.filter(function(e){return !e.is_cc&&tagMatch(e);});
+  var susp=all.filter(function(e){return e.sit==="Suspensa";}).length;
+  var inapt=all.filter(function(e){return e.sit==="Inapta";}).length;
+  document.getElementById("bSit").textContent=susp+inapt;
+  document.getElementById("statsSit").innerHTML=
+    sc("warn","Suspensas","",susp)+sc("warn","Inaptas","",inapt)+
+    sc("ok","Ativas","",all.filter(function(e){return e.sit==="Ativa";}).length)+
+    sc("all","Total auditado","excl. CC",all.length);
+  draw("bodySit","pagerSit",filtSit,rowSit,"sit");
+}
+function rowSit(e){
+  var ch=e.sit==="Ativa"?'<span class="chip ch-ok">Ativa</span>':e.sit==="Suspensa"?'<span class="chip ch-r">Suspensa</span>':e.sit==="Inapta"?'<span class="chip ch-r">Inapta</span>':'<span class="chip ch-gr">'+esc(e.sit)+'</span>';
+  return '<div class="tr" style="grid-template-columns:145px 1fr 70px 110px 100px 1fr">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div><div class="sub">'+esc(e.grupo)+'</div></div>'
+    +'<div class="td"><span class="chip ch-gr">'+esc(e.uf||"—")+'</span></div>'
+    +'<div class="td">'+ch+'</div>'
+    +'<div class="td"><span style="font-size:10px;color:var(--gray-50)">'+esc(e.sit_data||"—")+'</span></div>'
+    +'<div class="td"><span style="font-size:10px;color:var(--gray-70)">'+esc(e.sit_motivo||"—")+'</span></div>'
+    +'</div>';
+}
+
+// ABA IE
+function renderIE(){
+  pages.ie=1;
+  var q=(document.getElementById("srcIE").value||"").toLowerCase();
+  var modo=document.getElementById("filtIE").value;
+  var all=DADOS.filter(function(e){return !e.is_cc;});
+  var hp=function(t){return function(e){return e.ie_probs&&e.ie_probs.some(function(p){return p.tipo===t;});};};
+
+  // CARD 0: CNPJ não encontrado na consulta do CNPJá — não dá para confirmar isenção/IE
+  var nao_consultado = all.filter(function(e){return e.ie_status==="nao_consultado";});
+
+  // CARD 1: Isentos Acessórias x CNPJá OK
+  // S3D Sim e CNPJá sem IE (isento correto) — só conta quem foi de fato consultado
+  var isenta_ok   = all.filter(function(e){return e.ie_status==="isenta_ok";});
+
+  // CARD 2: Número de inscrição Acessórias x CNPJá OK
+  // Tem IE no S3D, bateu com CNPJá e está habilitada sem restrição
+  var ie_ok       = all.filter(function(e){return e.ie_status==="ok";});
+
+  // CARD 3: Inscrição CNPJá sem vínculo no Acessórias
+  // CNPJá tem IE habilitada que NÃO está cadastrada no S3D
+  var faltando    = all.filter(hp("IE_FALTANDO_S3D"));
+
+  // CARD 4: Inscrição no Acessórias com status não habilitada no CNPJá
+  // IE cadastrada no S3D mas inativa/não habilitada no CNPJá
+  var nao_hab     = all.filter(hp("IE_NAO_HABILITADA"));
+
+  // Badge = soma dos problemas reais (faltando + não habilitada + não consultado + outros erros)
+  var problemas = all.filter(function(e){return e.ie_probs&&e.ie_probs.length>0;});
+  document.getElementById("bIE").textContent=problemas.length;
+
+  document.getElementById("statsIE").innerHTML=
+    sc("warn","N&#227;o consultado no CNPJ&#225;","Imposs&#237;vel confirmar isen&#231;&#227;o/IE",nao_consultado.length)+
+    sc("ok","Isentos OK","Acessórias x CNPJá conferindo",isenta_ok.length)+
+    sc("ok","Inscrição OK","Número Acessórias x CNPJá OK",ie_ok.length)+
+    sc("warn","Faltando no Acessórias","IE no CNPJá sem vínculo",faltando.length)+
+    sc("warn","Não habilitada","Acessórias tem, CNPJá inativa",nao_hab.length);
+
+  var pool=
+    modo==="nao_consultado"?nao_consultado:
+    modo==="isenta_ok"?isenta_ok:
+    modo==="ie_ok"?ie_ok:
+    modo==="faltando"?faltando:
+    modo==="nao_hab"?nao_hab:
+    modo==="all"?all:
+    problemas;
+  if(q) pool=pool.filter(function(e){
+    return e.cnpj.indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1||e.grupo.toLowerCase().indexOf(q)>-1;
+  });
+  filtIE=pool;
+  draw("bodyIE","pagerIE",filtIE,rowIE,"ie");
+}
+
+function rowIE(e){
+  var probs=e.ie_probs||[];
+  var nums_s3d_r=e.ies_s3d?e.ies_s3d.map(function(x){return x.num;}):[]; 
+
+  // Status chip
+  var stat='';
+  var tipos_u={};
+  probs.forEach(function(p){
+    if(!tipos_u[p.tipo]){tipos_u[p.tipo]={descs:[],count:0};}
+    tipos_u[p.tipo].descs.push(p.desc);
+    tipos_u[p.tipo].count++;
+  });
+  Object.keys(tipos_u).forEach(function(t){
+    var g=tipos_u[t];
+    var cls=t==="IE_NAO_ENCONTRADA"||t==="SEM_IE"||t==="IE_NAO_HABILITADA"||t==="ERRO_ISENTA_COM_IE"||t==="NAO_CONSULTADO"?"ch-r":"ch-a";
+    var lbl=t==="SEM_IE"?"Sem IE":t==="IE_NAO_ENCONTRADA"?"N\u00e3o encontrada":t==="IE_FALTANDO_S3D"?"Faltando S3D":t==="IE_NAO_HABILITADA"?"N\u00e3o habilitada":t==="IE_RESTRICAO"?"Restri\u00e7\u00e3o":t==="ERRO_ISENTA_COM_IE"?"Isenta c/ IE":t==="NAO_CONSULTADO"?"N\u00e3o consultado":"?";
+    var suf=g.count>1?" ("+g.count+")":"";
+    stat+='<span class="chip '+cls+'" title="'+esc(g.descs.join("; "))+'">'+lbl+suf+'</span> ';
+  });
+  if(!stat) stat=e.ie_status==="isenta_ok"?'<span class="chip ch-ok">Isenta \u2713</span>':'<span class="chip ch-ok">OK</span>';
+
+  var isentoChip=e.ie_status==="isenta_ok"?'<span class="chip ch-ok">Sim \u2713</span>'
+    :e.ie_status==="erro_isenta"?'<span class="chip ch-r">Sim \u2717</span>'
+    :isentoSim(e.isento)?'<span class="chip ch-b">Sim</span>'
+    :'<span class="chip ch-gr">'+esc(e.isento||"N\u00e3o")+'</span>';
+
+  // Sub-tabela sempre visível
+  var subRows='';
+
+  // IEs do S3D
+  if(e.ies_s3d && e.ies_s3d.length>0){
+    e.ies_s3d.forEach(function(s){
+      var match=e.ies.find(function(x){return x.ie_num===s.num;});
+      var statusCell=match
+        ?(match.hab==="N\u00e3o"
+          ?'<span class="chip ch-r" style="font-size:9px">Inativa no CNPJá</span>'
+          :match.sit!=="Sem restri\u00e7\u00e3o"
+            ?'<span class="chip ch-a" style="font-size:9px">'+esc(match.sit.substring(0,22))+'</span>'
+            :'<span class="chip ch-ok" style="font-size:9px">Confere \u2713</span>')
+        :'<span class="chip ch-r" style="font-size:9px">N\u00e3o encontrada</span>';
+      subRows+='<tr style="background:rgba(0,0,0,.01)">'
+        +'<td style="padding:4px 8px"><span class="chip ch-b" style="font-size:9px;padding:1px 6px">S3D</span></td>'
+        +'<td style="padding:4px 8px"><span class="uf-badge">'+esc(s.uf||"?")+'</span></td>'
+        +'<td style="padding:4px 8px;font-family:monospace;font-size:11px;white-space:nowrap;color:var(--charcoal)">'+esc(s.raw)+'</td>'
+        +'<td style="padding:4px 8px">'+statusCell+'</td>'
+        +'</tr>';
+    });
+  }
+
+  // IEs do CNPJá que faltam no S3D (habilitadas)
+  var faltando_c=e.ies.filter(function(x){return x.hab==="Sim"&&nums_s3d_r.indexOf(x.ie_num)<0;});
+  faltando_c.forEach(function(x){
+    var sc2=x.sit!=="Sem restri\u00e7\u00e3o"
+      ?'<span class="chip ch-a" style="font-size:9px">'+esc(x.sit.substring(0,22))+'</span>'
+      :'<span class="chip ch-ok" style="font-size:9px">Habilitada</span>';
+    subRows+='<tr style="background:rgba(250,105,20,.04)">'
+      +'<td style="padding:4px 8px"><span class="chip ch-a" style="font-size:9px;padding:1px 6px">CNPJá</span></td>'
+      +'<td style="padding:4px 8px"><span class="uf-badge">'+esc(x.uf)+'</span></td>'
+      +'<td style="padding:4px 8px;font-family:monospace;font-size:11px;white-space:nowrap;color:var(--charcoal)">'+esc(x.ie_raw)+'</td>'
+      +'<td style="padding:4px 8px"><span class="chip ch-a" style="font-size:9px">Faltando no S3D</span></td>'
+      +'</tr>';
+  });
+
+  // IEs não habilitadas no CNPJá que estão no S3D
+  e.ies_s3d&&e.ies_s3d.forEach(function(s){
+    var match=e.ies.find(function(x){return x.ie_num===s.num;});
+    if(match&&match.hab==="N\u00e3o"&&nums_s3d_r.indexOf(s.num)>-1){
+      subRows+='<tr style="background:rgba(220,38,38,.04)">'
+        +'<td style="padding:4px 8px"><span class="chip ch-r" style="font-size:9px;padding:1px 6px">CNPJá</span></td>'
+        +'<td style="padding:4px 8px"><span class="uf-badge">'+esc(match.uf)+'</span></td>'
+        +'<td style="padding:4px 8px;font-family:monospace;font-size:11px;white-space:nowrap;color:var(--charcoal)">'+esc(match.ie_raw)+'</td>'
+        +'<td style="padding:4px 8px"><span class="chip ch-r" style="font-size:9px">N\u00e3o habilitada</span></td>'
+        +'</tr>';
+    }
+  });
+
+  var subTable=subRows
+    ?'<div style="padding:6px 14px 10px;background:var(--gray-05);border-bottom:1px solid var(--border);overflow-x:auto">'
+      +'<table style="border-collapse:collapse;font-size:11px;min-width:400px;width:100%">'
+      +'<thead><tr style="background:var(--gray-10)">'
+      +'<th style="padding:4px 8px;font-size:9px;font-weight:700;color:var(--gray-50);text-transform:uppercase;text-align:left">Fonte</th>'
+      +'<th style="padding:4px 8px;font-size:9px;font-weight:700;color:var(--gray-50);text-transform:uppercase;text-align:left">UF</th>'
+      +'<th style="padding:4px 8px;font-size:9px;font-weight:700;color:var(--gray-50);text-transform:uppercase;text-align:left">N\u00famero IE</th>'
+      +'<th style="padding:4px 8px;font-size:9px;font-weight:700;color:var(--gray-50);text-transform:uppercase;text-align:left">Situa\u00e7\u00e3o</th>'
+      +'</tr></thead>'
+      +'<tbody>'+subRows+'</tbody></table></div>'
+    :'';
+
+  return '<div class="tr-ie-main" style="grid-template-columns:145px 1fr 55px 55px 130px 100px">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span><div class="sub">'+esc(e.grupo)+'</div></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div></div>'
+    +'<div class="td">'+isentoChip+'</div>'
+    +'<div class="td"><span class="chip ch-gr">'+esc(e.uf||"\u2014")+'</span></div>'
+    +'<div class="td"><span style="font-size:10px;color:var(--gray-70)">'+esc((e.regime||"Sem regime").replace(" - Geral","").replace(" - Filial"," Fil.").substring(0,22))+'</span></div>'
+    +'<div class="td">'+stat+'</div>'
+    +'</div>'+subTable;
+}
+
+function toggleIEDetail(id){
+  var el=document.getElementById(id);
+  if(el)el.classList.toggle("open");
+}
+
+// ABA SIMPLES
+function reentrouSimples(e){
+  // Reentrou = tem histórico de saída E está optante hoje
+  if(!e.hist||!e.hist.length)return false;
+  return e.sn_cnpja===true;
+}
+
+function fmtDataHist(d){
+  if(!d&&d!==0)return"—";
+  try{
+    var dt;
+    if(typeof d==="number"){
+      // Serial do Excel (dias desde 1899-12-30)
+      dt=new Date(Math.round((d-25569)*86400*1000));
+    }else if(d instanceof Date){
+      dt=d;
+    }else{
+      dt=new Date(d);
+    }
+    if(isNaN(dt.getTime()))return String(d).substring(0,10);
+    return String(dt.getUTCDate()).padStart(2,"0")+"/"+String(dt.getUTCMonth()+1).padStart(2,"0")+"/"+dt.getUTCFullYear();
+  }catch(ex){return String(d).substring(0,10);}
+}
+
+function renderSimples(){
+  pages.simples=1;
+  var q=(document.getElementById("srcSimples").value||"").toLowerCase();
+  var modo=document.getElementById("filtSimples").value;
+  var all=DADOS.filter(function(e){return !e.is_cc;});
+  var naoConsult=all.filter(function(e){return !e.consultado;});
+  var div=all.filter(function(e){return e.consultado&&e.sn_div;});
+  var ok2=all.filter(function(e){return e.consultado&&!e.sn_div&&(e.sn_s3d||e.sn_cnpja);});
+  var reentrou=all.filter(reentrouSimples);
+  var comHist=all.filter(function(e){return e.hist&&e.hist.length>0;});
+  document.getElementById("bSimples").textContent=div.length;
+  document.getElementById("statsSimples").innerHTML=
+    sc("warn","N&#227;o consultado","Imposs&#237;vel confirmar",naoConsult.length)+
+    sc("warn","Divergências","S3D x CNPJá",div.length)+
+    sc("amb","Reentrou no Simples","Saiu e voltou",reentrou.length)+
+    sc("ok","Simples OK","Coincide",ok2.length)+
+    sc("all","Com hist&#243;rico","J&#225; teve altera&#231;&#227;o",comHist.length)+
+    sc("all","Total","excl. CC",all.length);
+  var pool=modo==="div"?div:modo==="ok"?ok2:modo==="reentrou"?reentrou:modo==="com_hist"?comHist:modo==="nao_consultado"?naoConsult:all;
+  if(q) pool=pool.filter(function(e){return e.cnpj.indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1||e.grupo.toLowerCase().indexOf(q)>-1;});
+  filtSimples=pool;
+  draw("bodySimples","pagerSimples",filtSimples,rowSimples,"simples");
+}
+function rowSimples(e){
+  if(!e.consultado){
+    var dc='<span class="chip ch-r">&#9888; N&#227;o consultado</span>';
+    var oc='<span class="chip ch-gr">&#8212;</span>';
+  } else {
+    var dc=e.sn_div?'<span class="chip ch-a">&#9888; Diverg.</span>':'<span class="chip ch-ok">OK</span>';
+    var oc=e.sn_cnpja?'<span class="chip ch-ok">Sim</span>':'<span class="chip ch-gr">Não</span>';
+  }
+  var histHtml='<span style="color:var(--gray-30);font-size:10px">Sem hist&#243;rico</span>';
+  if(e.hist&&e.hist.length>0){
+    var h=e.hist[0]; // mais recente
+    var reentrou=reentrouSimples(e);
+    var corMotivo=reentrou?"var(--green-dark)":"var(--gray-70)";
+    histHtml='<div style="font-size:10px;line-height:1.5">'
+      +'<strong style="color:'+corMotivo+'">'+(reentrou?"&#10003; Reentrou":"Saiu")+'</strong> em '+fmtDataHist(h.data_fim)
+      +'<div class="sub" title="'+esc(h.motivo)+'">'+esc(h.motivo.substring(0,45))+(h.motivo.length>45?"...":"")+'</div>'
+      +(e.hist.length>1?'<div class="sub" style="color:var(--gray-50)">+'+(e.hist.length-1)+' altera&#231;&#227;o(&#245;es) anterior(es)</div>':'')
+      +'</div>';
+  }
+  return '<div class="tr" style="grid-template-columns:145px 1fr 130px 90px 100px 100px 1fr'+(!e.consultado?";background:rgba(220,38,38,.03)":"")+'">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div><div class="sub">'+esc(e.grupo)+'</div></div>'
+    +'<div class="td"><span style="font-size:10px;color:var(--gray-70)">'+esc(e.regime||"Sem regime")+'</span></div>'
+    +'<div class="td">'+oc+'</div>'
+    +'<div class="td"><span style="font-size:10px;color:var(--gray-50)">'+esc(e.simples_inc&&e.simples_inc!=="-"?e.simples_inc:"—")+'</span></div>'
+    +'<div class="td">'+dc+'</div>'
+    +'<div class="td">'+histHtml+'</div>'
+    +'</div>';
+}
+
+// ABA CC
+function renderCC(){
+  pages.cc=1;
+  var q=(document.getElementById("srcCC").value||"").toLowerCase();
+  var modo=document.getElementById("filtCC").value;
+  var all=DADOS.filter(function(e){return e.is_cc&&(!TAG_FILTER||tagMatch(e));});
+  document.getElementById("bCC").textContent=all.length;
+  document.getElementById("statsCC").innerHTML=
+    sc("all","Total CC","",all.length)+
+    sc("ok","Ativas","",all.filter(function(e){return e.sit==="Ativa";}).length)+
+    sc("warn","Suspensas","",all.filter(function(e){return e.sit==="Suspensa";}).length)+
+    sc("warn","Inaptas","",all.filter(function(e){return e.sit==="Inapta";}).length);
+  var pool=modo==="all"?all:all.filter(function(e){return e.sit===modo;});
+  if(q) pool=pool.filter(function(e){return e.cnpj.indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1||e.grupo.toLowerCase().indexOf(q)>-1;});
+  filtCC=pool;
+  draw("bodyCC","pagerCC",filtCC,rowCC,"cc");
+}
+function rowCC(e){
+  var sc2=e.sit==="Ativa"?'<span class="chip ch-ok">Ativa</span>':e.sit==="Suspensa"?'<span class="chip ch-r">Suspensa</span>':e.sit==="Inapta"?'<span class="chip ch-r">Inapta</span>':'<span class="chip ch-gr">'+esc(e.sit)+'</span>';
+  var cct=e.tags.filter(function(t){return CC_TAGS.indexOf(t)>-1;}).map(function(t){return '<span class="chip ch-p">'+esc(t)+'</span>';}).join(" ");
+  return '<div class="tr" style="grid-template-columns:145px 1fr 110px 140px 1fr">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div><div class="sub">'+esc(e.grupo)+'</div></div>'
+    +'<div class="td">'+sc2+'</div>'
+    +'<div class="td"><span style="font-size:10px;color:var(--gray-70)">'+esc(e.regime||"—")+'</span></div>'
+    +'<div class="td">'+cct+'</div>'
+    +'</div>';
+}
+
+// HELPERS
+function sc(cls,t,s,n){
+  var bg=cls==="warn"?"var(--red-lt)":cls==="ok"?"var(--green-lt)":cls==="amb"?"var(--amber-lt)":"var(--gray-05)";
+  var ic=cls==="warn"?"var(--red)":cls==="ok"?"var(--green-dark)":cls==="amb"?"var(--amber)":"var(--gray-50)";
+  return '<div class="sc '+cls+'"><div class="sc-top"><div class="sc-ico" style="background:'+bg+'">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="'+ic+'" stroke-width="2" width="12" height="12"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    +'</div><div><div class="sc-t">'+t+'</div><div class="sc-s">'+s+'</div></div></div>'
+    +'<div class="sc-n">'+Number(n||0).toLocaleString("pt-BR")+'</div></div>';
+}
+
+function draw(bodyId,pagerId,data,rowFn,tabKey){
+  var p=pages[tabKey],total=data.length,slice=data.slice((p-1)*PER,p*PER);
+  var body=document.getElementById(bodyId);
+  var pager=document.getElementById(pagerId);
+  if(!slice.length){
+    body.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><strong>Nenhum resultado</strong></div>';
+    pager.innerHTML="";return;
+  }
+  body.innerHTML=slice.map(rowFn).join("");
+  var pt=Math.ceil(total/PER),s=(p-1)*PER+1,en=Math.min(p*PER,total);
+  var btns="";
+  for(var pp=Math.max(1,p-3);pp<=Math.min(pt,p+3);pp++)
+    btns+='<button class="pg-btn'+(pp===p?" cur":"")+'" onclick="goPage(\''+tabKey+'\','+pp+')">'+pp+'</button>';
+  pager.innerHTML='<span class="pg-info">'+s.toLocaleString("pt-BR")+"&ndash;"+en.toLocaleString("pt-BR")+" de "+total.toLocaleString("pt-BR")+'</span>'
+    +'<div class="pg-btns"><button class="pg-btn" onclick="goPage(\''+tabKey+'\','+(p-1)+')" '+(p<=1?"disabled":"")+'>&#8249;</button>'+btns+'<button class="pg-btn" onclick="goPage(\''+tabKey+'\','+(p+1)+')" '+(p>=pt?"disabled":"")+'>&#8250;</button></div>';
+}
+
+function goPage(tab,p){
+  var fmap={sit:filtSit,ie:filtIE,simples:filtSimples,cnae:filtCnae,cnaebase:filtCnaeBase,socios:filtSocios,cc:filtCC};
+  var f=fmap[tab]||filtCC;
+  var pt=Math.ceil(f.length/PER);
+  if(p<1||p>pt)return;
+  pages[tab]=p;
+  if(tab==="sit")draw("bodySit","pagerSit",filtSit,rowSit,"sit");
+  else if(tab==="ie")draw("bodyIE","pagerIE",filtIE,rowIE,"ie");
+  else if(tab==="simples")draw("bodySimples","pagerSimples",filtSimples,rowSimples,"simples");
+  else if(tab==="cnae")draw("bodyCnae","pagerCnae",filtCnae,rowCnae,"cnae");
+  else if(tab==="cnaebase")draw("bodyCnaeBase","pagerCnaeBase",filtCnaeBase,rowCnaeBase,"cnaebase");
+  else if(tab==="socios")draw("bodySocios","pagerSocios",filtSocios,rowSocios,"socios");
+  else draw("bodyCC","pagerCC",filtCC,rowCC,"cc");
+}
+
+function exportar(tab){
+  var fmapExp={sit:filtSit,ie:filtIE,simples:filtSimples,cnae:filtCnae,cnaebase:filtCnaeBase,socios:filtSocios,cc:filtCC};
+  var f=fmapExp[tab]||filtCC;
+  var hdr,rows;
+  if(tab==="sit"){
+    hdr=["CNPJ","Razao","Grupo","UF","Situacao RF","Data","Motivo"];
+    rows=f.map(function(e){return[e.cnpj,e.razao,e.grupo,e.uf,e.sit,e.sit_data,e.sit_motivo];});
+  } else if(tab==="ie"){
+    hdr=["CNPJ","Razao","Grupo","UF","Isento","IE Status","IEs CNPJa"];
+    rows=f.map(function(e){var ies=e.ies.map(function(x){return x.uf+":"+x.ie+"("+x.sit+")";}).join("; ");return[e.cnpj,e.razao,e.grupo,e.uf,e.isento,e.ie_status,ies];});
+  } else if(tab==="simples"){
+    hdr=["CNPJ","Razao","Grupo","Regime S3D","Optante CNPJa","Inclusao","Divergencia","Ultima Alteracao Data","Ultima Alteracao Motivo","Reentrou"];
+    rows=f.map(function(e){
+      var h=(e.hist&&e.hist.length>0)?e.hist[0]:null;
+      return[e.cnpj,e.razao,e.grupo,e.regime,e.simples_cnpja,e.simples_inc,e.sn_div?"Sim":"Nao",
+        h?fmtDataHist(h.data_fim):"",h?h.motivo:"",reentrouSimples(e)?"Sim":"Não"];
+    });
+  } else if(tab==="cnae"){
+    hdr=["CNPJ","Razao","Grupo","UF","CNAE","Atividade","Obrigatorio IE","Tem IE Habilitada","Status"];
+    rows=f.map(function(e){
+      var obr=e.cnae_obrig==="S"?"Sim":e.cnae_obrig==="N"?"Não":e.cnae_obrig==="C"?"Condicional":"Não mapeado";
+      var status=e.cnae_obrig==="S"&&!e.ie_habilitada&&e.ies&&e.ies.length>0?"IE cadastrada, inativa":
+        e.cnae_obrig==="S"&&!e.ie_habilitada?"Sem IE nenhuma":
+        e.cnae_obrig==="S"&&e.ie_habilitada?"OK":
+        e.cnae_obrig==="C"?"Verificar manualmente":
+        e.cnae_obrig==="N"?"Não exige":"Não mapeado";
+      return[e.cnpj,e.razao,e.grupo,e.uf,fmtCnae(e.cnae),e.cnae_desc,obr,e.ie_habilitada?"Sim":"Não",status];
+    });
+  } else if(tab==="cnaebase"){
+    hdr=["CNPJ","Razao","Grupo","CNAEs Atuais","Incluidos desde snapshot","Excluidos desde snapshot","Status"];
+    rows=f.map(function(e){
+      var cmp=e._cmp||{temSnap:false,incluidos:[],excluidos:[]};
+      var status=!cmp.temSnap?"Sem snapshot":cmp.novo?"Novo":(cmp.incluidos.length||cmp.excluidos.length)?"Alterado":"Sem alteração";
+      return[e.cnpj,e.razao,e.grupo,(e.atividades_all||[]).map(function(a){return fmtCnae(a.cod);}).join("; "),
+        (cmp.incluidos||[]).map(fmtCnae).join("; "),(cmp.excluidos||[]).map(fmtCnae).join("; "),status];
+    });
+  } else if(tab==="socios"){
+    hdr=["CNPJ","Razao","Grupo","Socios Atuais","Entraram desde snapshot","Sairam desde snapshot"];
+    rows=f.map(function(e){
+      var cmp=e._cmp||{entraram:[],sairam:[]};
+      return[e.cnpj,e.razao,e.grupo,(e.socios_atuais||[]).map(function(s){return s.nome;}).join("; "),
+        (cmp.entraram||[]).map(function(s){return s.nome;}).join("; "),(cmp.sairam||[]).join("; ")];
+    });
+  } else {
+    hdr=["CNPJ","Razao","Grupo","Situacao RF","Regime S3D","Tags CC"];
+    rows=f.map(function(e){return[e.cnpj,e.razao,e.grupo,e.sit,e.regime,e.tags.join("; ")];});
+  }
+  var csv=[hdr].concat(rows).map(function(r){return r.map(function(v){return'"'+String(v||"").replace(/"/g,'""')+'"';}).join(",");}).join("\n");
+  var blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+  var a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="auditoria_"+tab+".csv";
+  document.body.appendChild(a);a.click();document.body.removeChild(a);
+  showToast("CSV exportado!");
+}
+
+function setTab(id,btn){
+  document.querySelectorAll(".tc").forEach(function(t){t.classList.remove("act");});
+  document.querySelectorAll(".tb").forEach(function(b){b.classList.remove("act");});
+  document.getElementById("tab-"+id).classList.add("act");
+  btn.classList.add("act");
+  if(id==="resumo") renderResumo();
+}
+
+var tTimer;
+function showToast(msg){
+  var t=document.getElementById("toast");
+  document.getElementById("toastMsg").textContent=msg;
+  t.classList.add("show");clearTimeout(tTimer);
+  tTimer=setTimeout(function(){t.classList.remove("show");},2800);
+}
+
+
+
+</script>
+</body>
+</html>
