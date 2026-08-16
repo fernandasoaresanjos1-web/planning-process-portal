@@ -419,9 +419,23 @@ async function dbQuery(table,params){
   return res.json();
 }
 
+var _dbTags={};
+
+async function carregarTags(){
+  if(Object.keys(_dbTags).length>0)return _dbTags;
+  // busca vínculos empresa-tag com nome da tag
+  var data=await dbQuery('empresa_tags','select=cnpj,tag_id,tags(nome)&limit=5000');
+  if(data&&data.length){
+    data.forEach(function(r){
+      if(!_dbTags[r.cnpj])_dbTags[r.cnpj]=[];
+      if(r.tags&&r.tags.nome)_dbTags[r.cnpj].push(r.tags.nome);
+    });
+  }
+  return _dbTags;
+}
+
 async function carregarEmpresas(forcar){
   if(!forcar&&_dbEmpresas.length>0)return _dbEmpresas;
-  // busca em lotes de 1000 (limite do Supabase REST)
   var todos=[];
   var offset=0;
   while(true){
@@ -430,7 +444,7 @@ async function carregarEmpresas(forcar){
     todos=todos.concat(data);
     if(data.length<1000)break;
     offset+=1000;
-    if(offset>=5000)break; // máximo 5000
+    if(offset>=5000)break;
   }
   _dbEmpresas=todos;
   return todos;
@@ -760,28 +774,26 @@ function rEmpresas(){
   '<div class="panel"><table><thead><tr><th>CNPJ</th><th>Empresa</th><th>Grupo</th><th>Regime</th><th>Cidade</th><th>UF</th><th>Status</th></tr></thead><tbody id="etb"><tr><td colspan="6" style="text-align:center;padding:24px;color:#475569">Carregando...</td></tr></tbody></table></div>';
 
   // carrega do banco
-  carregarEmpresas().then(function(data){
+  Promise.all([carregarEmpresas(), carregarTags()]).then(function(results){
+    var data=results[0];
     _dbEmpresas=data;
-    // KPIs
     var ativas=data.filter(function(e){return(e.status||'').toLowerCase().indexOf('ativ')>=0;});
     document.getElementById('emp-total').textContent=data.length.toLocaleString('pt-BR');
     document.getElementById('emp-ativas').textContent=ativas.length.toLocaleString('pt-BR');
     document.getElementById('emp-inativas').textContent=(data.length-ativas.length).toLocaleString('pt-BR');
-    // popula selects
     var ufs=[...new Set(data.map(function(e){return e.uf;}).filter(Boolean))].sort();
     var regs=[...new Set(data.map(function(e){return e.regime;}).filter(Boolean))].sort();
     var euf=document.getElementById('euf');
-    if(euf){
-      ufs.forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;euf.appendChild(o);});
-    }
+    if(euf){ufs.forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;euf.appendChild(o);});}
     var ereg=document.getElementById('ereg');
-    if(ereg){
-      regs.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;ereg.appendChild(o);});
-    }
-    // renderiza tabela COM TODOS OS DADOS (sem filtro)
+    if(ereg){regs.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;ereg.appendChild(o);});}
+    // popula filtro de tags
+    var allTags=[...new Set(Object.values(_dbTags).flat())].sort();
+    var etag=document.getElementById('etag');
+    if(etag){allTags.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;etag.appendChild(o);});}
     document.getElementById('etb').innerHTML=eRows(data);
   }).catch(function(err){
-    document.getElementById('etb').innerHTML='<tr><td colspan="7" style="text-align:center;padding:24px;color:#f43f5e">Erro ao carregar: '+err.message+'</td></tr>';
+    document.getElementById('etb').innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:#f43f5e">Erro ao carregar: '+err.message+'</td></tr>';
   });
 
   return html;
@@ -799,8 +811,8 @@ function eRows(a){
       '<td style="font-family:monospace;font-size:10px;color:#475569">'+(fmt||cnpj)+'</td>'+
       '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
       '<td style="color:#94a3b8">'+(e.grupo||'—')+'</td>'+
+      '<td>'+((_dbTags[e.cnpj]||[]).map(function(t){return'<span class="badge" style="background:rgba(167,139,250,0.14);color:#c4b5fd;margin-right:2px">'+t+'</span>';}).join('')||'<span style="color:#334155">—</span>')+'</td>'+
       '<td style="color:#94a3b8;font-size:10px">'+(e.regime||'—')+'</td>'+
-      '<td style="color:#94a3b8;font-size:10px">'+(e.cidade||'—')+'</td>'+
       '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
       '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>'+
     '</tr>';
@@ -812,14 +824,12 @@ function fE(){
   var q=(document.getElementById('es').value||'').toLowerCase();
   var uf=(document.getElementById('euf')?document.getElementById('euf').value:'');
   var reg=(document.getElementById('ereg')?document.getElementById('ereg').value:'');
-  // se não tem nenhum filtro, mostra todos
-  if(!q&&!uf&&!reg){
-    document.getElementById('etb').innerHTML=eRows(_dbEmpresas);
-    return;
-  }
+  var tag=(document.getElementById('etag')?document.getElementById('etag').value:'');
+  if(!q&&!uf&&!reg&&!tag){document.getElementById('etb').innerHTML=eRows(_dbEmpresas);return;}
   var filtered=_dbEmpresas.filter(function(e){
     if(uf&&e.uf!==uf)return false;
     if(reg&&e.regime!==reg)return false;
+    if(tag){var ts=_dbTags[e.cnpj]||[];if(ts.indexOf(tag)<0)return false;}
     if(!q)return true;
     return (e.razao||'').toLowerCase().indexOf(q)>=0||(e.cnpj||'').indexOf(q)>=0||(e.grupo||'').toLowerCase().indexOf(q)>=0;
   });
