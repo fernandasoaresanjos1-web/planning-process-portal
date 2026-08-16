@@ -1314,73 +1314,26 @@ function cruzSincronizarEvt(el){
 
 async function cruzSincronizar(cnpj, comp){
   var res = document.getElementById('crz-result');
-  res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">🔄 Buscando entregas no Acessórias...</div>';
+  res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">🔄 Sincronizando com Acessórias...</div>';
   try {
-    var ACESS_TOKEN_KEY = 'ef7ceb75e9bab0fe36832dccc68e0e3c';
-    var ano = comp.slice(0,4), mes = comp.slice(5,7);
-    var dtIni = ano+'-'+mes+'-01';
-    var dtFim = ano+'-'+mes+'-'+new Date(+ano,+mes,0).getDate();
-
-    // Chama API via Netlify Function (proxy)
     var resp = await fetch('/.netlify/functions/sync-acessorias', {
       method: 'POST',
       headers:{ 'Content-Type':'application/json' },
       body: JSON.stringify({ cnpj: cnpj, competencia: comp })
     });
-
-    // Se Netlify falhar, tenta direto via allorigins proxy
-    if(!resp.ok || resp.headers.get('content-length')==='0') {
-      res.innerHTML='<div style="text-align:center;padding:20px;color:#64748b">Netlify falhou, tentando proxy alternativo...</div>';
-      var apiUrl = 'https://api.acessorias.com/deliveries/'+encodeURIComponent(cnpj)+
-        '?DtInitial='+dtIni+'&DtFinal='+dtFim+'&attachments&config';
-      var proxyUrl = 'https://api.allorigins.win/get?url='+encodeURIComponent(apiUrl);
-      var r2 = await fetch(proxyUrl);
-      if(!r2.ok) throw new Error('Proxy falhou: '+r2.status);
-      var wrapper = await r2.json();
-      var apiData = JSON.parse(wrapper.contents);
-      var emp = Array.isArray(apiData) ? apiData[0] : apiData;
-      var entregas = emp && emp.Entregas ? emp.Entregas : [];
-
-      // Salva no Supabase direto do browser
-      if(entregas.length > 0) {
-        var rows = entregas.map(function(e){return{
-          cnpj:cnpj, competencia:comp,
-          obrigacao_nome: e.Nome||'',
-          status: e.Status||'',
-          dt_prazo: e.EntDtPrazo&&e.EntDtPrazo!=='0000-00-00'?e.EntDtPrazo:null,
-          dt_entrega: e.EntDtEntrega&&e.EntDtEntrega!=='0000-00-00'?e.EntDtEntrega:null,
-          dt_finalizacao: e.EntDtFinalizacao||null,
-          anexo_url: e.Anexos&&e.Anexos[0]?e.Anexos[0].Url:null,
-          responsavel: e.RespEntrega||null,
-          dpto_nome: e.Config&&e.Config.DptoNome?e.Config.DptoNome:null,
-          sincronizado_em: new Date().toISOString()
-        };});
-        var SUPA_SVC = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZubXV4eHl1Y3N0YmNrYnlpdHJvIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4NjczNzQ5MiwiZXhwIjoyMTAyMzEzNDkyfQ.v8lIv1ALAtBFHxf9a-zTwhL2yznKxCi1t6s5Cbkco6g';
-        var sr = await fetch(SUPA_URL+'/rest/v1/acessorias_entregas',{
-          method:'POST',
-          headers:{'apikey':SUPA_SVC,'Authorization':'Bearer '+SUPA_SVC,'Content-Type':'application/json','Prefer':'resolution=merge-duplicates,return=minimal'},
-          body:JSON.stringify(rows)
-        });
-        if(!sr.ok) throw new Error('Supabase '+sr.status+': '+(await sr.text()).slice(0,100));
-      }
-
-      res.innerHTML='<div style="text-align:center;padding:20px;color:#4ade80">'+
-        '✅ Sincronizado via proxy! '+entregas.length+' entregas salvas.<br>'+
-        '<button onclick="cruzBuscar()" style="margin-top:12px;padding:8px 16px;background:#00bf63;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer">Ver resultado</button></div>';
-      return;
-    }
-
     var text = await resp.text();
-    if(!text) throw new Error('Sem resposta da function');
-    var data = JSON.parse(text);
-    if(!resp.ok) throw new Error(data.erro || 'Erro '+resp.status);
+    if(!text) throw new Error('Sem resposta - verifique logs do Netlify');
+    var data;
+    try{ data = JSON.parse(text); }catch(e){ throw new Error('Resposta invalida: '+text.slice(0,100)); }
+    if(!resp.ok) throw new Error(data.erro || 'Erro HTTP '+resp.status);
     res.innerHTML='<div style="text-align:center;padding:20px;color:#4ade80">'+
       '✅ Sincronizado! '+data.total_entregas+' entregas salvas.<br>'+
       '<button onclick="cruzBuscar()" style="margin-top:12px;padding:8px 16px;background:#00bf63;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer">Ver resultado</button></div>';
   } catch(err){
-    res.innerHTML='<div style="text-align:center;padding:32px;color:#f43f5e">Erro ao sincronizar: '+err.message+'</div>';
+    res.innerHTML='<div style="text-align:center;padding:32px;color:#f43f5e">Erro: '+err.message+'</div>';
   }
 }
+
 
 async function cruzProcessarRegraSupabase(regra, entregas, mes, ano){
   /* Busca entregas pelo nome da obrigação */
