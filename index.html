@@ -827,9 +827,8 @@ function openModulo(k){
   else if(k==='equipes')c.innerHTML=rEquipes();
   else if(k==='consulta-grupo'||k==='consulta-gestao')c.innerHTML=rConsulta(k);
   else if(k==='dashboard'){c.innerHTML=rDash();setTimeout(drawChart,60);}
-  else if(k==='auditoria')c.innerHTML=rAud();
-  else if(k==='cruzamento'){c.innerHTML=rCruzamento();initCruzamento();}
-  else if(k==='cadastral')c.innerHTML=rCad();
+  else if(k==='auditoria'||k==='cadastral')c.innerHTML=rAud();
+  else if(k==='cruzamento'){c.innerHTML=rCruzamento();initCruzamento();}  
   else if(k==='validacao')c.innerHTML=rVal();
   show('scr-modulo');
 }
