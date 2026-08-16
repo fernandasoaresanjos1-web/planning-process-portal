@@ -2,6 +2,8 @@
   command   = "echo ok"
   publish   = "."
   functions = "netlify/functions"
+  # Skip deploy if only index.html changed — saves build credits
+  ignore    = "git diff --quiet HEAD~1 HEAD -- netlify/"
 
 [build.environment]
   NODE_VERSION = "20"
