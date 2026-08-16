@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Matriz RACI</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+:root{
+  --green:#0AE18C;--green-dark:#00BF63;--green-lt:#EAFBF4;
+  --black:#0C0C0C;--charcoal:#1A1A1A;--ink:#2C2C2C;
+  --gray-70:#4A4A4A;--gray-50:#646464;--gray-30:#CDCDCD;
+  --gray-10:#E8E8E8;--gray-05:#F5F5F5;--off-white:#FAFAFA;
+  --white:#FFFFFF;--border:#E2E2E2;
+  --red:#DC2626;--red-lt:#FEE2E2;
+  --amber:#FA6914;--amber-lt:#FFF3E0;
+  --blue:#14C8FA;--blue-lt:#DDF6FF;
+  --purple:#7C3AED;--purple-lt:#F5F3FF;
+  --radius:10px;--radius-lg:16px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);--shadow-md:0 4px 16px rgba(0,0,0,.10);
+  --font:'Poppins',sans-serif;--tr:all .18s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--off-white);color:var(--ink);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased}
+
+/* ── TOPBAR (padrão OKR) ── */
+.topbar{background:var(--black);height:54px;display:flex;align-items:center;padding:0 22px;gap:10px;position:sticky;top:0;z-index:100}
+.logo{width:30px;height:30px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--black)}
+.bc{display:flex;align-items:center;gap:5px;color:rgba(255,255,255,.4);font-size:11px;font-weight:500}
+.bc strong{color:#fff}.bc span{color:rgba(255,255,255,.25)}
+.top-actions{display:flex;align-items:center;gap:7px;margin-left:auto}
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 13px;border-radius:8px;border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.07);font-family:var(--font);font-size:11px;font-weight:600;color:rgba(255,255,255,.75);cursor:pointer;transition:var(--tr);white-space:nowrap}
+.btn:hover{background:rgba(255,255,255,.14);color:#fff}
+.btn.primary{background:var(--green);color:var(--black);border-color:var(--green)}
+.btn.primary:hover{background:var(--green-dark)}
+.btn.warn{border-color:rgba(250,105,20,.5);color:var(--amber);background:rgba(250,105,20,.08)}
+.btn.warn:hover{background:rgba(250,105,20,.18)}
+.btn.info{border-color:rgba(20,200,250,.4);color:var(--blue);background:rgba(20,200,250,.08)}
+.btn.info:hover{background:rgba(20,200,250,.16)}
+.ih{display:none}
+
+/* ── CONTENT ── */
+.main{max-width:100%;margin:0 auto;padding:14px 18px 40px}
+.ey{font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.pt{font-size:19px;font-weight:800;color:var(--charcoal);margin-bottom:3px}
+.ps{font-size:12px;color:var(--gray-50);margin-bottom:16px}
+
+/* ── STAT CARDS (padrão OKR) ── */
+.stats-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.sc-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;min-width:110px;flex:1}
+.sc-top{padding:10px 13px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sc-ico{width:26px;height:26px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sc-t{font-size:11px;font-weight:700;color:var(--charcoal)}
+.sc-n{font-size:20px;font-weight:800;padding:9px 13px;color:var(--charcoal)}
+.sc-card.ok .sc-n{color:var(--green-dark)}
+.sc-card.warn .sc-n{color:var(--red)}
+.sc-card.amb .sc-n{color:var(--amber)}
+.sc-card.info .sc-n{color:#0284C7}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.sw{position:relative;min-width:180px;max-width:260px}
+.sw svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
+.si{width:100%;font-family:var(--font);font-size:12px;padding:8px 10px 8px 32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none}
+.si:focus{border-color:var(--green)}
+.sel{font-family:var(--font);font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none;cursor:pointer}
+.sel:focus{border-color:var(--green)}
+.view-btns{display:flex;gap:3px;margin-left:auto}
+.vbtn{font-family:var(--font);font-size:11px;font-weight:700;padding:7px 14px;border-radius:8px;border:1px solid var(--border);background:var(--white);color:var(--gray-50);cursor:pointer;transition:var(--tr)}
+.vbtn:hover{color:var(--ink)}
+.vbtn.act{background:var(--black);color:#fff;border-color:var(--black)}
+.count-badge{font-size:10px;font-weight:700;padding:3px 10px;border-radius:12px;background:var(--gray-10);color:var(--gray-50)}
+
+/* ── TABS grupo (padrão OKR) ── */
+.group-tabs{display:flex;gap:0;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:4px;margin-bottom:8px;flex-wrap:wrap;box-shadow:var(--shadow-sm)}
+.gtab{font-family:var(--font);font-size:12px;font-weight:600;padding:7px 16px;border-radius:9px;border:none;background:none;color:var(--gray-50);cursor:pointer;transition:var(--tr);white-space:nowrap}
+.gtab:hover{color:var(--ink);background:var(--gray-05)}
+.gtab.act{background:var(--black);color:#fff}
+
+/* ── SUBTABS processo ── */
+.proc-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.ptab{font-family:var(--font);font-size:11px;font-weight:600;padding:5px 13px;border-radius:20px;border:1px solid var(--border);background:var(--white);color:var(--gray-50);cursor:pointer;transition:var(--tr);white-space:nowrap}
+.ptab:hover{color:var(--ink);background:var(--gray-05)}
+.ptab.act{background:var(--gray-10);color:var(--charcoal);border-color:var(--gray-30)}
+
+/* ── TABLE CONTAINER ── */
+.table-wrap{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:auto;box-shadow:var(--shadow-sm);max-height:calc(100vh - 180px)}
+
+/* ── TABLE HEADER ── */
+.t-hdr{display:grid;padding:9px 16px;background:var(--gray-05);border-bottom:2px solid var(--border);position:sticky;top:0;z-index:10}
+.t-hdr-cell{font-size:9px;font-weight:700;letter-spacing:.8px;text-transform:uppercase;color:var(--gray-70)}
+
+/* ── TABLE ROW ── */
+.t-row{display:grid;padding:0;border-bottom:1px solid #F4F4F6;transition:background .1s;align-items:stretch}
+.t-row:last-child{border-bottom:none}
+.t-row:hover{background:#FAFCFF}
+.t-row.hidden{display:none}
+/* células com padding interno para alinhar ao topo */
+.t-cell{padding:11px 16px 11px 0;display:flex;flex-direction:column;justify-content:flex-start;font-size:11.5px;color:var(--gray-70)}
+.t-cell:first-child{padding-left:16px}
+.t-cell.demanda-cell .t-dem{font-size:12.5px;font-weight:600;color:var(--charcoal);line-height:1.35}
+.t-cell.demanda-cell .t-obs{font-size:10px;color:var(--gray-50);margin-top:2px}
+
+/* ── CHIPS RACI ── */
+.chip-wrap{display:flex;flex-direction:column;gap:3px;padding-top:1px}
+.chip{display:inline-flex;align-items:center;gap:4px;font-size:11px;font-weight:500;padding:3px 7px 3px 3px;border-radius:6px;white-space:nowrap;width:fit-content}
+.chip-letter{display:inline-grid;place-items:center;width:16px;height:16px;border-radius:4px;font-size:8px;font-weight:800;flex-shrink:0}
+/* Solicita = azul (S) */
+.chip-s{background:var(--blue-lt);color:#006B8A}
+.chip-s .chip-letter{background:var(--blue);color:#fff}
+/* Autoriza = laranja (A) */
+.chip-a{background:var(--amber-lt);color:#8B3A00}
+.chip-a .chip-letter{background:var(--amber);color:#fff}
+/* Faz = verde (F) */
+.chip-f{background:var(--green-lt);color:var(--green-dark)}
+.chip-f .chip-letter{background:var(--green-dark);color:#fff}
+/* Dono = roxo (D) */
+.chip-d{background:var(--purple-lt);color:var(--purple)}
+.chip-d .chip-letter{background:var(--purple);color:#fff}
+.chip-empty{color:var(--gray-30);font-size:12px}
+
+/* ── SLA badges ── */
+.sla-badge{display:inline-flex;align-items:center;font-size:10.5px;font-weight:600;padding:3px 10px;border-radius:20px;white-space:nowrap;width:fit-content}
+.sla-gr{background:var(--green-lt);color:var(--green-dark)}
+.sla-ti{background:var(--blue-lt);color:#0078A8}
+.sla-g{background:var(--amber-lt);color:var(--amber)}
+
+/* ── CANAL tag ── */
+.canal-tag{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:5px;background:var(--gray-05);color:var(--gray-70);border:1px solid var(--border);width:fit-content}
+
+/* ── ROW ACTIONS ── */
+.row-acts{display:flex;gap:4px;justify-content:flex-end;padding-top:10px;padding-right:10px}
+.ic-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--border);background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:var(--tr);color:var(--gray-50)}
+.ic-btn:hover{background:var(--gray-05);color:var(--ink)}
+.ic-btn.del:hover{background:var(--red-lt);color:var(--red);border-color:var(--red-lt)}
+
+/* ── SECTION DIVIDER (processo) ── */
+.sec-div{padding:6px 16px;background:var(--gray-05);border-top:1px solid var(--border);border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;position:sticky;top:38px;z-index:9}
+.sec-name{font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:var(--gray-50)}
+.sec-count{font-size:9px;font-weight:700;padding:1px 7px;border-radius:10px;background:var(--gray-10);color:var(--gray-50)}
+
+/* ── LEGEND ── */
+.legend{display:flex;gap:12px;flex-wrap:wrap;align-items:center;padding:10px 16px;border-top:1px solid var(--border);background:var(--gray-05)}
+.legend-item{display:flex;align-items:center;gap:5px;font-size:9.5px;color:var(--gray-50);font-weight:500}
+
+/* ── EMPTY ── */
+.empty-state{padding:52px 20px;text-align:center;color:var(--gray-30)}
+.empty-state p{font-size:12px;margin-top:8px;color:var(--gray-50)}
+
+/* ── MODAL ── */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{background:var(--white);border-radius:var(--radius-lg);width:840px;max-width:96vw;max-height:90vh;overflow-y:auto;padding:26px 28px;transform:translateY(12px);transition:transform .2s;box-shadow:var(--shadow-md)}
+.overlay.open .modal{transform:translateY(0)}
+.modal-title{font-size:16px;font-weight:800;color:var(--charcoal);margin-bottom:2px}
+.modal-sub{font-size:11.5px;color:var(--gray-50);margin-bottom:18px}
+hr.sep{border:none;border-top:1px solid var(--border);margin:16px 0 14px}
+.sec-label{font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--gray-50);margin-bottom:10px}
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.full{grid-column:1/-1}
+.three{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fl{font-size:11px;font-weight:600;color:var(--gray-70)}
+.fi,.fse,.fta{border:1px solid var(--border);border-radius:8px;padding:7px 10px;font-family:var(--font);font-size:12px;color:var(--ink);outline:none;background:var(--white);transition:var(--tr)}
+.fi:focus,.fse:focus,.fta:focus{border-color:var(--green);box-shadow:0 0 0 3px var(--green-lt)}
+.fta{resize:vertical;min-height:54px}
+.fh{font-size:9.5px;color:var(--gray-50);font-style:italic;margin-top:2px}
+.modal-foot{display:flex;justify-content:flex-end;gap:8px;margin-top:20px;padding-top:14px;border-top:1px solid var(--border)}
+.mbtn{display:inline-flex;align-items:center;gap:5px;padding:8px 16px;border-radius:8px;border:1px solid var(--border);background:var(--white);font-family:var(--font);font-size:12px;font-weight:600;color:var(--ink);cursor:pointer;transition:var(--tr)}
+.mbtn:hover{background:var(--gray-05)}
+.mbtn.save{background:var(--green);color:var(--black);border-color:var(--green)}
+.mbtn.save:hover{background:var(--green-dark)}
+
+/* ── MAIN TABS ── */
+.main-tabs{display:flex;gap:3px;border-bottom:2px solid var(--border);margin-bottom:18px}
+.main-tab{display:flex;align-items:center;gap:6px;font-family:var(--font);font-size:12px;font-weight:600;padding:10px 16px;border:none;background:none;color:var(--gray-50);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;transition:var(--tr)}
+.main-tab:hover{color:var(--ink)}
+.main-tab.act{color:var(--green-dark);border-bottom-color:var(--green)}
+
+/* ── CONFIG ── */
+.config-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px}
+.config-card{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden;box-shadow:var(--shadow-sm)}
+.config-card-head{display:flex;align-items:flex-start;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--border)}
+.config-card-title{font-size:13px;font-weight:800;color:var(--charcoal)}
+.config-card-sub{font-size:10px;color:var(--gray-50);margin-top:2px}
+.cfg-add-btn{font-family:var(--font);font-size:11px;font-weight:700;padding:6px 12px;border-radius:8px;border:1px solid var(--green);background:var(--green-lt);color:var(--green-dark);cursor:pointer;white-space:nowrap;transition:var(--tr)}
+.cfg-add-btn:hover{background:var(--green);color:var(--black)}
+.config-list{padding:8px}
+.cfg-item{display:flex;align-items:center;gap:8px;padding:8px 10px;border-radius:8px;transition:var(--tr)}
+.cfg-item:hover{background:var(--gray-05)}
+.cfg-dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0}
+.cfg-name{flex:1;font-size:12px;font-weight:500;color:var(--charcoal)}
+.cfg-count{font-size:10px;font-weight:600;padding:2px 7px;border-radius:10px;background:var(--gray-10);color:var(--gray-50)}
+.cfg-del{width:22px;height:22px;border-radius:5px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--gray-30);transition:var(--tr);opacity:0}
+.cfg-item:hover .cfg-del{opacity:1}
+.cfg-del:hover{background:var(--red-lt);color:var(--red)}
+.cfg-empty{padding:20px;text-align:center;font-size:11px;color:var(--gray-30)}
+.cfg-input-row{display:flex;gap:6px;padding:8px}
+.cfg-input-row input{flex:1;font-family:var(--font);font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:8px;outline:none;color:var(--ink)}
+.cfg-input-row input:focus{border-color:var(--green)}
+.cfg-input-row button{font-family:var(--font);font-size:11px;font-weight:700;padding:7px 12px;border-radius:8px;border:none;background:var(--green);color:var(--black);cursor:pointer}
+
+/* ── DATA ACTIONS ── */
+.data-actions{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px;padding:14px 16px}
+.data-btn{display:flex;align-items:flex-start;gap:10px;text-align:left;padding:12px;border-radius:10px;border:1px solid var(--border);background:var(--white);cursor:pointer;transition:var(--tr);font-family:var(--font);position:relative}
+.data-btn:hover{background:var(--gray-05);transform:translateY(-1px);box-shadow:var(--shadow-sm)}
+.data-btn svg{flex-shrink:0;margin-top:1px;color:var(--gray-50)}
+.data-btn-t{font-size:12px;font-weight:700;color:var(--charcoal)}
+.data-btn-s{font-size:10px;color:var(--gray-50);margin-top:2px;line-height:1.4}
+.data-btn.info svg{color:#0078A8}
+.data-btn.info:hover{background:var(--blue-lt)}
+.data-btn.warn svg{color:var(--amber)}
+.data-btn.warn:hover{background:var(--amber-lt)}
+.data-btn.danger svg{color:var(--red)}
+.data-btn.danger:hover{background:var(--red-lt)}
+.toast{position:fixed;bottom:20px;right:20px;background:var(--black);color:#fff;padding:10px 16px;border-radius:10px;font-family:var(--font);font-size:11.5px;font-weight:600;display:flex;align-items:center;gap:7px;transform:translateY(14px);opacity:0;transition:all .25s;z-index:2000;pointer-events:none;box-shadow:var(--shadow-md)}
+.toast.show{transform:translateY(0);opacity:1}
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<div class="topbar">
+  <div class="logo">P</div>
+  <div class="bc"><span>Portal</span><span>›</span><strong>Matriz RACI</strong></div>
+  <div class="top-actions">
+    <button class="btn primary" onclick="openM(null)">+ Nova demanda</button>
+  </div>
+</div>
+
+<div class="main">
+  <!-- NAV TABS -->
+  <div class="main-tabs">
+    <button class="main-tab act" id="mtRaci" onclick="setMainTab('raci')">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="9" y1="21" x2="9" y2="9"/></svg>
+      Matriz RACI
+    </button>
+    <button class="main-tab" id="mtConfig" onclick="setMainTab('config')">
+      <svg width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      Configuração
+    </button>
+  </div>
+
+  <!-- ABA MATRIZ -->
+  <div id="viewRaci">
+    <!-- GROUP TABS -->
+    <div class="group-tabs" id="groupTabs"></div>
+    <!-- PROC TABS -->
+    <div class="proc-tabs" id="procTabs"></div>
+    <!-- TOOLBAR -->
+    <div class="toolbar">
+      <div class="sw">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input class="si" id="srch" placeholder="Buscar demanda..." oninput="filt()">
+      </div>
+      <select class="sel" id="fDep" onchange="filt()">
+        <option value="">Todos os deptos</option>
+        <option>Gestão de Risco</option><option>T.I</option><option>CS</option>
+        <option>Coordenador</option><option>Supervisor</option><option>Analista</option>
+        <option>Gerentes</option><option>Gerente</option><option>Head</option><option>RH</option>
+      </select>
+      <span class="count-badge" id="countBadge">0</span>
+      <div class="view-btns">
+        <button class="vbtn act" id="vR" onclick="setView('raci')">RACI</button>
+        <button class="vbtn" id="vS" onclick="setView('sla')">SLA</button>
+      </div>
+    </div>
+    <!-- TABLE -->
+    <div class="table-wrap" id="tableWrap"></div>
+  </div>
+
+  <!-- ABA CONFIGURAÇÃO -->
+  <div id="viewConfig" style="display:none">
+    <div class="config-grid">
+      <!-- GRUPOS -->
+      <div class="config-card">
+        <div class="config-card-head">
+          <div>
+            <div class="config-card-title">Grupos de Processo</div>
+            <div class="config-card-sub">Categorias principais da matriz</div>
+          </div>
+          <button class="cfg-add-btn" onclick="addGrupo()">+ Adicionar</button>
+        </div>
+        <div class="config-list" id="cfgGrupos"></div>
+      </div>
+      <!-- PROCESSOS -->
+      <div class="config-card">
+        <div class="config-card-head">
+          <div>
+            <div class="config-card-title">Processos</div>
+            <div class="config-card-sub">Sub-categorias dentro dos grupos</div>
+          </div>
+          <button class="cfg-add-btn" onclick="addProcesso()">+ Adicionar</button>
+        </div>
+        <div class="config-list" id="cfgProcessos"></div>
+      </div>
+      <!-- DEPARTAMENTOS -->
+      <div class="config-card">
+        <div class="config-card-head">
+          <div>
+            <div class="config-card-title">Departamentos</div>
+            <div class="config-card-sub">Quem pode solicitar, autorizar e fazer</div>
+          </div>
+          <button class="cfg-add-btn" onclick="addDepto()">+ Adicionar</button>
+        </div>
+        <div class="config-list" id="cfgDeptos"></div>
+      </div>
+    </div>
+
+    <!-- DADOS E BACKUP -->
+    <div class="config-card" style="margin-top:16px">
+      <div class="config-card-head">
+        <div>
+          <div class="config-card-title">Dados e Backup</div>
+          <div class="config-card-sub">Importar, exportar e gerenciar os dados da matriz</div>
+        </div>
+      </div>
+      <div class="data-actions">
+        <label class="data-btn info" style="cursor:pointer">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          <div><div class="data-btn-t">Importar Excel</div><div class="data-btn-s">Substitui os dados atuais por uma planilha .xlsx</div></div>
+          <input class="ih" type="file" id="iXls" accept=".xlsx,.xls" onchange="impXls(event)">
+        </label>
+        <label class="data-btn" style="cursor:pointer">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.65"/></svg>
+          <div><div class="data-btn-t">Restaurar backup</div><div class="data-btn-s">Carrega um arquivo .json salvo anteriormente</div></div>
+          <input class="ih" type="file" id="iJson" accept=".json" onchange="impJson(event)">
+        </label>
+        <button class="data-btn warn" onclick="bkpJson()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <div><div class="data-btn-t">Backup JSON</div><div class="data-btn-s">Salva uma cópia completa dos dados atuais</div></div>
+        </button>
+        <button class="data-btn" onclick="expXls()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          <div><div class="data-btn-t">Exportar Excel</div><div class="data-btn-s">Baixa todas as demandas em planilha .xlsx</div></div>
+        </button>
+        <button class="data-btn danger" onclick="resetData()">
+          <svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.65"/></svg>
+          <div><div class="data-btn-t">Resetar dados</div><div class="data-btn-s">Apaga tudo e restaura os dados padrão</div></div>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay" onclick="ovClick(event)">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Nova demanda</div>
+    <div class="modal-sub">Preencha as informações e responsabilidades</div>
+    <div class="form-grid">
+      <div class="fg full"><label class="fl">Demanda *</label><input class="fi" id="fDem" placeholder="Ex: Cadastrar Empresa (CNPJ)"></div>
+      <div class="fg">
+        <label class="fl">Grupo *</label>
+        <select class="fse" id="fGrp">
+          <option value="">Selecione</option>
+          <option>Acessórias</option><option>SAAM</option><option>SITTAX</option>
+        </select>
+      </div>
+      <div class="fg">
+        <label class="fl">Processo</label>
+        <select class="fse" id="fPrc">
+          <option value="">Selecione</option>
+          <option>Onboarding</option><option>Offboarding</option><option>Grupo Existente</option>
+          <option>Sistema</option><option>Onboarding Colaborador</option>
+          <option>Colaborador Ativo</option><option>Offboarding Colaborador</option>
+        </select>
+      </div>
+      <div class="fg"><label class="fl">Quem pode solicitar</label><input class="fi" id="fSol" placeholder="Ex: CS | Coordenador"><div class="fh">Separe múltiplos com |</div></div>
+      <div class="fg"><label class="fl">Quem autoriza</label><input class="fi" id="fAut" placeholder="Ex: Gestão de Risco"></div>
+      <div class="fg"><label class="fl">Quem faz</label><input class="fi" id="fFaz" placeholder="Ex: T.I | Gestão de Risco"></div>
+      <div class="fg"><label class="fl">Dono do Processo</label><input class="fi" id="fDon" placeholder="Ex: Gestão de Risco"></div>
+      <div class="fg"><label class="fl">Canal de Abertura</label><input class="fi" id="fCan" placeholder="Ex: Acessórias"></div>
+    </div>
+    <hr class="sep">
+    <div class="sec-label">SLA</div>
+    <div class="three">
+      <div class="fg"><label class="fl">SLA Gestão de Risco</label><input class="fi" id="fSGR" placeholder="Ex: 48h"></div>
+      <div class="fg"><label class="fl">SLA T.I</label><input class="fi" id="fSTI" placeholder="Ex: 48h"></div>
+      <div class="fg"><label class="fl">SLA Geral</label><input class="fi" id="fSGL" placeholder="Ex: 72h"></div>
+    </div>
+    <hr class="sep">
+    <div class="fg full"><label class="fl">Observações</label><textarea class="fta" id="fObs" placeholder="Informações adicionais..."></textarea></div>
+    <div class="modal-foot">
+      <button class="mbtn" onclick="closeM()">Cancelar</button>
+      <button class="mbtn save" onclick="saveP()">Salvar demanda</button>
+    </div>
+    <input type="hidden" id="fId">
+  </div>
+</div>
+
+<div class="toast" id="toast"><span id="toastMsg"></span></div>
+
+<script id="appjs">
+var P=[], aTab='Todos', aProc='Todos', aView='raci', eid=null;
+var GRUPOS=['Acessórias','SAAM','SITTAX'];
+var PROCESSOS=['Onboarding','Offboarding','Grupo Existente','Sistema','Onboarding Colaborador','Colaborador Ativo','Offboarding Colaborador'];
+var DEPTOS=['Gestão de Risco','T.I','CS','Coordenador','Supervisor','Analista','Gerentes','Gerente','Head','RH'];
+
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6);}
+function esc(s){var d=document.createElement('div');d.textContent=s||'';return d.innerHTML;}
+
+function persist(){
+  try{localStorage.setItem('raci_v6',JSON.stringify({data:P,grupos:GRUPOS,processos:PROCESSOS,deptos:DEPTOS}));}catch(e){}
+}
+function load(){
+  try{localStorage.removeItem('raci_v5');localStorage.removeItem('raci_v4');localStorage.removeItem('raci_v3');}catch(e){}
+  try{
+    var s=localStorage.getItem('raci_v6');
+    if(s){
+      var obj=JSON.parse(s);
+      var parsed=obj.data||obj;
+      var invalid=Array.isArray(parsed)&&parsed.some(function(p){
+        return !p.demanda||p.demanda.indexOf('DEMANDA')===0||p.grupo.indexOf('GRUPO')===0;
+      });
+      if(!invalid&&Array.isArray(parsed)&&parsed.length){
+        P=parsed;
+        if(obj.grupos)GRUPOS=obj.grupos;
+        if(obj.processos)PROCESSOS=obj.processos;
+        if(obj.deptos)DEPTOS=obj.deptos;
+        return;
+      }
+    }
+  }catch(e){}
+  defaultData();
+}
+
+function defaultData(){
+  P=[
+  {id:uid(),grupo:'Acessórias',processo:'Onboarding',demanda:'Cadastrar Empresa (CNPJ)',solicitar:'CS',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'Competencia Inicial',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Onboarding',demanda:'Incluir Regime Tributário',solicitar:'CS',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'Competencia Inicial',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Onboarding',demanda:'Incluir Inscrições Fiscais',solicitar:'CS',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'Competencia Inicial',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Onboarding',demanda:'Incluir Regime Tributário',solicitar:'CS',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'Competencia Inicial',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Onboarding',demanda:'Vincular Obrigações (Contábil, Fiscal e Folha)',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Onboarding',demanda:'Vincular Obrigações Específicas (Contábil, Fiscal e Folha)',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Grupo Existente',demanda:'Alterar Inscrições Fiscais',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Grupo Existente',demanda:'Vincular Obrigações (Contábil, Fiscal e Folha)',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Grupo Existente',demanda:'Vincular Obrigações Específicas (Contábil, Fiscal e Folha)',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Criar Obrigação',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Alterar Obrigações',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Alterar Datas das Obrigações',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Inativar Obrigação',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'T.I',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Vincular Tarefas (Contábil, Fiscal e Folha)',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Criar Tarefas',solicitar:'Coordenador | Supervisor',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Alterar Tarefas',solicitar:'Coordenador | Supervisor',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Inativar Tarefa',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Criar Processo',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Criar TAG',solicitar:'Gerentes',autoriza:'Gerentes',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'T.I',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Vincular TAG',solicitar:'Gerentes',autoriza:'Gerentes',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'T.I',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Sistema',demanda:'Alterar TAG',solicitar:'Gerentes',autoriza:'Gestão de Risco',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'T.I',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Onboarding Colaborador',demanda:'Cadastrar usuário',solicitar:'RH',autoriza:'RH',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'T.I',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Colaborador Ativo',demanda:'Alterar usuário',solicitar:'Coordenador | Supervisor',autoriza:'Coordenador | Supervisor',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'T.I',obs:''},
+  {id:uid(),grupo:'Acessórias',processo:'Offboarding Colaborador',demanda:'Inativar usuário',solicitar:'RH',autoriza:'RH',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'T.I',obs:''},
+  {id:uid(),grupo:'SAAM',processo:'Onboarding',demanda:'Cadastrar Empresa (CNPJ)',solicitar:'CS',autoriza:'Gestão de Risco',faz:'T.I',sla_gr:'Inicio da Competencia',sla_ti:'Inicio da Competencia',sla_geral:'-',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'SAAM',processo:'Offboarding',demanda:'Inativar Empresa (CNPJ)',solicitar:'CS',autoriza:'Gestão de Risco',faz:'T.I',sla_gr:'Final da Competencia',sla_ti:'Final da Competencia',sla_geral:'-',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'SAAM',processo:'Grupo Existente',demanda:'Cadastrar Empresa (CNPJ)',solicitar:'CS',autoriza:'Gestão de Risco',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'SAAM',processo:'Grupo Existente',demanda:'Vincular Certificados Digital',solicitar:'Coordenador | Supervisor',autoriza:'Coordenador | Supervisor',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'certificados@planning.com.br',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'SAAM',processo:'Onboarding Colaborador',demanda:'Cadastrar Usuário',solicitar:'RH',autoriza:'RH',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'T.I',obs:''},
+  {id:uid(),grupo:'SAAM',processo:'Colaborador Ativo',demanda:'Alterar Usuário',solicitar:'Coordenador | Supervisor',autoriza:'Coordenador | Supervisor',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'T.I',obs:''},
+  {id:uid(),grupo:'SAAM',processo:'Offboarding Colaborador',demanda:'Inativar usuário',solicitar:'RH',autoriza:'RH',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'T.I',obs:''},
+  {id:uid(),grupo:'SAAM',processo:'Sistema',demanda:'Liberar Rotinas',solicitar:'Coordenador',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'SAAM',processo:'Sistema',demanda:'Liberar checklist',solicitar:'Coordenador | Supervisor',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'48 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'SAAM',processo:'Sistema',demanda:'Liberação de Base',solicitar:'Gestão de Risco',autoriza:'Gestão de Risco',faz:'T.I',sla_gr:'',sla_ti:'48h',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'SITTAX',processo:'Sistema',demanda:'Cadastrar Empresa (CNPJ)',solicitar:'Coordenador | Supervisor',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'24 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'SITTAX',processo:'Sistema',demanda:'Inativar Empresa (CNPJ)',solicitar:'Coordenador | Supervisor',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'24 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'SITTAX',processo:'Sistema',demanda:'Cadastrar usuário',solicitar:'Coordenador | Supervisor',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'24 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''},
+  {id:uid(),grupo:'SITTAX',processo:'Sistema',demanda:'Inativar usuário',solicitar:'Coordenador | Supervisor',autoriza:'Gestão de Risco',faz:'Gestão de Risco',sla_gr:'24 h',sla_ti:'-',sla_geral:'',canal:'Acessórias',dono:'Gestão de Risco',obs:''}
+  ];
+}
+
+/* ── helpers ── */
+function getGrupos(){return GRUPOS.filter(function(g){return P.some(function(p){return p.grupo===g;});}).concat(GRUPOS.filter(function(g){return !P.some(function(p){return p.grupo===g;});})).filter(function(v,i,a){return a.indexOf(v)===i;})||GRUPOS;}
+function getProcs(grupo){var ps=[],s={};for(var i=0;i<P.length;i++){if(grupo==='Todos'||P[i].grupo===grupo){var v=P[i].processo;if(v&&!s[v]){s[v]=1;ps.push(v);}}}return ps;}
+function getList(){var r=[];for(var i=0;i<P.length;i++){var p=P[i];if((aTab==='Todos'||p.grupo===aTab)&&(aProc==='Todos'||p.processo===aProc))r.push(p);}return r;}
+
+/* ── main tab ── */
+function setMainTab(t){
+  document.getElementById('viewRaci').style.display=t==='raci'?'block':'none';
+  document.getElementById('viewConfig').style.display=t==='config'?'block':'none';
+  document.getElementById('mtRaci').className='main-tab'+(t==='raci'?' act':'');
+  document.getElementById('mtConfig').className='main-tab'+(t==='config'?' act':'');
+  if(t==='config')renderConfig();
+}
+
+/* ── config ── */
+function renderConfig(){
+  renderCfgList('cfgGrupos',GRUPOS,function(g){return P.filter(function(p){return p.grupo===g;}).length;},'grupo');
+  renderCfgList('cfgProcessos',PROCESSOS,function(pr){return P.filter(function(p){return p.processo===pr;}).length;},'processo');
+  renderCfgDeptos();
+  syncSelects();
+}
+function renderCfgList(elId,arr,countFn,tipo){
+  var el=document.getElementById(elId);
+  if(!arr.length){el.innerHTML='<div class="cfg-empty">Nenhum cadastrado</div>';return;}
+  el.innerHTML=arr.map(function(item,i){
+    var cnt=countFn(item);
+    return'<div class="cfg-item">'
+      +'<div class="cfg-dot"></div>'
+      +'<span class="cfg-name">'+esc(item)+'</span>'
+      +(cnt>0?'<span class="cfg-count">'+cnt+' demanda'+(cnt!==1?'s':'')+'</span>':'')
+      +'<button class="cfg-del" onclick="delCfg(\''+tipo+'\','+i+')" title="Remover"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      +'</div>';
+  }).join('');
+}
+function renderCfgDeptos(){
+  var el=document.getElementById('cfgDeptos');
+  el.innerHTML=DEPTOS.map(function(d,i){
+    var cnt=P.filter(function(p){return [p.solicitar,p.autoriza,p.faz,p.dono].join('|').indexOf(d)>=0;}).length;
+    return'<div class="cfg-item">'
+      +'<div class="cfg-dot" style="background:var(--blue)"></div>'
+      +'<span class="cfg-name">'+esc(d)+'</span>'
+      +(cnt>0?'<span class="cfg-count">'+cnt+' dem.</span>':'')
+      +'<button class="cfg-del" onclick="delDepto('+i+')" title="Remover"><svg width="10" height="10" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>'
+      +'</div>';
+  }).join('')||'<div class="cfg-empty">Nenhum departamento</div>';
+}
+function addGrupo(){
+  var nome=prompt('Nome do novo grupo:');
+  if(!nome||!nome.trim())return;
+  nome=nome.trim();
+  if(GRUPOS.indexOf(nome)>=0){toast('Grupo já existe.');return;}
+  GRUPOS.push(nome);persist();renderGroupTabs();renderConfig();toast('Grupo "'+nome+'" adicionado!');
+}
+function addProcesso(){
+  var nome=prompt('Nome do novo processo:');
+  if(!nome||!nome.trim())return;
+  nome=nome.trim();
+  if(PROCESSOS.indexOf(nome)>=0){toast('Processo já existe.');return;}
+  PROCESSOS.push(nome);persist();renderConfig();toast('Processo "'+nome+'" adicionado!');
+}
+function addDepto(){
+  var nome=prompt('Nome do departamento:');
+  if(!nome||!nome.trim())return;
+  nome=nome.trim();
+  if(DEPTOS.indexOf(nome)>=0){toast('Departamento já existe.');return;}
+  DEPTOS.push(nome);persist();renderConfig();toast('Departamento "'+nome+'" adicionado!');
+}
+function delCfg(tipo,idx){
+  var arr=tipo==='grupo'?GRUPOS:PROCESSOS;
+  var nome=arr[idx];
+  var inUso=P.some(function(p){return(tipo==='grupo'?p.grupo:p.processo)===nome;});
+  if(inUso&&!confirm('"'+nome+'" está em uso em demandas existentes. Remover mesmo assim?'))return;
+  arr.splice(idx,1);persist();renderGroupTabs();renderProcTabs();renderConfig();toast('"'+nome+'" removido.');
+}
+function delDepto(idx){
+  var nome=DEPTOS[idx];
+  DEPTOS.splice(idx,1);persist();renderConfig();toast('"'+nome+'" removido.');
+}
+function syncSelects(){
+  // Atualiza select de departamentos no filtro e no modal
+  var fDep=document.getElementById('fDep');
+  if(fDep){
+    fDep.innerHTML='<option value="">Todos os deptos</option>'+DEPTOS.map(function(d){return'<option>'+esc(d)+'</option>';}).join('');
+  }
+  // Atualiza selects do modal
+  var fGrp=document.getElementById('fGrp');
+  if(fGrp){fGrp.innerHTML='<option value="">Selecione</option>'+GRUPOS.map(function(g){return'<option>'+esc(g)+'</option>';}).join('');}
+  var fPrc=document.getElementById('fPrc');
+  if(fPrc){fPrc.innerHTML='<option value="">Selecione</option>'+PROCESSOS.map(function(p){return'<option>'+esc(p)+'</option>';}).join('');}
+}
+
+/* ── tabs ── */
+function renderGroupTabs(){
+  var el=document.getElementById('groupTabs');
+  el.innerHTML='';
+  ['Todos'].concat(getGrupos()).forEach(function(g){
+    var b=document.createElement('button');
+    b.className='gtab'+(aTab===g?' act':'');
+    b.textContent=g;
+    b.onclick=function(){setTab(g);};
+    el.appendChild(b);
+  });
+}
+function renderProcTabs(){
+  var el=document.getElementById('procTabs');
+  el.innerHTML='';
+  var ps=getProcs(aTab);
+  if(!ps.length)return;
+  ['Todos'].concat(ps).forEach(function(p){
+    var b=document.createElement('button');
+    b.className='ptab'+(aProc===p?' act':'');
+    b.textContent=p;
+    b.onclick=function(){setProc(p);};
+    el.appendChild(b);
+  });
+}
+function setTab(g){aTab=g;aProc='Todos';renderGroupTabs();renderProcTabs();renderTable();}
+function setProc(p){aProc=p;renderProcTabs();renderTable();}
+function setView(v){aView=v;document.getElementById('vR').className='vbtn'+(v==='raci'?' act':'');document.getElementById('vS').className='vbtn'+(v==='sla'?' act':'');renderTable();}
+
+/* ── chips ── */
+function makeChips(val,cls,letter){
+  if(!val||val==='-')return '<span class="chip-empty">—</span>';
+  return val.split('|').map(function(v){
+    v=v.trim();if(!v||v==='-')return '';
+    return'<span class="chip chip-'+cls+'"><span class="chip-letter">'+letter+'</span>'+esc(v)+'</span>';
+  }).filter(Boolean).join('');
+}
+function makeSla(val,cls){
+  if(!val||val==='-')return '<span class="chip-empty">—</span>';
+  return'<span class="sla-badge '+cls+'">'+esc(val)+'</span>';
+}
+function makeCanal(val){
+  if(!val)return '<span class="chip-empty">—</span>';
+  return'<span class="canal-tag">'+esc(val)+'</span>';
+}
+
+/* ── table ── */
+function renderTable(){
+  var wrap=document.getElementById('tableWrap');
+  var list=getList();
+  if(!list.length){
+    wrap.innerHTML='<div class="empty-state"><p>Nenhuma demanda. Importe um Excel ou clique em + Nova demanda.</p></div>';
+    document.getElementById('countBadge').textContent='0';
+    return;
+  }
+  if(aView==='raci') buildRaci(wrap,list);
+  else buildSla(wrap,list);
+}
+
+function gbBy(arr,k){var g={},keys=[];for(var i=0;i<arr.length;i++){var kk=arr[i][k]||'Sem grupo';if(!g[kk]){g[kk]=[];keys.push(kk);}g[kk].push(arr[i]);}return{g:g,keys:keys};}
+
+function buildRaci(wrap,list){
+  // Colunas fixas — sem Grupo nem Processo como coluna
+  var tpl='2fr 1.1fr 1.1fr 1.1fr 130px 1fr 56px';
+  var hdrs=['Demanda / Processo','Quem pode solicitar','Quem autoriza','Quem faz','Canal de abertura','Dono do processo',''];
+
+  var html='<div class="t-hdr" style="grid-template-columns:'+tpl+'">'
+    +hdrs.map(function(h){return'<div class="t-hdr-cell">'+h+'</div>';}).join('')
+    +'</div>';
+
+  // Agrupar por Grupo > Processo
+  var grupos={}, gkeys=[];
+  list.forEach(function(p){
+    var g=p.grupo||'Sem grupo';
+    if(!grupos[g]){grupos[g]={};gkeys.push(g);}
+    var pr=p.processo||'Sem processo';
+    if(!grupos[g][pr])grupos[g][pr]=[];
+    grupos[g][pr].push(p);
+  });
+
+  var showG=(aTab==='Todos');
+  gkeys.forEach(function(g){
+    var prMap=grupos[g];
+    Object.keys(prMap).forEach(function(proc){
+      var items=prMap[proc];
+      // Divisor de seção: mostra Grupo quando "Todos", sempre mostra Processo
+      var secLabel=showG?(g+' › '+proc):proc;
+      html+='<div class="sec-div">'
+        +'<span class="sec-name">'+esc(secLabel)+'</span>'
+        +'<span class="sec-count">'+items.length+'</span>'
+        +'</div>';
+      items.forEach(function(p){
+        html+='<div class="t-row" style="grid-template-columns:'+tpl+'" data-id="'+p.id+'" data-p="'+esc((p.demanda||'').toLowerCase())+'" data-d="'+esc([p.solicitar,p.autoriza,p.faz,p.dono].join('|'))+'">';
+        html+='<div class="t-cell demanda-cell"><div class="t-dem">'+esc(p.demanda||'')+'</div>'+(p.obs?'<div class="t-obs">'+esc(p.obs)+'</div>':'')+'</div>';
+        html+='<div class="t-cell"><div class="chip-wrap">'+makeChips(p.solicitar,'s','S')+'</div></div>';
+        html+='<div class="t-cell"><div class="chip-wrap">'+makeChips(p.autoriza,'a','A')+'</div></div>';
+        html+='<div class="t-cell"><div class="chip-wrap">'+makeChips(p.faz,'f','F')+'</div></div>';
+        html+='<div class="t-cell">'+makeCanal(p.canal)+'</div>';
+        html+='<div class="t-cell"><div class="chip-wrap">'+makeChips(p.dono,'d','D')+'</div></div>';
+        html+='<div class="t-cell row-acts">'
+          +'<button class="ic-btn" onclick="editP(\''+p.id+'\')" title="Editar"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+          +'<button class="ic-btn del" onclick="delP(\''+p.id+'\')" title="Excluir"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg></button>'
+          +'</div>';
+        html+='</div>';
+      });
+    });
+  });
+
+  html+='<div class="legend">'
+    +'<span class="legend-item"><span class="chip chip-s"><span class="chip-letter">S</span>Solicita</span></span>'
+    +'<span class="legend-item"><span class="chip chip-a"><span class="chip-letter">A</span>Autoriza</span></span>'
+    +'<span class="legend-item"><span class="chip chip-f"><span class="chip-letter">F</span>Faz</span></span>'
+    +'<span class="legend-item"><span class="chip chip-d"><span class="chip-letter">D</span>Dono</span></span>'
+    +'</div>';
+
+  wrap.innerHTML=html;
+  filt();
+}
+
+function buildSla(wrap,list){
+  var tpl='2fr 1.3fr 1.1fr 1fr 130px 56px';
+  var hdrs=['Demanda / Processo','SLA Gest. Risco','SLA T.I','SLA Geral','Canal',''];
+
+  var html='<div class="t-hdr" style="grid-template-columns:'+tpl+'">'
+    +hdrs.map(function(h){return'<div class="t-hdr-cell">'+h+'</div>';}).join('')
+    +'</div>';
+
+  var grupos={}, gkeys=[];
+  list.forEach(function(p){
+    var g=p.grupo||'Sem grupo';
+    if(!grupos[g]){grupos[g]={};gkeys.push(g);}
+    var pr=p.processo||'Sem processo';
+    if(!grupos[g][pr])grupos[g][pr]=[];
+    grupos[g][pr].push(p);
+  });
+
+  var showG=(aTab==='Todos');
+  gkeys.forEach(function(g){
+    var prMap=grupos[g];
+    Object.keys(prMap).forEach(function(proc){
+      var items=prMap[proc];
+      var secLabel=showG?(g+' › '+proc):proc;
+      html+='<div class="sec-div"><span class="sec-name">'+esc(secLabel)+'</span><span class="sec-count">'+items.length+'</span></div>';
+      items.forEach(function(p){
+        html+='<div class="t-row" style="grid-template-columns:'+tpl+'" data-id="'+p.id+'" data-p="'+esc((p.demanda||'').toLowerCase())+'" data-d="'+esc([p.solicitar,p.autoriza,p.faz,p.dono].join('|'))+'">';
+        html+='<div class="t-cell demanda-cell"><div class="t-dem">'+esc(p.demanda||'')+'</div>'+(p.obs?'<div class="t-obs">'+esc(p.obs)+'</div>':'')+'</div>';
+        html+='<div class="t-cell">'+makeSla(p.sla_gr,'sla-gr')+'</div>';
+        html+='<div class="t-cell">'+makeSla(p.sla_ti,'sla-ti')+'</div>';
+        html+='<div class="t-cell">'+makeSla(p.sla_geral,'sla-g')+'</div>';
+        html+='<div class="t-cell">'+makeCanal(p.canal)+'</div>';
+        html+='<div class="t-cell row-acts">'
+          +'<button class="ic-btn" onclick="editP(\''+p.id+'\')" title="Editar"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>'
+          +'<button class="ic-btn del" onclick="delP(\''+p.id+'\')" title="Excluir"><svg width="12" height="12" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M3 6h18M19 6l-1 14H6L5 6M10 11v6M14 11v6M9 6V4h6v2"/></svg></button>'
+          +'</div>';
+        html+='</div>';
+      });
+    });
+  });
+  wrap.innerHTML=html;
+  filt();
+}
+
+/* ── filter ── */
+function filt(){
+  var s=(document.getElementById('srch').value||'').toLowerCase();
+  var d=document.getElementById('fDep').value;
+  var rows=document.querySelectorAll('.t-row[data-p]');
+  var v=0;
+  rows.forEach(function(r){
+    var ok=(!s||r.getAttribute('data-p').indexOf(s)>=0)&&(!d||r.getAttribute('data-d').indexOf(d)>=0);
+    r.classList.toggle('hidden',!ok);
+    if(ok)v++;
+  });
+  document.getElementById('countBadge').textContent=v+(v===1?' demanda':' demandas');
+}
+
+/* ── CRUD ── */
+function openM(data){
+  eid=data?data.id:null;
+  document.getElementById('modalTitle').textContent=data?'Editar demanda':'Nova demanda';
+  var m=[['fDem','demanda'],['fGrp','grupo'],['fPrc','processo'],['fSol','solicitar'],
+         ['fAut','autoriza'],['fFaz','faz'],['fDon','dono'],['fCan','canal'],
+         ['fObs','obs'],['fSGR','sla_gr'],['fSTI','sla_ti'],['fSGL','sla_geral']];
+  m.forEach(function(f){var el=document.getElementById(f[0]);if(el)el.value=(data&&data[f[1]]!=null)?data[f[1]]:'';});
+  document.getElementById('overlay').classList.add('open');
+  syncSelects();
+}
+function closeM(){document.getElementById('overlay').classList.remove('open');eid=null;}
+function ovClick(e){if(e.target===document.getElementById('overlay'))closeM();}
+
+function saveP(){
+  var dem=document.getElementById('fDem').value.trim();
+  var grp=document.getElementById('fGrp').value;
+  if(!dem){toast('Informe a demanda.');return;}
+  if(!grp){toast('Selecione o grupo.');return;}
+  var entry={id:eid||uid(),grupo:grp,processo:document.getElementById('fPrc').value,demanda:dem,
+    solicitar:document.getElementById('fSol').value.trim(),autoriza:document.getElementById('fAut').value.trim(),
+    faz:document.getElementById('fFaz').value.trim(),dono:document.getElementById('fDon').value.trim(),
+    canal:document.getElementById('fCan').value.trim(),obs:document.getElementById('fObs').value.trim(),
+    sla_gr:document.getElementById('fSGR').value.trim(),sla_ti:document.getElementById('fSTI').value.trim(),
+    sla_geral:document.getElementById('fSGL').value.trim()};
+  if(eid){for(var i=0;i<P.length;i++){if(P[i].id===eid){P[i]=entry;break;}}}
+  else P.push(entry);
+  persist();renderGroupTabs();renderProcTabs();renderTable();closeM();
+  toast(eid?'Demanda atualizada!':'Demanda criada!');
+}
+function editP(id){var p=P.find(function(x){return x.id===id;});if(p)openM(p);}
+function delP(id){
+  if(!confirm('Excluir esta demanda?'))return;
+  P=P.filter(function(x){return x.id!==id;});
+  persist();renderGroupTabs();renderProcTabs();renderTable();toast('Demanda excluída.');
+}
+
+/* ── IMPORT/EXPORT ── */
+function impXls(evt){
+  var file=evt.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{
+      var wb=XLSX.read(e.target.result,{type:'binary'});
+      var ws=wb.Sheets['RACI']||wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{header:1,defval:''});
+      var start=-1;
+      for(var i=0;i<rows.length;i++){var v=String(rows[i][0]||'').trim();if(v&&v.indexOf('GRUPO')<0&&v.indexOf('Preencha')<0&&v!=='Matriz RACI'){start=i;break;}}
+      if(start<0){toast('Formato inválido.');return;}
+      var hdr=rows[start];if(String(hdr[0]).indexOf('GRUPO')>=0)start++;
+      var imp=[];
+      for(var i=start;i<rows.length;i++){
+        var r=rows[i];var g=String(r[0]||'').trim();var d=String(r[2]||'').trim();
+        if(!g||!d)continue;
+        imp.push({id:uid(),grupo:g,processo:String(r[1]||'').trim(),demanda:d,solicitar:String(r[3]||'').trim(),
+          autoriza:String(r[4]||'').trim(),faz:String(r[5]||'').trim(),sla_gr:String(r[6]||'').trim(),
+          sla_ti:String(r[7]||'').trim(),sla_geral:String(r[8]||'').trim(),canal:String(r[9]||'').trim(),
+          dono:String(r[10]||'').trim(),obs:String(r[11]||'').trim()});
+      }
+      if(!imp.length){toast('Nenhuma linha válida.');return;}
+      P=imp;persist();renderGroupTabs();renderProcTabs();renderTable();toast(imp.length+' demandas importadas!');
+    }catch(ex){toast('Erro: '+ex.message);}
+    evt.target.value='';
+  };
+  reader.readAsBinaryString(file);
+}
+function expXls(){
+  var hdr=['Grupo de Processo','Processo','Demanda','Quem pode solicitar','Quem autoriza','Quem faz','SLA Gestão de Risco','SLA T.I','SLA Geral','Canal de Abertura','Dono do Processo','Observações'];
+  var rows=[hdr];
+  P.forEach(function(p){rows.push([p.grupo,p.processo,p.demanda,p.solicitar,p.autoriza,p.faz,p.sla_gr,p.sla_ti,p.sla_geral,p.canal,p.dono,p.obs]);});
+  var wb=XLSX.utils.book_new();
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[18,18,34,18,18,18,20,14,14,16,18,30].map(function(w){return{wch:w};});
+  XLSX.utils.book_append_sheet(wb,ws,'RACI');
+  XLSX.writeFile(wb,'matriz_raci_export.xlsx');
+  toast('Excel exportado!');
+}
+function bkpJson(){
+  var d=new Date().toISOString().slice(0,10);
+  var blob=new Blob([JSON.stringify({v:5,date:d,data:P},null,2)],{type:'application/json'});
+  var a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='raci_backup_'+d+'.json';a.click();URL.revokeObjectURL(a.href);
+  toast('Backup salvo!');
+}
+function impJson(evt){
+  var file=evt.target.files[0];if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(e){
+    try{var obj=JSON.parse(e.target.result);var data=obj.data||obj;if(!Array.isArray(data)||!data.length)throw new Error('Formato inválido');P=data;persist();renderGroupTabs();renderProcTabs();renderTable();toast(P.length+' demandas restauradas!');}
+    catch(ex){toast('Erro: '+ex.message);}
+    evt.target.value='';
+  };
+  reader.readAsText(file);
+}
+function resetData(){
+  if(!confirm('Apagar todos os dados e restaurar os dados padrão?'))return;
+  try{localStorage.removeItem('raci_v6');}catch(e){}
+  defaultData();persist();renderGroupTabs();renderProcTabs();renderTable();
+  toast('Dados restaurados ao padrão!');
+}
+function toast(msg){var t=document.getElementById('toast');document.getElementById('toastMsg').textContent=msg;t.classList.add('show');setTimeout(function(){t.classList.remove('show');},2800);}
+
+load();syncSelects();renderGroupTabs();renderProcTabs();renderTable();
+</script>
+</body>
+</html>
