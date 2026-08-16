@@ -1,159 +1,131 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-Deno.serve(async (req) => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: { "Access-Control-Allow-Origin": "*", "Access-Control-Allow-Headers": "authorization, content-type" },
-    });
-  }
+const CORS = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization, apikey",
+  "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+};
 
-  const ACESSORIAS_TOKEN = Deno.env.get("ACESSORIAS_TOKEN") ?? "";
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
-  const SERVICE_KEY = Deno.env.get("SERVICE_ROLE_KEY") ?? "";
+const ACESS_TOKEN = Deno.env.get("ACESS_TOKEN") || "ef7ceb75e9bab0fe36832dccc68e0e3c";
+const ACESS_API   = "https://api.acessorias.com";
+const SUPA_URL    = Deno.env.get("SUPABASE_URL")!;
+const SUPA_KEY    = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-  if (!SUPABASE_URL || !SERVICE_KEY || !ACESSORIAS_TOKEN) {
-    return new Response(JSON.stringify({ ok: false, erro: "Secrets ausentes" }), { status: 500 });
-  }
-
-  const supabase = createClient(SUPABASE_URL, SERVICE_KEY, {
-    auth: { persistSession: false, autoRefreshToken: false },
-  });
-
-  const apiHeaders = { Authorization: `Bearer ${ACESSORIAS_TOKEN}` };
-  const BASE = "https://api.acessorias.com";
-  const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
-
-  // lê parâmetros do body: { modo: "empresas"|"tags"|"grupos", pagInicio, pagFim }
-  let modo = "empresas";
-  let pagInicio = 1;
-  let pagFim = 25; // 25 páginas × 20 registros = 500 por execução
+serve(async (req) => {
+  if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
 
   try {
-    const body = await req.json().catch(() => ({}));
-    if (body.modo) modo = body.modo;
-    if (body.pagInicio) pagInicio = Number(body.pagInicio);
-    if (body.pagFim) pagFim = Number(body.pagFim);
-  } catch (_) { /* usa defaults */ }
+    const body       = req.method === "POST" ? await req.json() : {};
+    const url        = new URL(req.url);
+    const compParam  = body.competencia || url.searchParams.get("competencia") || getCompAtual();
+    const cnpjFiltro = body.cnpj        || url.searchParams.get("cnpj")        || null;
 
-  console.log(`Modo: ${modo} | Páginas: ${pagInicio}-${pagFim}`);
+    const [ano, mes] = compParam.split("-");
+    const dtIni = `${ano}-${mes}-01`;
+    const dtFim = `${ano}-${mes}-${ultimoDia(ano, mes)}`;
 
-  try {
-    if (modo === "empresas") {
-      const empresas: Record<string, unknown>[] = [];
-      for (let page = pagInicio; page <= pagFim; page++) {
-        const res = await fetch(`${BASE}/companies/ListAll?ativa=S&registrationData&Pagina=${page}`, { headers: apiHeaders });
-        if (!res.ok) { console.log(`Página ${page} retornou ${res.status} — parando`); break; }
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) { console.log(`Página ${page} vazia — fim`); break; }
-        empresas.push(...data);
-        console.log(`Página ${page}: ${data.length} empresas`);
-        if (data.length < 20) break;
-        await sleep(650);
-      }
+    const supabase = createClient(SUPA_URL, SUPA_KEY);
 
-      const rows = empresas.map((e) => ({
-        cnpj: String(e.Identificador ?? "").replace(/\D/g, ""),
-        razao: e.Razao ?? null,
-        regime: e.Regime ?? null,
-        uf: e.UF ?? null,
-        cidade: e.Cidade ?? e.cidade ?? null,
-        status: e.Status ?? "Ativa",
-        grupo: e.GrupoDeEmpresas ?? null,
-        sincronizado_em: new Date().toISOString(),
-      })).filter((r) => r.cnpj.length > 0);
+    // Log início
+    const { data: logData } = await supabase
+      .from("acessorias_sync_log")
+      .insert({ competencia: compParam, status: "running" })
+      .select("id").single();
+    const logId = logData?.id;
 
-      for (let i = 0; i < rows.length; i += 200) {
-        const res = await supabase.from("empresas").upsert(rows.slice(i, i + 200), { onConflict: "cnpj", ignoreDuplicates: false });
-        if (res.error) {
-          console.log(`Aviso lote ${i}: ${res.error.message} — continuando`);
-          // tenta um por um para não perder o lote inteiro
-          for (const row of rows.slice(i, i + 200)) {
-            const r2 = await supabase.from("empresas").upsert([row], { onConflict: "cnpj", ignoreDuplicates: true });
-            if (r2.error) console.log(`Skip ${row.cnpj}: ${r2.error.message}`);
-          }
+    // Empresas
+    const empresas = cnpjFiltro
+      ? [{ cnpj: cnpjFiltro }]
+      : await buscarEmpresas();
+
+    let totalEntregas = 0;
+    const erros: { cnpj: string; erro: string }[] = [];
+
+    for (const emp of empresas) {
+      try {
+        const entregas = await buscarEntregas(emp.cnpj, dtIni, dtFim);
+        if (entregas.length > 0) {
+          const rows = entregas.map((e: any) => ({
+            cnpj:           emp.cnpj,
+            competencia:    compParam,
+            obrigacao_nome: e.Nome || "",
+            status:         e.Status || "",
+            dt_prazo:       e.EntDtPrazo && e.EntDtPrazo !== "0000-00-00" ? e.EntDtPrazo : null,
+            dt_entrega:     e.EntDtEntrega && e.EntDtEntrega !== "0000-00-00" ? e.EntDtEntrega : null,
+            dt_finalizacao: e.EntDtFinalizacao || null,
+            anexo_url:      e.Anexos?.[0]?.Url || null,
+            responsavel:    e.RespEntrega || null,
+            dpto_nome:      e.Config?.DptoNome || null,
+            sincronizado_em: new Date().toISOString(),
+          }));
+
+          const { error } = await supabase
+            .from("acessorias_entregas")
+            .upsert(rows, { onConflict: "cnpj,competencia,obrigacao_nome" });
+
+          if (error) throw new Error(error.message);
+          totalEntregas += rows.length;
         }
+      } catch (err: any) {
+        erros.push({ cnpj: emp.cnpj, erro: err.message });
       }
-
-      return new Response(JSON.stringify({ ok: true, modo, paginas: `${pagInicio}-${pagFim}`, inseridas: rows.length }),
-        { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
     }
 
-    if (modo === "tags") {
-      // 1. lista todas as tags (sem companies)
-      const tags: Record<string, unknown>[] = [];
-      for (let page = pagInicio; page <= pagFim; page++) {
-        const res = await fetch(`${BASE}/tags/ListAll?Pagina=${page}`, { headers: apiHeaders });
-        if (!res.ok) break;
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) break;
-        tags.push(...data);
-        if (data.length < 20) break;
-        await sleep(650);
-      }
-      console.log(`Tags listadas: ${tags.length}`);
+    // Log fim
+    await supabase.from("acessorias_sync_log").update({
+      finalizado_em:  new Date().toISOString(),
+      total_empresas: empresas.length,
+      total_entregas: totalEntregas,
+      status:         erros.length === 0 ? "ok" : "parcial",
+      erro_msg:       erros.length ? JSON.stringify(erros.slice(0, 10)) : null,
+    }).eq("id", logId);
 
-      // 2. upsert das tags
-      const tagRows = tags.map((t) => ({ id: Number(t.id), nome: String(t.nome ?? ""), status: String(t.status ?? "Ativo"), sincronizado_em: new Date().toISOString() }));
-      for (let i = 0; i < tagRows.length; i += 200) {
-        const res = await supabase.from("tags").upsert(tagRows.slice(i, i + 200), { onConflict: "id" });
-        if (res.error) throw new Error(`upsert tags: ${res.error.message}`);
-      }
+    return new Response(
+      JSON.stringify({ ok: true, competencia: compParam, total_empresas: empresas.length, total_entregas: totalEntregas, erros: erros.length }),
+      { headers: { ...CORS, "Content-Type": "application/json" } }
+    );
 
-      return new Response(JSON.stringify({ ok: true, modo, tags: tagRows.length, pivots: 0 }),
-        { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
-    }
-
-    // modo "tag-empresas": busca empresas de UMA tag específica
-    if (modo === "tag-empresas") {
-      const tagId = Number(pagInicio); // pagInicio = id da tag
-      const res = await fetch(`${BASE}/tags/${tagId}?companies`, { headers: apiHeaders });
-      if (!res.ok) throw new Error(`API ${res.status} tag ${tagId}`);
-      const data = await res.json();
-      const tagData = Array.isArray(data) ? data[0] : data;
-      const companies = (tagData?.companies ?? tagData?.Empresas ?? []) as Array<Record<string, unknown>>;
-      
-      const pivots = companies.map((c) => ({
-        cnpj: String(c.cnpj ?? c.Identificador ?? c.CNPJ ?? "").replace(/\D/g, ""),
-        tag_id: tagId
-      })).filter((p) => p.cnpj.length > 0);
-
-      if (pivots.length > 0) {
-        await supabase.from("empresa_tags").delete().eq("tag_id", tagId);
-        const res2 = await supabase.from("empresa_tags").insert(pivots);
-        if (res2.error) throw new Error(`insert empresa_tags: ${res2.error.message}`);
-      }
-
-      return new Response(JSON.stringify({ ok: true, modo, tag_id: tagId, empresas: pivots.length }),
-        { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
-    }
-
-    if (modo === "grupos") {
-      const grupos: Record<string, unknown>[] = [];
-      for (let page = pagInicio; page <= pagFim; page++) {
-        const res = await fetch(`${BASE}/company_groups/ListAll?Pagina=${page}`, { headers: apiHeaders });
-        if (!res.ok) break;
-        const data = await res.json();
-        if (!Array.isArray(data) || data.length === 0) break;
-        grupos.push(...data);
-        if (data.length < 20) break;
-        await sleep(650);
-      }
-
-      const rows = grupos.map((g) => ({ id: Number(g.id), nome: String(g.nome ?? ""), status: String(g.status ?? "Ativo"), sincronizado_em: new Date().toISOString() }));
-      for (let i = 0; i < rows.length; i += 200) {
-        const res = await supabase.from("grupos").upsert(rows.slice(i, i + 200), { onConflict: "id" });
-        if (res.error) throw new Error(`upsert grupos: ${res.error.message}`);
-      }
-
-      return new Response(JSON.stringify({ ok: true, modo, grupos: rows.length }),
-        { headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
-    }
-
-    return new Response(JSON.stringify({ ok: false, erro: "modo inválido" }), { status: 400 });
-
-  } catch (err) {
-    console.error("ERRO:", (err as Error).message);
-    return new Response(JSON.stringify({ ok: false, erro: (err as Error).message }),
-      { status: 500, headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" } });
+  } catch (err: any) {
+    return new Response(
+      JSON.stringify({ erro: err.message }),
+      { status: 500, headers: { ...CORS, "Content-Type": "application/json" } }
+    );
   }
 });
+
+async function buscarEmpresas() {
+  const todas: { cnpj: string }[] = [];
+  let pagina = 1;
+  while (pagina <= 200) {
+    const res  = await fetch(`${ACESS_API}/companies/ListAll?ativa=S&Pagina=${pagina}`, {
+      headers: { Authorization: `Bearer ${ACESS_TOKEN}` },
+    });
+    if (!res.ok) throw new Error(`Empresas HTTP ${res.status}`);
+    const data = await res.json();
+    if (!Array.isArray(data) || data.length === 0) break;
+    todas.push(...data.map((e: any) => ({ cnpj: e.Identificador })));
+    if (data.length < 20) break;
+    pagina++;
+  }
+  return todas;
+}
+
+async function buscarEntregas(cnpj: string, dtIni: string, dtFim: string) {
+  const url = `${ACESS_API}/deliveries/${encodeURIComponent(cnpj)}?DtInitial=${dtIni}&DtFinal=${dtFim}&attachments&config`;
+  const res  = await fetch(url, { headers: { Authorization: `Bearer ${ACESS_TOKEN}` } });
+  if (res.status === 204) return [];
+  if (!res.ok) throw new Error(`Entregas HTTP ${res.status}`);
+  const data = await res.json();
+  const emp  = Array.isArray(data) ? data[0] : data;
+  return emp?.Entregas || [];
+}
+
+function getCompAtual() {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}`;
+}
+
+function ultimoDia(ano: string, mes: string) {
+  return new Date(+ano, +mes, 0).getDate();
+}
