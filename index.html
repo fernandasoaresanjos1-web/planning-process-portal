@@ -989,26 +989,32 @@ async function eSalvar(cnpj, campo, valor){
 }
 
 function eCelula(cnpj, campo, valor, tipo, opcoes){
-  // tipo: 'text' | 'select' | 'bool'
   var v=valor||'';
+  var cn=cnpj.replace(/'/g,'');
+  var cp=campo.replace(/'/g,'');
   if(tipo==='bool'){
     var checked=valor?'checked':'';
     return '<label style="cursor:pointer;display:flex;align-items:center;gap:4px">'+
-      '<input type="checkbox" '+checked+' onchange="eSalvar(''+cnpj+'',''+campo+'',this.checked)" style="cursor:pointer">'+
+      '<input type="checkbox" '+checked+' data-cnpj="'+cn+'" data-campo="'+cp+'" onchange="eSalvarEvt(this,true)" style="cursor:pointer">'+
       '<span style="font-size:10px;color:#94a3b8">'+(valor?'Sim':'—')+'</span>'+
     '</label>';
   }
   if(tipo==='select'){
     var opts=opcoes.map(function(o){return'<option value="'+o+'"'+(v===o?' selected':'')+'>'+o+'</option>';}).join('');
-    return '<select onchange="eSalvar(''+cnpj+'',''+campo+'',this.value)" '+
+    return '<select data-cnpj="'+cn+'" data-campo="'+cp+'" onchange="eSalvarEvt(this,false)" '+
       'style="background:#0f172a;border:1px solid #1e293b;color:#cbd5e1;border-radius:4px;padding:2px 4px;font-size:11px;max-width:140px">'+
       '<option value="">—</option>'+opts+'</select>';
   }
-  // text
-  return '<input type="text" value="'+v.replace(/"/g,'&quot;')+'" '+
-    'onblur="eSalvar(''+cnpj+'',''+campo+'',this.value)" '+
-    'onkeydown="if(event.key==='Enter')this.blur()" '+
+  return '<input type="text" value="'+v.replace(/"/g,'&quot;')+'" data-cnpj="'+cn+'" data-campo="'+cp+'" '+
+    'onblur="eSalvarEvt(this,false)" onkeydown="if(event.key==\'Enter\')this.blur()" '+
     'style="background:#0f172a;border:1px solid #1e293b;color:#cbd5e1;border-radius:4px;padding:2px 6px;font-size:11px;width:100%;min-width:90px">';
+}
+
+function eSalvarEvt(el, isBool){
+  var cnpj=el.getAttribute('data-cnpj');
+  var campo=el.getAttribute('data-campo');
+  var valor=isBool?el.checked:el.value;
+  eSalvar(cnpj, campo, valor);
 }
 
 function renderETab(tab, data){
