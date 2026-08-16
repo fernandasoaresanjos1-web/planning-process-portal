@@ -1247,50 +1247,116 @@ async function initCruzamento(){
 
 async function cruzBuscar(){
   var cnpj = (document.getElementById('crz-emp')||{}).value;
-  var comp = (document.getElementById('crz-comp')||{}).value; /* YYYY-MM */
+  var comp = (document.getElementById('crz-comp')||{}).value;
   var res  = document.getElementById('crz-result');
   if(!cnpj || !comp){ res.innerHTML='<p style="color:#f43f5e">Selecione a empresa e a competência.</p>'; return; }
 
-  res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">Buscando entregas na API do Acessórias...</div>';
-
   var ano = comp.slice(0,4), mes = comp.slice(5,7);
-  var dtIni = comp+'-01';
-  var dtFim = comp+'-28'; /* cobre todo o mês */
+  res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">Buscando entregas no banco de dados...</div>';
 
   try {
-    /* Busca entregas da empresa com attachments */
-    var url = ACESS_API_BASE+'/deliveries/'+encodeURIComponent(cnpj)+
-      '?DtInitial='+dtIni+'&DtFinal='+dtFim+'&attachments&situation=delivered';
-
-    var resp = await fetch(url, { headers:{ 'Authorization':'Bearer '+ACESS_TOKEN_KEY } });
-    if(!resp.ok) throw new Error('API '+resp.status);
-    var data = await resp.json();
-
-    /* Extrai entregas da empresa */
-    var emp = Array.isArray(data) ? data[0] : data;
-    var entregas = (emp && emp.Entregas) ? emp.Entregas : [];
+    /* Busca do Supabase — dados sincronizados pela Netlify Function */
+    var url = SUPA_URL+'/rest/v1/acessorias_entregas?cnpj=eq.'+encodeURIComponent(cnpj)+'&competencia=eq.'+comp+'&select=*&order=obrigacao_nome';
+    var resp = await fetch(url, {
+      headers:{ 'apikey':SUPA_KEY, 'Authorization':'Bearer '+SUPA_KEY, 'Accept':'application/json' }
+    });
+    if(!resp.ok) throw new Error('DB '+resp.status);
+    var entregas = await resp.json();
 
     if(!entregas.length){
-      res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">Nenhuma entrega encontrada para '+mes+'/'+ano+'.</div>';
+      res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">'+
+        'Nenhuma entrega sincronizada para '+mes+'/'+ano+'.'+
+        '<br><br><button data-cnpj="'+cnpj+'" data-comp="'+comp+'" onclick="cruzSincronizarEvt(this)" '+
+        'style="padding:8px 16px;background:#38bdf8;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer">'+
+        '&#8635; Sincronizar agora</button></div>';
       return;
     }
 
     /* Processa cada regra */
-    res.innerHTML='<div style="text-align:center;padding:20px;color:#64748b">Baixando e analisando PDFs...</div>';
+    res.innerHTML='<div style="text-align:center;padding:20px;color:#64748b">Analisando PDFs...</div>';
     var linhas = await Promise.all(REGRAS_CRUZAMENTO.map(function(regra){
-      return cruzProcessarRegra(regra, entregas, mes, ano);
+      return cruzProcessarRegraSupabase(regra, entregas, mes, ano);
     }));
 
-    var html = '<table><thead><tr>'+
-      '<th>Cruzamento</th><th>'+REGRAS_CRUZAMENTO[0].obrigA.nome+'</th>'+
-      '<th>'+REGRAS_CRUZAMENTO[0].obrigB.nome+'</th>'+
-      '<th>Divergência</th><th>Status</th>'+
-    '</tr></thead><tbody>'+linhas.join('')+'</tbody></table>';
+    /* Último sync */
+    var lastSync = entregas[0] ? entregas[0].sincronizado_em : null;
+    var syncStr  = lastSync ? 'Sync: '+new Date(lastSync).toLocaleString('pt-BR') : '';
+
+    var html = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">'+
+      '<span style="font-size:11px;color:#475569">'+syncStr+'</span>'+
+      '<button data-cnpj="'+cnpj+'" data-comp="'+comp+'" onclick="cruzSincronizarEvt(this)" '+
+      'style="padding:4px 12px;background:transparent;border:1px solid #38bdf8;color:#38bdf8;border-radius:6px;font-size:11px;cursor:pointer">'+
+      '&#8635; Atualizar</button></div>'+
+      '<table><thead><tr>'+
+        '<th>Cruzamento</th><th>SPED Fiscal</th><th>Guia ICMS</th><th>Divergência</th><th>Status</th>'+
+      '</tr></thead><tbody>'+linhas.join('')+'</tbody></table>';
     res.innerHTML='<div class="panel">'+html+'</div>';
 
   } catch(err){
     res.innerHTML='<div style="text-align:center;padding:32px;color:#f43f5e">Erro: '+err.message+'</div>';
   }
+}
+
+function cruzSincronizarEvt(el){
+  var cnpj = el.getAttribute('data-cnpj');
+  var comp = el.getAttribute('data-comp');
+  cruzSincronizar(cnpj, comp);
+}
+
+async function cruzSincronizar(cnpj, comp){
+  var res = document.getElementById('crz-result');
+  res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">Sincronizando com Acessórias...</div>';
+  try {
+    var resp = await fetch('/.netlify/functions/sync-acessorias', {
+      method: 'POST',
+      headers:{ 'Content-Type':'application/json' },
+      body: JSON.stringify({ cnpj: cnpj, competencia: comp })
+    });
+    var data = await resp.json();
+    if(!resp.ok) throw new Error(data.erro || 'Erro '+resp.status);
+    res.innerHTML='<div style="text-align:center;padding:20px;color:#4ade80">'+
+      '✅ Sincronizado! '+data.total_entregas+' entregas salvas.<br>'+
+      '<button onclick="cruzBuscar()" style="margin-top:12px;padding:8px 16px;background:#00bf63;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer">Ver resultado</button></div>';
+  } catch(err){
+    res.innerHTML='<div style="text-align:center;padding:32px;color:#f43f5e">Erro ao sincronizar: '+err.message+'</div>';
+  }
+}
+
+async function cruzProcessarRegraSupabase(regra, entregas, mes, ano){
+  /* Busca entregas pelo nome da obrigação */
+  var entA = entregas.find(function(e){ return (e.obrigacao_nome||'').toLowerCase().indexOf(regra.obrigA.nome.toLowerCase())>=0; });
+  var entB = entregas.find(function(e){ return (e.obrigacao_nome||'').toLowerCase().indexOf(regra.obrigB.nome.toLowerCase())>=0; });
+
+  var valA=null, valB=null, errA='', errB='';
+
+  if(entA && entA.anexo_url){
+    try{ valA = await regra.extrairA(entA.anexo_url); }
+    catch(e){ errA = e.message; }
+  } else { errA = entA ? 'Sem anexo' : 'Não entregue'; }
+
+  if(entB && entB.anexo_url){
+    try{ valB = await regra.extrairB(entB.anexo_url); }
+    catch(e){ errB = e.message; }
+  } else { errB = entB ? 'Sem anexo' : 'Não entregue'; }
+
+  var fmtA = valA!==null ? 'R$ '+valA.toLocaleString('pt-BR',{minimumFractionDigits:2}) : '<span style="color:#f43f5e">'+(errA||'—')+'</span>';
+  var fmtB = valB!==null ? 'R$ '+valB.toLocaleString('pt-BR',{minimumFractionDigits:2}) : '<span style="color:#f43f5e">'+(errB||'—')+'</span>';
+
+  var div='—', status='—', stC='#94a3b8';
+  if(valA!==null && valB!==null){
+    var dif=Math.abs(valA-valB);
+    if(dif<0.01){ div='R$ 0,00'; status='✅ OK'; stC='#4ade80'; }
+    else {
+      div='<span style="color:#f43f5e">R$ '+dif.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>';
+      status='❌ Divergência'; stC='#f43f5e';
+    }
+  }
+
+  return '<tr>'+
+    '<td style="font-weight:600">'+regra.nome+' '+mes+'/'+ano.slice(2)+'</td>'+
+    '<td>'+fmtA+'</td><td>'+fmtB+'</td><td>'+div+'</td>'+
+    '<td style="color:'+stC+';font-weight:700">'+status+'</td>'+
+  '</tr>';
 }
 
 async function cruzProcessarRegra(regra, entregas, mes, ano){
