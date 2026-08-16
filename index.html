@@ -837,6 +837,18 @@ function setETab(tab, btn){
   document.querySelectorAll('.etab-btn').forEach(function(b){b.classList.remove('on');});
   btn.classList.add('on');
   var filtered=fEFiltered();
+  // Atualiza KPIs com totais da aba
+  if(tab==='geral'){
+    var ativas=_dbEmpresas.filter(function(e){return(e.status||'').toLowerCase().indexOf('ativ')>=0;});
+    document.getElementById('emp-total').textContent=_dbEmpresas.length.toLocaleString('pt-BR');
+    document.getElementById('emp-ativas').textContent=ativas.length.toLocaleString('pt-BR');
+    document.getElementById('emp-inativas').textContent=(_dbEmpresas.length-ativas.length).toLocaleString('pt-BR');
+  } else {
+    var ativasFilt=filtered.filter(function(e){return(e.status||'').toLowerCase().indexOf('ativ')>=0;});
+    document.getElementById('emp-total').textContent=filtered.length.toLocaleString('pt-BR');
+    document.getElementById('emp-ativas').textContent=ativasFilt.length.toLocaleString('pt-BR');
+    document.getElementById('emp-inativas').textContent=(filtered.length-ativasFilt.length).toLocaleString('pt-BR');
+  }
   renderETab(tab, filtered);
 }
 
@@ -846,11 +858,24 @@ function fEFiltered(){
   var uf=(document.getElementById('euf')?document.getElementById('euf').value:'');
   var reg=(document.getElementById('ereg')?document.getElementById('ereg').value:'');
   var tag=(document.getElementById('etag')?document.getElementById('etag').value:'');
-  if(!q&&!uf&&!reg&&!tag)return _dbEmpresas;
+
+  // Filtro por departamento conforme aba ativa
+  var deptFilter={
+    fiscal:   function(ts){return ts.some(function(t){return t.toLowerCase().indexOf('fiscal')>=0;});},
+    contabil: function(ts){return ts.some(function(t){return t.toLowerCase().indexOf('cont')>=0;});},
+    folha:    function(ts){return ts.some(function(t){return t.toLowerCase().indexOf('dp')>=0||t.toLowerCase().indexOf('folha')>=0||t.toLowerCase().indexOf('pessoal')>=0;});}
+  };
+
   return _dbEmpresas.filter(function(e){
+    var ts=_dbTags[e.cnpj]||[];
+
+    // Filtra pelo departamento da aba (fiscal/contabil/folha)
+    if(deptFilter[_eTab]&&!deptFilter[_eTab](ts))return false;
+
+    // Filtros manuais do usuário
     if(uf&&e.uf!==uf)return false;
     if(reg&&e.regime!==reg)return false;
-    if(tag){var ts=_dbTags[e.cnpj]||[];if(ts.indexOf(tag)<0)return false;}
+    if(tag&&ts.indexOf(tag)<0)return false;
     if(!q)return true;
     return (e.razao||'').toLowerCase().indexOf(q)>=0||(e.cnpj||'').indexOf(q)>=0||(e.grupo||'').toLowerCase().indexOf(q)>=0;
   });
