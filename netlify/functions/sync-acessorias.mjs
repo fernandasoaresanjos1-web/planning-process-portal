@@ -9,8 +9,6 @@ const CORS = {
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
 };
 
-const sleep = ms => new Promise(r => setTimeout(r, ms));
-
 export const handler = async function(event) {
   if(event.httpMethod === "OPTIONS") return { statusCode:200, headers:CORS, body:"" };
 
@@ -20,89 +18,45 @@ export const handler = async function(event) {
     const compParam  = body.competencia || params.competencia || getCompAtual();
     const cnpjFiltro = body.cnpj || params.cnpj || null;
 
+    if(!cnpjFiltro) {
+      return { statusCode:400, headers:CORS, body: JSON.stringify({ erro:"cnpj obrigatorio para sync manual" }) };
+    }
+
     const [ano, mes] = compParam.split("-");
     const dtIni = `${ano}-${mes}-01`;
     const dtFim = `${ano}-${mes}-${ultimoDia(ano, mes)}`;
 
-    console.log(`Sync | comp=${compParam} | cnpj=${cnpjFiltro||'todos'}`);
+    console.log(`Sync | comp=${compParam} | cnpj=${cnpjFiltro}`);
 
-    const logId = await dbInsertLog(compParam);
+    // Busca entregas da empresa específica
+    const entregas = await buscarEntregas(cnpjFiltro, dtIni, dtFim);
+    console.log(`Entregas: ${entregas.length}`);
 
-    // Se CNPJ específico, busca só ele — sem rate limit
-    const empresas = cnpjFiltro
-      ? [{ cnpj: cnpjFiltro }]
-      : await buscarEmpresas();
-
-    console.log(`Empresas: ${empresas.length}`);
-
-    let totalEntregas = 0;
-    const erros = [];
-
-    for(let i = 0; i < empresas.length; i++) {
-      const emp = empresas[i];
-      try {
-        const entregas = await buscarEntregas(emp.cnpj, dtIni, dtFim);
-        if(entregas.length > 0) {
-          await salvarEntregas(emp.cnpj, compParam, entregas);
-          totalEntregas += entregas.length;
-        }
-        // Delay entre empresas para respeitar rate limit (100 req/min)
-        // 1 empresa = ~2 requests (list + deliveries), então aguarda 1.5s
-        if(!cnpjFiltro && i < empresas.length - 1) {
-          await sleep(1500);
-        }
-      } catch(err) {
-        console.error(`Erro ${emp.cnpj}:`, err.message);
-        erros.push({ cnpj: emp.cnpj, erro: err.message });
-        // Se 429, aguarda mais
-        if(err.message.includes('429')) await sleep(10000);
-      }
+    if(entregas.length > 0) {
+      await salvarEntregas(cnpjFiltro, compParam, entregas);
     }
-
-    await dbUpdateLog(logId, {
-      finalizado_em:  new Date().toISOString(),
-      total_empresas: empresas.length,
-      total_entregas: totalEntregas,
-      status:         erros.length === 0 ? "ok" : "parcial",
-      erro_msg:       erros.length ? JSON.stringify(erros.slice(0,10)) : null
-    });
 
     return {
       statusCode: 200, headers: CORS,
-      body: JSON.stringify({ ok:true, competencia:compParam, total_empresas:empresas.length, total_entregas:totalEntregas, erros:erros.length })
+      body: JSON.stringify({
+        ok: true,
+        competencia: compParam,
+        cnpj: cnpjFiltro,
+        total_entregas: entregas.length
+      })
     };
 
   } catch(err) {
-    console.error("Erro geral:", err.message);
+    console.error("Erro:", err.message);
     return { statusCode:500, headers:CORS, body: JSON.stringify({ erro:err.message }) };
   }
 };
-
-async function buscarEmpresas() {
-  const todas = [];
-  let pagina = 1;
-  while(pagina <= 200) {
-    const res = await fetch(`${ACESS_API}/companies/ListAll?ativa=S&Pagina=${pagina}`, {
-      headers:{ Authorization:`Bearer ${ACESS_TOKEN}` }
-    });
-    if(res.status === 429) { await sleep(10000); continue; }
-    if(!res.ok) throw new Error(`Empresas HTTP ${res.status}`);
-    const data = await res.json();
-    if(!Array.isArray(data) || data.length === 0) break;
-    todas.push(...data.map(e => ({ cnpj: e.Identificador })));
-    if(data.length < 20) break;
-    pagina++;
-    await sleep(700); // delay entre páginas
-  }
-  return todas;
-}
 
 async function buscarEntregas(cnpj, dtIni, dtFim) {
   const url = `${ACESS_API}/deliveries/${encodeURIComponent(cnpj)}?DtInitial=${dtIni}&DtFinal=${dtFim}&attachments&config`;
   const res  = await fetch(url, { headers:{ Authorization:`Bearer ${ACESS_TOKEN}` } });
   if(res.status === 204) return [];
-  if(res.status === 429) throw new Error("429 rate limit");
-  if(!res.ok) throw new Error(`Entregas HTTP ${res.status}`);
+  if(!res.ok) throw new Error(`API Acessorias HTTP ${res.status}: ${await res.text()}`);
   const data = await res.json();
   const emp  = Array.isArray(data) ? data[0] : data;
   return emp?.Entregas || [];
@@ -131,26 +85,7 @@ async function salvarEntregas(cnpj, competencia, entregas) {
     },
     body: JSON.stringify(rows)
   });
-  if(!res.ok) throw new Error(`Supabase ${res.status}: ${(await res.text()).slice(0,200)}`);
-}
-
-async function dbInsertLog(competencia) {
-  const res = await fetch(`${SUPA_URL}/rest/v1/acessorias_sync_log`, {
-    method: "POST",
-    headers: { "apikey":SUPA_KEY, "Authorization":`Bearer ${SUPA_KEY}`, "Content-Type":"application/json", "Prefer":"return=representation" },
-    body: JSON.stringify({ competencia, status:"running" })
-  });
-  const data = await res.json();
-  return Array.isArray(data) ? data[0]?.id : null;
-}
-
-async function dbUpdateLog(id, fields) {
-  if(!id) return;
-  await fetch(`${SUPA_URL}/rest/v1/acessorias_sync_log?id=eq.${id}`, {
-    method: "PATCH",
-    headers: { "apikey":SUPA_KEY, "Authorization":`Bearer ${SUPA_KEY}`, "Content-Type":"application/json" },
-    body: JSON.stringify(fields)
-  });
+  if(!res.ok) throw new Error(`Supabase ${res.status}: ${(await res.text()).slice(0,300)}`);
 }
 
 function getCompAtual() {
