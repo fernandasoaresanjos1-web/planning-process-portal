@@ -1210,18 +1210,226 @@ function drawChart(){
   });
 }
 
+/* ══════════════════════════════════════════════════════
+   AUDITORIA CADASTRAL — CNPJá Integration
+   ══════════════════════════════════════════════════════ */
+var CNPJA_TOKEN = '93dfed7e-4b8b-4798-86bf-143487c32c97-45be03e6-acaf-4d74-8850-bc77398fcab5';
+var AUD = { empresas:[], tab:'resumo', filtro:'todos', busca:'', carregando:false, consultando:false, progresso:0, total:0 };
+
+function fmtCNPJ(v){ var d=String(v||'').replace(/\D/g,'').padStart(14,'0'); return d.length===14?d.slice(0,2)+'.'+d.slice(2,5)+'.'+d.slice(5,8)+'/'+d.slice(8,12)+'-'+d.slice(12):v; }
+function audChip(tipo,txt){ var s={ok:'background:#EAFBF4;color:#00BF63',r:'background:#FEE2E2;color:#DC2626',a:'background:#FFF3E0;color:#FA6914',b:'background:#DDF6FF;color:#0284C7',gr:'background:#F3F4F6;color:#374151'}[tipo]||'background:#F3F4F6;color:#374151'; return '<span style="font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap;'+s+'">'+txt+'</span>'; }
+function audRow(cols,bg){ return '<div style="display:grid;grid-template-columns:'+cols+';padding:0 16px;border-bottom:1px solid #F3F4F6;align-items:center'+(bg?';background:'+bg:'')+'">'; }
+function audTD(v,st){ return '<div style="padding:8px 6px;font-size:11px;color:#374151;min-width:0;'+(st||'')+'">'+v+'</div>'; }
+
 function rAud(){
-  return kpis([{l:"Pendentes",v:"2",c:"#f43f5e",s:"aguardando ação"},{l:"Em Andamento",v:"2",c:"#38bdf8",s:"em execução"},{l:"Concluídas",v:"2",c:"#4ade80",s:"este mês"}])+
-  '<div style="display:flex;gap:8px;margin-bottom:14px">'+
-  '<select id="asi" onchange="fA()"><option>Todos</option><option>SAAM</option><option>Sittax Monitora</option><option>Sittax Token</option><option>Sittax SN</option></select>'+
-  '<select id="ast" onchange="fA()"><option>Todos</option><option>Pendente</option><option>Em Andamento</option><option>Concluída</option></select>'+
-  '<span id="act" style="font-size:11px;color:#334155;align-self:center">6 registros</span></div>'+
-  '<div class="panel"><table><thead><tr><th>Empresa</th><th>CNPJ</th><th>Tipo</th><th>Sistema</th><th>Data</th><th>Responsável</th><th>Prioridade</th><th>Status</th></tr></thead><tbody id="atb">'+aRows(AUDITORIA)+'</tbody></table></div>';
+  // Mount the container and load async
+  setTimeout(audInit, 10);
+  return '<div id="aud-root" style="font-family:Inter,sans-serif;max-width:1100px"><div style="display:flex;align-items:center;gap:12px;padding:20px 0 14px"><div style="width:32px;height:32px;background:#0A0E14;border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:#0AE18C">P</div><div><div style="font-size:18px;font-weight:800;color:#111827">Auditoria Cadastral</div><div style="font-size:12px;color:#6B7280">Empresas Contábil · Fiscal · Folha — cruzamento com CNPJá</div></div><button onclick="audConsultarTodos()" id="aud-btn-consultar" style="margin-left:auto;display:flex;align-items:center;gap:6px;font-family:inherit;font-size:12px;font-weight:600;padding:8px 16px;border-radius:8px;border:1px solid #0AE18C;background:#0AE18C;color:#111827;cursor:pointer">🔍 Consultar CNPJá</button></div><div id="aud-progresso" style="display:none;margin-bottom:14px;background:#F9FAFB;border:1px solid #E5E7EB;border-radius:10px;padding:12px 16px"><div style="font-size:12px;font-weight:600;color:#374151;margin-bottom:6px" id="aud-prog-txt">Consultando...</div><div style="background:#E5E7EB;border-radius:4px;height:6px"><div id="aud-prog-bar" style="background:#0AE18C;height:6px;border-radius:4px;width:0%;transition:width .3s"></div></div></div><div id="aud-stats" style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px"></div><div style="display:flex;gap:10px;margin-bottom:14px;border-bottom:2px solid #E5E7EB"><button class="aud-tab on" data-t="resumo" onclick="audTab(this,\'resumo\')">Resumo Geral</button><button class="aud-tab" data-t="sit" onclick="audTab(this,\'sit\')">Situação RF</button><button class="aud-tab" data-t="ie" onclick="audTab(this,\'ie\')">Insc. Estadual</button><button class="aud-tab" data-t="simples" onclick="audTab(this,\'simples\')">Simples Nacional</button></div><div style="display:flex;gap:8px;margin-bottom:12px"><input id="aud-busca" oninput="audFiltrar()" placeholder="Buscar CNPJ, razão ou grupo..." style="flex:1;font-family:inherit;font-size:12px;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;background:#fff;color:#111827;outline:none"><select id="aud-filtro" onchange="audFiltrar()" style="font-family:inherit;font-size:12px;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;background:#fff;color:#111827;outline:none;cursor:pointer"><option value="todos">Todos</option><option value="pendencias">Só com pendências</option></select><select id="aud-dept" onchange="audFiltrar()" style="font-family:inherit;font-size:12px;padding:8px 12px;border:1px solid #D1D5DB;border-radius:8px;background:#fff;color:#111827;outline:none;cursor:pointer"><option value="">Todos os deptos</option><option value="contabil">Contábil</option><option value="fiscal">Fiscal</option><option value="folha">Folha / DP</option></select></div><div id="aud-tabela"><div style="text-align:center;padding:40px;color:#6B7280;font-size:13px">⏳ Carregando empresas...</div></div></div>';
 }
-function aRows(a){return a.map(function(x){return'<tr><td style="font-weight:600;font-size:12px;color:#f1f5f9">'+x.empresa+'</td><td style="font-family:monospace;font-size:10px;color:#334155">'+x.cnpj+'</td><td>'+x.tipo+'</td><td><span class="badge" style="background:rgba(56,189,248,0.12);color:#7dd3fc">'+x.sistema+'</span></td><td style="color:#475569">'+x.data+'</td><td>'+x.resp+'</td><td>'+bg(x.prio,pc(x.prio),pb(x.prio))+'</td><td>'+bg(x.status,sc(x.status),sb(x.status))+'</td></tr>';}).join('');}
-function fA(){var s=document.getElementById('asi').value,t=document.getElementById('ast').value;
-  var f=AUDITORIA.filter(function(a){return(s==='Todos'||a.sistema===s)&&(t==='Todos'||a.status===t);});
-  document.getElementById('atb').innerHTML=aRows(f);document.getElementById('act').textContent=f.length+' registros';}
+<style>.aud-tab{font-family:inherit;font-size:12px;font-weight:600;padding:8px 16px;border:none;background:none;color:#6B7280;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px}.aud-tab.on{color:#00BF63;border-bottom-color:#0AE18C}</style>
+
+async function audInit(){
+  try{
+    // Load companies from bi_config tables (contabil, fiscal, folha) + empresas base
+    var [contRows, fiscRows, folhaRows, empRows] = await Promise.all([
+      sbFetch('bi_config_contabil?select=cnpj'),
+      sbFetch('bi_config_fiscal?select=cnpj'),
+      sbFetch('bi_config_folha?select=cnpj'),
+      sbFetch('empresas?select=cnpj,razao,grupo,regime,tags&limit=5000')
+    ]);
+    var cnpjCont = new Set((contRows||[]).map(function(r){return r.cnpj;}));
+    var cnpjFisc = new Set((fiscRows||[]).map(function(r){return r.cnpj;}));
+    var cnpjFolha = new Set((folhaRows||[]).map(function(r){return r.cnpj;}));
+    var union = new Set([...cnpjCont,...cnpjFisc,...cnpjFolha]);
+    var emps = (empRows||[]).filter(function(e){return union.has(e.cnpj);});
+    AUD.empresas = emps.map(function(e){
+      return {
+        cnpj: fmtCNPJ(e.cnpj), cnpj_raw: e.cnpj,
+        razao: e.razao||'', grupo: e.grupo||'', regime: e.regime||'',
+        tags: e.tags||'',
+        dept: (cnpjCont.has(e.cnpj)?'contabil ':'')+( cnpjFisc.has(e.cnpj)?'fiscal ':'')+( cnpjFolha.has(e.cnpj)?'folha':''),
+        consultado: false, sit:'', sit_motivo:'',
+        simples_cnpja:'', sn_s3d: (e.regime||'').toLowerCase().includes('simples'),
+        ies:[], ie_probs:[],
+        pendencias:[]
+      };
+    });
+    AUD.total = AUD.empresas.length;
+    audRenderStats();
+    audRenderTabela();
+  }catch(e){
+    var r=document.getElementById('aud-root');
+    if(r)r.querySelector('#aud-tabela').innerHTML='<div style="padding:20px;color:#DC2626;font-size:13px">Erro ao carregar: '+e.message+'</div>';
+  }
+}
+
+async function sbFetch(path){
+  var res = await fetch(SUPA_URL+'/rest/v1/'+path, {headers:{'apikey':SUPA_KEY,'Authorization':'Bearer '+SUPA_KEY,'Accept':'application/json'}});
+  if(!res.ok) throw new Error('Supabase '+path+' '+res.status);
+  return res.json();
+}
+
+async function audConsultarTodos(){
+  if(AUD.consultando)return;
+  var pendentes = AUD.empresas.filter(function(e){return !e.consultado;});
+  if(!pendentes.length){alert('Todas as empresas já foram consultadas!');return;}
+  AUD.consultando = true;
+  var btn = document.getElementById('aud-btn-consultar');
+  if(btn)btn.textContent='⏳ Consultando...';
+  var prog = document.getElementById('aud-progresso');
+  if(prog)prog.style.display='block';
+  var ok=0, erros=0;
+  for(var i=0;i<pendentes.length;i++){
+    var e=pendentes[i];
+    var ptxt=document.getElementById('aud-prog-txt');
+    var pbar=document.getElementById('aud-prog-bar');
+    if(ptxt)ptxt.textContent='Consultando '+(i+1)+'/'+pendentes.length+': '+e.razao.substring(0,30)+'...';
+    if(pbar)pbar.style.width=Math.round(((i+1)/pendentes.length)*100)+'%';
+    try{
+      var cnpj_num = e.cnpj.replace(/\D/g,'');
+      var res = await fetch('https://api.cnpja.com/office/'+cnpj_num+'?simples=true&registrations=ORIGIN',{
+        headers:{'Authorization':CNPJA_TOKEN}
+      });
+      if(res.ok){
+        var d = await res.json();
+        audProcessarCNPJa(e, d);
+        ok++;
+      } else { e.consultado=true; e.sit='Não encontrada'; e.pendencias=['Não encontrada no CNPJá']; erros++; }
+    }catch(ex){ e.consultado=true; erros++; }
+    // Small delay to avoid rate limiting
+    if(i<pendentes.length-1) await new Promise(function(r){setTimeout(r,200);});
+  }
+  AUD.consultando=false;
+  if(prog)prog.style.display='none';
+  if(btn)btn.textContent='🔄 Reconsultar';
+  audRenderStats();
+  audRenderTabela();
+}
+
+function audProcessarCNPJa(e, d){
+  e.consultado = true;
+  // Situação RF
+  var sit = (d.status && d.status.text) ? d.status.text : (d.situation||{}).text||'';
+  e.sit = sit;
+  e.sit_motivo = (d.reason&&d.reason.text)||'';
+  // Simples Nacional
+  var simp = d.simples||{};
+  e.simples_cnpja = simp.optant ? 'Sim' : 'Não';
+  e.simples_inc = simp.since||'';
+  e.sn_cnpja = !!simp.optant;
+  e.sn_div = e.sn_s3d !== e.sn_cnpja;
+  // Inscrições Estaduais
+  var regs = d.registrations||[];
+  e.ies = regs.map(function(r){ return {uf:r.state||'',numero:r.number||'',tipo:r.type&&r.type.text||'',hab:r.enabled?'Sim':'Não',sit:r.status&&r.status.text||''}; });
+  // Pendências
+  var pend = [];
+  var sitProb = ['Suspensa','Inapta','Baixada','SUSPENSA','INAPTA','BAIXADA'];
+  if(sitProb.some(function(s){return e.sit.includes(s);})) pend.push('Situação: '+e.sit);
+  if(e.sn_div) pend.push('Simples: S3D='+( e.sn_s3d?'Sim':'Não')+' / CNPJá='+e.simples_cnpja);
+  var inabt = e.ies.filter(function(i){return i.hab==='Não';});
+  if(inabt.length) pend.push('IE(s) inabilitada(s): '+inabt.map(function(i){return i.uf;}).join(', '));
+  e.pendencias = pend;
+}
+
+function audTab(el, tab){
+  AUD.tab=tab;
+  document.querySelectorAll('.aud-tab').forEach(function(b){b.classList.remove('on');});
+  el.classList.add('on');
+  audRenderTabela();
+}
+function audFiltrar(){
+  AUD.busca=(document.getElementById('aud-busca')||{}).value||'';
+  AUD.filtro=(document.getElementById('aud-filtro')||{}).value||'todos';
+  AUD.dept=(document.getElementById('aud-dept')||{}).value||'';
+  audRenderTabela();
+}
+
+function audGetFiltradas(){
+  var busca=AUD.busca.toLowerCase();
+  return AUD.empresas.filter(function(e){
+    if(busca&&!(e.cnpj.includes(AUD.busca)||e.razao.toLowerCase().includes(busca)||e.grupo.toLowerCase().includes(busca)))return false;
+    if(AUD.filtro==='pendencias'&&!e.pendencias.length)return false;
+    if(AUD.dept&&!e.dept.includes(AUD.dept))return false;
+    return true;
+  });
+}
+
+function audRenderStats(){
+  var el=document.getElementById('aud-stats');
+  if(!el)return;
+  var total=AUD.empresas.length;
+  var consult=AUD.empresas.filter(function(e){return e.consultado;}).length;
+  var pend=AUD.empresas.filter(function(e){return e.pendencias&&e.pendencias.length;}).length;
+  var sitProb=AUD.empresas.filter(function(e){return e.consultado&&e.sit&&['Suspensa','Inapta','Baixada'].some(function(s){return e.sit.includes(s);});}).length;
+  var snDiv=AUD.empresas.filter(function(e){return e.sn_div;}).length;
+  var ieProb=AUD.empresas.filter(function(e){return e.ies&&e.ies.some(function(i){return i.hab==='Não';});}).length;
+  var card=function(v,l,sub,c){return '<div style="background:#fff;border:1px solid '+(c==='r'?'#fca5a5':c==='a'?'#fed7aa':c==='ok'?'#6ee7b7':'#E5E7EB')+';border-radius:12px;padding:12px 16px;min-width:120px;flex:1"><div style="font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;margin-bottom:2px">'+l+'</div><div style="font-size:22px;font-weight:800;color:'+(c==='r'?'#DC2626':c==='a'?'#FA6914':c==='ok'?'#00BF63':'#111827')+'">'+v+'</div>'+(sub?'<div style="font-size:10px;color:#9CA3AF">'+sub+'</div>':'')+'</div>';};
+  el.innerHTML = card(total,'Total','empresas','')+ card(consult,'Consultadas','no CNPJá','ok')+ card(pend,'Com pendências','','r')+ card(sitProb,'Situação RF','suspensas/inaptas/baixadas','r')+ card(snDiv,'Simples Nacional','divergências','a')+ card(ieProb,'Insc. Estadual','IEs inabilitadas','a');
+}
+
+function audRenderTabela(){
+  var el=document.getElementById('aud-tabela');
+  if(!el)return;
+  var lista=audGetFiltradas();
+  if(!lista.length){el.innerHTML='<div style="text-align:center;padding:40px;color:#9CA3AF;font-size:13px">Nenhum resultado encontrado.</div>';return;}
+  var tab=AUD.tab;
+  var html='<div style="background:#fff;border:1px solid #E5E7EB;border-radius:12px;overflow:hidden">';
+  // Header
+  var heads = {
+    resumo: ['145px','1fr','110px','120px','1fr',['CNPJ / Grupo','Razão Social','Depto','Situação RF','Pendências']],
+    sit:    ['145px','1fr','110px','120px','130px','1fr',['CNPJ','Razão / Grupo','Depto','Situação','Motivo','Regime']],
+    ie:     ['145px','1fr','110px','80px','1fr',['CNPJ','Razão / Grupo','Depto','Consultado','Inscrições Estaduais']],
+    simples:['145px','1fr','110px','80px','80px','100px','1fr',['CNPJ','Razão / Grupo','Depto','SN S3D','SN CNPJá','Divergência','Regime']]
+  }[tab];
+  var cols=heads.slice(0,-1).join(' '), hdr=heads[heads.length-1];
+  html+='<div style="display:grid;grid-template-columns:'+cols+';padding:0 16px;background:#F9FAFB;border-bottom:1px solid #E5E7EB">';
+  hdr.forEach(function(h){html+='<div style="padding:9px 6px;font-size:10px;font-weight:700;color:#6B7280;text-transform:uppercase;letter-spacing:.5px">'+h+'</div>';});
+  html+='</div>';
+  lista.slice(0,200).forEach(function(e){
+    var sitProb=['Suspensa','Inapta','Baixada'].some(function(s){return (e.sit||'').includes(s);});
+    var dept=e.dept.split(' ').filter(Boolean).map(function(d){return audChip('b',d.charAt(0).toUpperCase()+d.slice(1));}).join(' ');
+    if(tab==='resumo'){
+      html+=audRow(cols, sitProb?'rgba(220,38,38,.03)':undefined);
+      html+=audTD('<span style="font-family:monospace;font-size:10.5px;font-weight:600;color:#111827">'+e.cnpj+'</span><div style="font-size:10px;color:#9CA3AF">'+e.grupo+'</div>');
+      html+=audTD('<div style="font-weight:600;color:#111827;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" title="'+e.razao+'">'+e.razao+'</div>');
+      html+=audTD(dept);
+      html+=audTD(!e.consultado?audChip('gr','Não consultada'):sitProb?audChip('r',e.sit):audChip('ok',e.sit||'Ativa'));
+      html+=audTD(e.pendencias.length?'<div style="font-size:10px;color:#DC2626">'+e.pendencias.slice(0,2).join('<br>')+'</div>':audChip('ok','✓ OK'));
+      html+='</div>';
+    } else if(tab==='sit'){
+      html+=audRow(cols, sitProb?'rgba(220,38,38,.03)':undefined);
+      html+=audTD('<span style="font-family:monospace;font-size:10.5px;font-weight:600;color:#111827">'+e.cnpj+'</span>');
+      html+=audTD('<div style="font-weight:600;color:#111827">'+e.razao+'</div><div style="font-size:10px;color:#9CA3AF">'+e.grupo+'</div>');
+      html+=audTD(dept);
+      html+=audTD(!e.consultado?audChip('gr','N/C'):sitProb?audChip('r',e.sit):audChip('ok',e.sit||'Ativa'));
+      html+=audTD('<span style="font-size:10px;color:#6B7280">'+( e.sit_motivo||'—')+'</span>');
+      html+=audTD('<span style="font-size:10px;color:#6B7280">'+(e.regime||'—')+'</span>');
+      html+='</div>';
+    } else if(tab==='ie'){
+      var ieHtml = !e.consultado?audChip('gr','Não consultada'):!e.ies.length?audChip('gr','Sem IE'):e.ies.map(function(i){return audChip(i.hab==='Não'?'r':'ok',i.uf+': '+(i.hab==='Não'?'⚠ Inabilitada':'OK'));}).join(' ');
+      html+=audRow(cols);
+      html+=audTD('<span style="font-family:monospace;font-size:10.5px;font-weight:600;color:#111827">'+e.cnpj+'</span>');
+      html+=audTD('<div style="font-weight:600;color:#111827">'+e.razao+'</div><div style="font-size:10px;color:#9CA3AF">'+e.grupo+'</div>');
+      html+=audTD(dept);
+      html+=audTD(!e.consultado?audChip('gr','Não'):'<span style="font-size:10px;color:#00BF63;font-weight:600">Sim</span>');
+      html+=audTD(ieHtml);
+      html+='</div>';
+    } else if(tab==='simples'){
+      html+=audRow(cols, e.sn_div?'rgba(250,105,20,.03)':undefined);
+      html+=audTD('<span style="font-family:monospace;font-size:10.5px;font-weight:600;color:#111827">'+e.cnpj+'</span>');
+      html+=audTD('<div style="font-weight:600;color:#111827">'+e.razao+'</div><div style="font-size:10px;color:#9CA3AF">'+e.grupo+'</div>');
+      html+=audTD(dept);
+      html+=audTD(audChip(e.sn_s3d?'ok':'gr',e.sn_s3d?'Sim':'Não'));
+      html+=audTD(!e.consultado?audChip('gr','N/C'):audChip(e.sn_cnpja?'ok':'gr',e.simples_cnpja||'Não'));
+      html+=audTD(!e.consultado?audChip('gr','—'):e.sn_div?audChip('a','⚠ Diverg.'):audChip('ok','OK'));
+      html+=audTD('<span style="font-size:10px;color:#6B7280">'+(e.regime||'—')+'</span>');
+      html+='</div>';
+    }
+  });
+  if(lista.length>200)html+='<div style="padding:10px 16px;font-size:11px;color:#6B7280;text-align:center;border-top:1px solid #E5E7EB">Mostrando 200 de '+lista.length+'. Use a busca para filtrar.</div>';
+  html+='</div>';
+  el.innerHTML=html;
+}
 
 function rCad(){
   return'<input oninput="fC(this.value)" placeholder="Buscar empresa ou CNPJ..." style="width:100%;margin-bottom:14px">'+
