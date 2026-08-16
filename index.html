@@ -449,7 +449,7 @@ async function carregarEmpresas(forcar){
   var todos=[];
   var offset=0;
   while(true){
-    var data=await dbQuery('empresas','select=cnpj,razao,regime,cidade,uf,grupo,status&order=razao&limit=1000&offset='+offset);
+    var data=await dbQuery('empresas','select=cnpj,razao,regime,cidade,uf,grupo,status,ie_normal,ie_st,im,fechamento_contabil,modalidade_lucro_real,retencao_lucro,tipo_cnpj,adiantamento,fechamento_folha&order=razao&limit=1000&offset='+offset);
     if(!data||data.length===0)break;
     todos=todos.concat(data);
     if(data.length<1000)break;
@@ -877,41 +877,37 @@ var _eCols={
     }
   },
   fiscal:{
-    heads:['CNPJ','Empresa','Grupo','TAG Fiscal','Regime Federal','IE Normal','IE ST','Inscrição Municipal','UF','Status'],
+    heads:['CNPJ','Empresa','Grupo','TAG Fiscal','Regime Federal','IE Normal','IE ST','Insc. Municipal','UF','Status'],
     row:function(e,fmt,tags,st,stC,stB){
       var tagFisc=((_dbTags[e.cnpj]||[]).filter(function(t){return t.toLowerCase().indexOf('fiscal')>=0;})
         .map(function(t){return'<span class="badge" style="background:rgba(250,148,50,0.14);color:#fb923c;margin-right:2px">'+t+'</span>';}).join(''))||'<span style="color:#334155">—</span>';
-      var ieNorm=e.ie_normal?('<span class="badge" style="background:rgba(74,222,128,0.14);color:#4ade80">'+e.ie_normal+'</span>'):'<span style="color:#334155">—</span>';
-      var ieST=e.ie_st?('<span class="badge" style="background:rgba(251,191,36,0.14);color:#fbbf24">'+e.ie_st+'</span>'):'<span style="color:#334155">—</span>';
-      var im=e.im?('<span class="badge" style="background:rgba(167,139,250,0.14);color:#c4b5fd">'+e.im+'</span>'):'<span style="color:#334155">—</span>';
       return '<td style="font-family:monospace;font-size:10px;color:#64748b">'+fmt+'</td>'+
         '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
         '<td style="color:#94a3b8;font-size:11px">'+(e.grupo||'—')+'</td>'+
         '<td>'+tagFisc+'</td>'+
         '<td style="color:#94a3b8;font-size:11px">'+(e.regime||'—')+'</td>'+
-        '<td>'+ieNorm+'</td>'+
-        '<td>'+ieST+'</td>'+
-        '<td>'+im+'</td>'+
+        '<td>'+eCelula(e.cnpj,'ie_normal',e.ie_normal,'text')+'</td>'+
+        '<td>'+eCelula(e.cnpj,'ie_st',e.ie_st,'text')+'</td>'+
+        '<td>'+eCelula(e.cnpj,'im',e.im,'text')+'</td>'+
         '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
         '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>';
     }
   },
   contabil:{
-    heads:['CNPJ','Empresa','Grupo','TAG Contábil','Regime','Periodicidade','Modalidade LR','Retenção Lucro','UF','Status'],
+    heads:['CNPJ','Empresa','Grupo','TAG Contábil','Regime','Periodicidade','Modalidade LR','Ret. Lucro','UF','Status'],
     row:function(e,fmt,tags,st,stC,stB){
       var tagCont=((_dbTags[e.cnpj]||[]).filter(function(t){return t.toLowerCase().indexOf('cont')>=0;})
         .map(function(t){return'<span class="badge" style="background:rgba(0,191,99,0.14);color:#4ade80;margin-right:2px">'+t+'</span>';}).join(''))||'<span style="color:#334155">—</span>';
-      var per=e.fechamento_contabil?('<span class="badge" style="background:rgba(99,102,241,0.14);color:#818cf8">'+e.fechamento_contabil+'</span>'):'<span style="color:#334155">—</span>';
-      var mod=e.modalidade_lucro_real?('<span class="badge" style="background:rgba(251,191,36,0.14);color:#fbbf24">'+e.modalidade_lucro_real+'</span>'):'<span style="color:#334155">—</span>';
-      var ret=e.retencao_lucro?'<span class="badge" style="background:rgba(244,63,94,0.14);color:#f43f5e">Sim</span>':'<span style="color:#334155">—</span>';
+      var PERIO=['Mensal','Trimestral','Trimestral D60','Trimestral D90','Semestral','Semestral D90','Anual','Anual D90'];
+      var MODAL=['Estimativa','Balanço'];
       return '<td style="font-family:monospace;font-size:10px;color:#64748b">'+fmt+'</td>'+
         '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
         '<td style="color:#94a3b8;font-size:11px">'+(e.grupo||'—')+'</td>'+
         '<td>'+tagCont+'</td>'+
         '<td style="color:#94a3b8;font-size:11px">'+(e.regime||'—')+'</td>'+
-        '<td>'+per+'</td>'+
-        '<td>'+mod+'</td>'+
-        '<td>'+ret+'</td>'+
+        '<td>'+eCelula(e.cnpj,'fechamento_contabil',e.fechamento_contabil,'select',PERIO)+'</td>'+
+        '<td>'+eCelula(e.cnpj,'modalidade_lucro_real',e.modalidade_lucro_real,'select',MODAL)+'</td>'+
+        '<td>'+eCelula(e.cnpj,'retencao_lucro',e.retencao_lucro,'bool')+'</td>'+
         '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
         '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>';
     }
@@ -921,22 +917,72 @@ var _eCols={
     row:function(e,fmt,tags,st,stC,stB){
       var tagDP=((_dbTags[e.cnpj]||[]).filter(function(t){return t.toLowerCase().indexOf('dp')>=0||t.toLowerCase().indexOf('folha')>=0||t.toLowerCase().indexOf('pessoal')>=0;})
         .map(function(t){return'<span class="badge" style="background:rgba(56,189,248,0.14);color:#38bdf8;margin-right:2px">'+t+'</span>';}).join(''))||'<span style="color:#334155">—</span>';
-      var tipo=e.tipo_cnpj?('<span class="badge" style="background:rgba(167,139,250,0.14);color:#c4b5fd">'+e.tipo_cnpj+'</span>'):'<span style="color:#334155">—</span>';
-      var adto=e.adiantamento?'<span class="badge" style="background:rgba(74,222,128,0.14);color:#4ade80">Sim</span>':'<span style="color:#334155">—</span>';
-      var fech=e.fechamento_folha?('<span class="badge" style="background:rgba(251,191,36,0.14);color:#fbbf24">'+e.fechamento_folha+'</span>'):'<span style="color:#334155">—</span>';
+      var TIPOS=['Empresa (CNPJ)','Doméstica (CPF)','Produtor Rural (CPF)'];
+      var FECH=['5º dia útil','Dia 20','Dia 30'];
       return '<td style="font-family:monospace;font-size:10px;color:#64748b">'+fmt+'</td>'+
         '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
         '<td style="color:#94a3b8;font-size:11px">'+(e.grupo||'—')+'</td>'+
         '<td>'+tagDP+'</td>'+
         '<td style="color:#94a3b8;font-size:11px">'+(e.regime||'—')+'</td>'+
-        '<td>'+tipo+'</td>'+
-        '<td>'+adto+'</td>'+
-        '<td>'+fech+'</td>'+
+        '<td>'+eCelula(e.cnpj,'tipo_cnpj',e.tipo_cnpj,'select',TIPOS)+'</td>'+
+        '<td>'+eCelula(e.cnpj,'adiantamento',e.adiantamento,'bool')+'</td>'+
+        '<td>'+eCelula(e.cnpj,'fechamento_folha',e.fechamento_folha,'select',FECH)+'</td>'+
         '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
         '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>';
     }
   }
 };
+
+
+/* ── Edição inline de célula ── */
+async function eSalvar(cnpj, campo, valor){
+  var url=SUPA_URL+'/rest/v1/empresas?cnpj=eq.'+encodeURIComponent(cnpj);
+  var body={};
+  body[campo]=valor===''?null:valor;
+  try{
+    var res=await fetch(url,{
+      method:'PATCH',
+      headers:{
+        'apikey':SUPA_KEY,
+        'Authorization':'Bearer '+SUPA_KEY,
+        'Content-Type':'application/json',
+        'Prefer':'return=minimal'
+      },
+      body:JSON.stringify(body)
+    });
+    if(!res.ok)throw new Error('HTTP '+res.status);
+    // atualiza cache local
+    var emp=_dbEmpresas.find(function(e){return e.cnpj===cnpj;});
+    if(emp)emp[campo]=body[campo];
+    return true;
+  }catch(err){
+    alert('Erro ao salvar: '+err.message);
+    return false;
+  }
+}
+
+function eCelula(cnpj, campo, valor, tipo, opcoes){
+  // tipo: 'text' | 'select' | 'bool'
+  var v=valor||'';
+  if(tipo==='bool'){
+    var checked=valor?'checked':'';
+    return '<label style="cursor:pointer;display:flex;align-items:center;gap:4px">'+
+      '<input type="checkbox" '+checked+' onchange="eSalvar(''+cnpj+'',''+campo+'',this.checked)" style="cursor:pointer">'+
+      '<span style="font-size:10px;color:#94a3b8">'+(valor?'Sim':'—')+'</span>'+
+    '</label>';
+  }
+  if(tipo==='select'){
+    var opts=opcoes.map(function(o){return'<option value="'+o+'"'+(v===o?' selected':'')+'>'+o+'</option>';}).join('');
+    return '<select onchange="eSalvar(''+cnpj+'',''+campo+'',this.value)" '+
+      'style="background:#0f172a;border:1px solid #1e293b;color:#cbd5e1;border-radius:4px;padding:2px 4px;font-size:11px;max-width:140px">'+
+      '<option value="">—</option>'+opts+'</select>';
+  }
+  // text
+  return '<input type="text" value="'+v.replace(/"/g,'&quot;')+'" '+
+    'onblur="eSalvar(''+cnpj+'',''+campo+'',this.value)" '+
+    'onkeydown="if(event.key==='Enter')this.blur()" '+
+    'style="background:#0f172a;border:1px solid #1e293b;color:#cbd5e1;border-radius:4px;padding:2px 6px;font-size:11px;width:100%;min-width:90px">';
+}
 
 function renderETab(tab, data){
   var cfg=_eCols[tab]||_eCols.geral;
