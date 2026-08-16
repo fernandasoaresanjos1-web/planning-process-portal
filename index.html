@@ -1265,7 +1265,8 @@ async function cruzBuscar(){
 
   try {
     /* Busca do Supabase — dados sincronizados pela Netlify Function */
-    var url = SUPA_URL+'/rest/v1/acessorias_entregas?cnpj=eq.'+encodeURIComponent(cnpj)+'&competencia=eq.'+comp+'&select=*&order=obrigacao_nome';
+    var cnpjBusca = cnpj.replace(/[.\/\-]/g,'');
+    var url = SUPA_URL+'/rest/v1/acessorias_entregas?cnpj=eq.'+encodeURIComponent(cnpjBusca)+'&competencia=eq.'+comp+'&select=*&order=obrigacao_nome';
     var resp = await fetch(url, {
       headers:{ 'apikey':SUPA_KEY, 'Authorization':'Bearer '+SUPA_KEY, 'Accept':'application/json' }
     });
