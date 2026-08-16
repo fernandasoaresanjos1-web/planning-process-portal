@@ -140,6 +140,18 @@ select option{background:#0a0d12}
 .eact-btn:hover{opacity:.8}
 </style>
 <script>
+(function(){
+  var s=document.createElement('script');
+  s.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+  s.async=true;
+  s.onload=function(){
+    if(window.pdfjsLib) pdfjsLib.GlobalWorkerOptions.workerSrc=
+      'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+  };
+  document.head.appendChild(s);
+})();
+</script>
+<script>
 (function(){var s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.async=true;document.head.appendChild(s);})();
 </script>
 </head>
@@ -370,7 +382,7 @@ var QUADROS={
     {num:"03",titulo:"AUDITORIA",sub:"Validações, controles e análises detalhadas",cor:"#a78bfa",
      icon:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/><path d="M9 12l2 2 4-4"/>',
      perfis:["admin","auditor"],
-     itens:[{k:"auditoria",l:"Auditoria Geral"},{k:"cadastral",l:"Auditoria Cadastral"},{k:"validacao",l:"Validação Cadastral"}]}
+     itens:[{k:"auditoria",l:"Auditoria Geral"},{k:"cadastral",l:"Auditoria Cadastral"},{k:"validacao",l:"Validação Cadastral"},{k:"cruzamento",l:"Cruzamento SPED x Guia"}]}
   ]
 };
 
@@ -755,7 +767,7 @@ function backToProduto(){
   else openProduto(currentProd);
 }
 
-var TITLES={dashboard:"Dashboard de Performance","consulta-grupo":"Consulta Grupo por TAG","consulta-gestao":"Consulta Gestão por TAG",empresas:"Informações de Empresas",equipes:"Equipes x Grupos",auditoria:"Auditoria Geral",cadastral:"Auditoria Cadastral",validacao:"Validação Cadastral"};
+var TITLES={dashboard:"Dashboard de Performance","consulta-grupo":"Consulta Grupo por TAG","consulta-gestao":"Consulta Gestão por TAG",empresas:"Informações de Empresas",equipes:"Equipes x Grupos",auditoria:"Auditoria Geral",cadastral:"Auditoria Cadastral",validacao:"Validação Cadastral",cruzamento:"Cruzamento SPED x Guia ICMS"};
 var MODULOS_PUBLICOS=['dashboard','consulta-grupo','consulta-gestao'];
 function openModulo(k){
   if(user.papel==='publico'&&MODULOS_PUBLICOS.indexOf(k)<0){alert('Área restrita. Faça login para acessar.');return;}
@@ -766,6 +778,7 @@ function openModulo(k){
   else if(k==='consulta-grupo'||k==='consulta-gestao')c.innerHTML=rConsulta(k);
   else if(k==='dashboard'){c.innerHTML=rDash();setTimeout(drawChart,60);}
   else if(k==='auditoria')c.innerHTML=rAud();
+  else if(k==='cruzamento'){c.innerHTML=rCruzamento();initCruzamento();}
   else if(k==='cadastral')c.innerHTML=rCad();
   else if(k==='validacao')c.innerHTML=rVal();
   show('scr-modulo');
@@ -1184,6 +1197,191 @@ function rVal(){
   d.map(function(x){return'<tr style="background:'+(x.situacao==='Divergente'?'rgba(244,63,94,0.04)':'transparent')+'"><td style="font-weight:600;font-size:12px;color:#f1f5f9">'+x.empresa+'</td><td style="font-family:monospace;font-size:10px;color:#334155">'+x.cnpj+'</td><td>'+x.campo+'</td><td>'+bg(x.situacao,sc(x.situacao),sb(x.situacao))+'</td><td style="color:#475569">'+x.detalhe+'</td></tr>';}).join('')+'</tbody></table></div>';
 }
 function selSis(s){currentSis=s;document.getElementById('mod-content').innerHTML=rVal();}
+
+/* ════════════════════════════════════════════════════════
+   CRUZAMENTO SPED x GUIA ICMS
+   ════════════════════════════════════════════════════════ */
+
+var ACESS_TOKEN_KEY = 'ef7ceb75e9bab0fe36832dccc68e0e3c';
+var ACESS_API_BASE  = 'https://api.acessorias.com';
+
+/* Regras de cruzamento: par de obrigações a comparar */
+var REGRAS_CRUZAMENTO = [
+  {
+    id: 'icms',
+    nome: 'ICMS Normal',
+    obrigA: { nome: 'Sped ICMS - EFD ICMS-IPI', campo: 'ICMS a recolher', venc: 15 },
+    obrigB: { nome: 'GUIA ICMS Normal',           campo: 'Total a recolher', venc: 20 },
+    extrairA: extrairValorSped,
+    extrairB: extrairValorGuia
+  }
+];
+
+function rCruzamento(){
+  return '<div style="max-width:900px">' +
+    '<p style="color:#94a3b8;font-size:13px;margin-bottom:16px">Selecione a empresa e a competência para cruzar os valores do SPED Fiscal com a Guia de ICMS.</p>' +
+    '<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">' +
+      '<select id="crz-emp" style="flex:1;min-width:260px" onchange="cruzCarregarEmpresas()"><option value="">— Selecione a empresa —</option></select>' +
+      '<input id="crz-comp" type="month" value="'+new Date().toISOString().slice(0,7)+'" style="width:160px" onchange="cruzBuscar()">' +
+      '<button onclick="cruzBuscar()" style="padding:8px 18px;background:#00bf63;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer">Buscar</button>' +
+    '</div>' +
+    '<div id="crz-result" style="min-height:120px"></div>' +
+  '</div>';
+}
+
+async function initCruzamento(){
+  /* Preenche o select com empresas do Supabase */
+  try {
+    var emps = _dbEmpresas && _dbEmpresas.length ? _dbEmpresas : await carregarEmpresas();
+    var sel = document.getElementById('crz-emp');
+    if(!sel) return;
+    emps.sort(function(a,b){return(a.razao||'').localeCompare(b.razao||'');})
+      .forEach(function(e){
+        var o=document.createElement('option');
+        o.value=e.cnpj;
+        o.textContent=(e.razao||e.cnpj)+' — '+(e.cnpj||'').replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5');
+        sel.appendChild(o);
+      });
+  } catch(err){ console.warn('initCruzamento:', err); }
+}
+
+async function cruzBuscar(){
+  var cnpj = (document.getElementById('crz-emp')||{}).value;
+  var comp = (document.getElementById('crz-comp')||{}).value; /* YYYY-MM */
+  var res  = document.getElementById('crz-result');
+  if(!cnpj || !comp){ res.innerHTML='<p style="color:#f43f5e">Selecione a empresa e a competência.</p>'; return; }
+
+  res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">Buscando entregas na API do Acessórias...</div>';
+
+  var ano = comp.slice(0,4), mes = comp.slice(5,7);
+  var dtIni = comp+'-01';
+  var dtFim = comp+'-28'; /* cobre todo o mês */
+
+  try {
+    /* Busca entregas da empresa com attachments */
+    var url = ACESS_API_BASE+'/deliveries/'+encodeURIComponent(cnpj)+
+      '?DtInitial='+dtIni+'&DtFinal='+dtFim+'&attachments&situation=delivered';
+
+    var resp = await fetch(url, { headers:{ 'Authorization':'Bearer '+ACESS_TOKEN_KEY } });
+    if(!resp.ok) throw new Error('API '+resp.status);
+    var data = await resp.json();
+
+    /* Extrai entregas da empresa */
+    var emp = Array.isArray(data) ? data[0] : data;
+    var entregas = (emp && emp.Entregas) ? emp.Entregas : [];
+
+    if(!entregas.length){
+      res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">Nenhuma entrega encontrada para '+mes+'/'+ano+'.</div>';
+      return;
+    }
+
+    /* Processa cada regra */
+    res.innerHTML='<div style="text-align:center;padding:20px;color:#64748b">Baixando e analisando PDFs...</div>';
+    var linhas = await Promise.all(REGRAS_CRUZAMENTO.map(function(regra){
+      return cruzProcessarRegra(regra, entregas, mes, ano);
+    }));
+
+    var html = '<table><thead><tr>'+
+      '<th>Cruzamento</th><th>'+REGRAS_CRUZAMENTO[0].obrigA.nome+'</th>'+
+      '<th>'+REGRAS_CRUZAMENTO[0].obrigB.nome+'</th>'+
+      '<th>Divergência</th><th>Status</th>'+
+    '</tr></thead><tbody>'+linhas.join('')+'</tbody></table>';
+    res.innerHTML='<div class="panel">'+html+'</div>';
+
+  } catch(err){
+    res.innerHTML='<div style="text-align:center;padding:32px;color:#f43f5e">Erro: '+err.message+'</div>';
+  }
+}
+
+async function cruzProcessarRegra(regra, entregas, mes, ano){
+  /* Acha as duas entregas pelo nome */
+  var entA = entregas.find(function(e){ return (e.Nome||'').toLowerCase().indexOf(regra.obrigA.nome.toLowerCase())>=0; });
+  var entB = entregas.find(function(e){ return (e.Nome||'').toLowerCase().indexOf(regra.obrigB.nome.toLowerCase())>=0; });
+
+  var valA = null, valB = null, errA = '', errB = '';
+
+  if(entA && entA.Anexos && entA.Anexos.length){
+    try { valA = await regra.extrairA(entA.Anexos[0].Url); }
+    catch(e){ errA = e.message; }
+  } else if(!entA){
+    errA = 'Não entregue';
+  } else {
+    errA = 'Sem anexo';
+  }
+
+  if(entB && entB.Anexos && entB.Anexos.length){
+    try { valB = await regra.extrairB(entB.Anexos[0].Url); }
+    catch(e){ errB = e.message; }
+  } else if(!entB){
+    errB = 'Não entregue';
+  } else {
+    errB = 'Sem anexo';
+  }
+
+  var fmtA = valA!==null ? 'R$ '+valA.toLocaleString('pt-BR',{minimumFractionDigits:2}) : '<span style="color:#f43f5e">'+(errA||'—')+'</span>';
+  var fmtB = valB!==null ? 'R$ '+valB.toLocaleString('pt-BR',{minimumFractionDigits:2}) : '<span style="color:#f43f5e">'+(errB||'—')+'</span>';
+
+  var div = '—', status = '—', stC = '#94a3b8';
+  if(valA!==null && valB!==null){
+    var dif = Math.abs(valA - valB);
+    if(dif < 0.01){
+      div    = 'R$ 0,00';
+      status = '✅ OK';
+      stC    = '#4ade80';
+    } else {
+      div    = '<span style="color:#f43f5e">R$ '+dif.toLocaleString('pt-BR',{minimumFractionDigits:2})+'</span>';
+      status = '❌ Divergência';
+      stC    = '#f43f5e';
+    }
+  }
+
+  return '<tr>'+
+    '<td style="font-weight:600">'+regra.nome+' '+mes+'/'+ano.slice(2)+'</td>'+
+    '<td>'+fmtA+'</td>'+
+    '<td>'+fmtB+'</td>'+
+    '<td>'+div+'</td>'+
+    '<td style="color:'+stC+';font-weight:700">'+status+'</td>'+
+  '</tr>';
+}
+
+/* ── Extratores de valor dos PDFs ── */
+
+async function lerTextoPDF(url){
+  if(typeof pdfjsLib === 'undefined') throw new Error('PDF.js não carregado');
+  var pdf  = await pdfjsLib.getDocument({ url: url, withCredentials: false }).promise;
+  var text = '';
+  for(var i=1; i<=Math.min(pdf.numPages, 5); i++){
+    var page  = await pdf.getPage(i);
+    var cont  = await page.getTextContent();
+    text += cont.items.map(function(it){ return it.str; }).join(' ') + '\n';
+  }
+  return text;
+}
+
+async function extrairValorSped(url){
+  var text = await lerTextoPDF(url);
+  /* Procura: "Valor total do ICMS a recolher" seguido do valor */
+  var match = text.match(/ICMS a recolher[\s\S]{0,60}?R\$\s*([\d.,]+)/i)
+           || text.match(/ICMS a recolher\s+([\d.,]+)/i)
+           || text.match(/R\$\s*([\d.,]+)\s*[\r\n][\s\S]{0,30}?0,00[\s\S]{0,30}?0,00/i);
+  if(!match) throw new Error('Valor SPED não encontrado');
+  return parseBR(match[1]);
+}
+
+async function extrairValorGuia(url){
+  var text = await lerTextoPDF(url);
+  /* Procura: "Total a recolher:" seguido do valor */
+  var match = text.match(/Total a recolher[\s:]+R?\$?\s*([\d.,]+)/i)
+           || text.match(/Total a recolher\s+([\d.,]+)/i);
+  if(!match) throw new Error('Valor guia não encontrado');
+  return parseBR(match[1]);
+}
+
+function parseBR(s){
+  /* "11.742,54" → 11742.54 */
+  return parseFloat(String(s).replace(/\./g,'').replace(',','.'));
+}
+
 </script>
 </body>
 </html>
