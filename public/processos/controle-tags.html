@@ -1,0 +1,1680 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Gestão de TAGs — Acessórias</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --green:#0AE18C;--green-dark:#00BF63;--green-lt:#EAFBF4;
+  --black:#0C0C0C;--charcoal:#1A1A1A;--ink:#2C2C2C;
+  --gray-70:#4A4A4A;--gray-50:#646464;--gray-30:#CDCDCD;--gray-10:#E8E8E8;--gray-05:#F2F2F2;
+  --off-white:#FAFAFA;--white:#FFFFFF;--border:#E2E2E2;
+  --red:#DC2626;--red-lt:#FEE2E2;
+  --amber:#FA6914;--amber-lt:#FFF3E0;
+  --blue:#14C8FA;--blue-lt:#DDF6FF;
+  --purple:#7C3AED;--purple-lt:#F5F3FF;
+  --dp-accent:#00BF63;--dp-bg:#C9F7E2;--dp-lt:#EAFBF4;
+  --fi-accent:#FA6914;--fi-bg:#FFE5D2;--fi-lt:#FFF8F4;
+  --co-accent:#14C8FA;--co-bg:#DDF6FF;--co-lt:#F0FBFF;
+  --cc-accent:#7C3AED;--cc-bg:#EDE9FE;--cc-lt:#F5F3FF;
+  --int-accent:#0EA5E9;--int-bg:#E0F2FE;
+  --radius:10px;--radius-lg:16px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06),0 1px 8px rgba(0,0,0,.04);
+  --shadow-md:0 4px 16px rgba(0,0,0,.09),0 1px 4px rgba(0,0,0,.04);
+  --font:'Poppins',sans-serif;--tr:all .18s cubic-bezier(.4,0,.2,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--off-white);color:var(--ink);font-family:var(--font);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+.topbar{background:var(--black);height:54px;display:flex;align-items:center;padding:0 22px;gap:10px;position:sticky;top:0;z-index:200}
+.logo{width:30px;height:30px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--black)}
+.bc{display:flex;align-items:center;gap:5px;color:rgba(255,255,255,.4);font-size:11px;font-weight:500}
+.bc strong{color:#fff}.bc span{color:rgba(255,255,255,.2)}
+.tb-sp{flex:1}
+
+.tabs-bar{background:var(--white);border-bottom:2px solid var(--border);display:flex;padding:0 22px;overflow-x:auto}
+.tb{font-family:var(--font);font-size:12px;font-weight:600;padding:13px 18px;border:none;background:none;color:var(--gray-50);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:6px;transition:var(--tr);white-space:nowrap;flex-shrink:0}
+.tb:hover{color:var(--ink)}
+.tb.act{color:var(--green-dark);border-bottom-color:var(--green)}
+.badge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:12px;background:var(--gray-10);color:var(--gray-50)}
+.tb.act .badge{background:var(--green-lt);color:var(--green-dark)}
+.badge-r{background:var(--red-lt);color:var(--red)}
+.badge-a{background:var(--amber-lt);color:var(--amber)}
+
+.main{max-width:1220px;margin:0 auto;padding:22px 22px 80px}
+.tc{display:none}.tc.act{display:block}
+
+.ey{font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.pt{font-size:19px;font-weight:800;color:var(--charcoal);margin-bottom:3px}
+.ps{font-size:12px;color:var(--gray-50);margin-bottom:18px}
+
+.stats-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.sp{display:flex;align-items:center;gap:5px;padding:5px 11px;border-radius:20px;font-size:11px;font-weight:600;border:1px solid}
+.sp .n{font-size:14px;font-weight:800}
+.s-all{background:var(--gray-05);border-color:var(--border);color:var(--gray-70)}
+.s-dp{background:var(--dp-lt);border-color:var(--dp-bg);color:var(--dp-accent)}
+.s-fi{background:var(--fi-lt);border-color:var(--fi-bg);color:var(--fi-accent)}
+.s-co{background:var(--co-lt);border-color:var(--co-bg);color:var(--co-accent)}
+.s-cc{background:var(--cc-lt);border-color:var(--cc-bg);color:var(--cc-accent)}
+.s-warn{background:var(--red-lt);border-color:#fca5a5;color:var(--red)}
+.s-amb{background:var(--amber-lt);border-color:#fed7aa;color:var(--amber)}
+
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:160px;max-width:340px}
+.sw svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
+.si{width:100%;font-family:var(--font);font-size:12px;padding:8px 10px 8px 32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none;transition:var(--tr)}
+.si:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(10,225,140,.1)}
+.si::placeholder{color:var(--gray-30)}
+.sel{font-family:var(--font);font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none;cursor:pointer;transition:var(--tr)}
+.sel:focus{border-color:var(--green)}
+.tsp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:5px;font-family:var(--font);font-size:11px;font-weight:600;padding:7px 13px;border-radius:var(--radius);border:1px solid var(--border);background:var(--white);color:var(--gray-70);cursor:pointer;transition:var(--tr);white-space:nowrap}
+.btn:hover{border-color:var(--gray-30);color:var(--ink)}
+.btn svg{width:12px;height:12px;flex-shrink:0}
+.btn-g{background:var(--green);border-color:var(--green);color:var(--black)}
+.btn-g:hover{background:var(--green-dark);border-color:var(--green-dark)}
+.btn-sm{font-size:10px;padding:5px 9px}
+
+/* TABLE */
+.tw{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.th-row{display:grid;padding:0 14px;background:var(--gray-05);border-bottom:1px solid var(--border)}
+.th{padding:9px 7px;font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.5px}
+.tb-body{display:flex;flex-direction:column}
+.tr{display:grid;padding:0 14px;border-bottom:1px solid var(--border);transition:background .1s;align-items:center}
+.tr:last-child{border-bottom:none}
+.tr:hover{background:#FAFFFD}
+.td{padding:8px 7px;font-size:11px;color:var(--ink)}
+.cnpj{font-family:monospace;font-size:10.5px;font-weight:600;color:var(--charcoal)}
+.razao{font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:10px;color:var(--gray-50);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.chips{display:flex;flex-wrap:wrap;gap:3px}
+.chip{font-size:10px;font-weight:600;padding:2px 7px;border-radius:20px;white-space:nowrap}
+.c-dp{background:var(--dp-bg);color:var(--dp-accent)}
+.c-fi{background:var(--fi-bg);color:var(--fi-accent)}
+.c-co{background:var(--co-bg);color:var(--co-accent)}
+.c-cc{background:var(--cc-bg);color:var(--cc-accent)}
+.c-int{background:var(--int-bg);color:var(--int-accent)}
+.c-warn{background:var(--red-lt);color:var(--red)}
+.c-gray{background:var(--gray-10);color:var(--gray-70)}
+
+/* GROUP */
+.grp-hdr{padding:9px 14px;display:flex;align-items:center;gap:7px;cursor:pointer;background:var(--gray-05);border-bottom:1px solid var(--border);transition:background .1s}
+.grp-hdr:hover{background:var(--gray-10)}
+.grp-nm{font-size:12px;font-weight:700;color:var(--charcoal);flex:1}
+.grp-cnt{font-size:10px;color:var(--gray-50);font-weight:600;white-space:nowrap}
+.grp-arr{color:var(--gray-30);transition:transform .2s;flex-shrink:0}
+.grp-arr.open{transform:rotate(180deg)}
+.tr-sub{border-left:3px solid transparent}
+.tr-sub:hover{background:#FAFFF8;border-left-color:var(--green)}
+
+/* PAGER */
+.pager{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:var(--gray-05)}
+.pg-info{font-size:11px;color:var(--gray-50)}
+.pg-btns{display:flex;gap:3px}
+.pg-btn{font-family:var(--font);font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:var(--white);color:var(--gray-70);cursor:pointer;transition:var(--tr)}
+.pg-btn:hover{border-color:var(--green);color:var(--green-dark)}
+.pg-btn.cur{background:var(--charcoal);color:var(--white);border-color:var(--charcoal)}
+.pg-btn:disabled{opacity:.35;cursor:default;pointer-events:none}
+
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;padding:40px 22px;gap:8px;color:var(--gray-50)}
+.empty svg{opacity:.3}
+.empty strong{font-size:13px;color:var(--charcoal)}
+.empty span{font-size:12px}
+
+/* ── BASE DE TAGs ── */
+/* ── BASE DE TAGs — LISTA ── */
+.tags-list-wrap{display:flex;flex-direction:column;gap:0;margin-top:4px;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.dept-header{display:flex;align-items:center;gap:10px;padding:10px 18px;background:var(--gray-05);border-bottom:1px solid var(--border);cursor:pointer;user-select:none;transition:background .12s}
+.dept-header:hover{background:var(--gray-10)}
+.dept-header-ico{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.dept-header-title{font-size:12px;font-weight:700;color:var(--charcoal);flex:1}
+.dept-header-cnt{font-size:10px;color:var(--gray-50);font-weight:600}
+.dept-header-arr{color:var(--gray-30);transition:transform .2s;flex-shrink:0}
+.dept-header-arr.open{transform:rotate(180deg)}
+.dept-body{display:flex;flex-direction:column}
+/* Cabeçalho da tabela */
+.tag-list-hdr{display:grid;grid-template-columns:130px 160px 160px 1fr 140px;padding:7px 18px;background:var(--gray-05);border-bottom:1px solid var(--border)}
+.tag-list-hdr span{font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.5px}
+/* Linha da TAG */
+.tag-row{display:grid;grid-template-columns:130px 160px 160px 1fr 140px;padding:0 18px;border-bottom:1px solid var(--border);align-items:start;transition:background .1s;min-height:52px}
+.tag-row:last-child{border-bottom:none}
+.tag-row:hover{background:#FAFFFD}
+.tag-row.editing{background:#F0FBFF}
+.td-badge{padding:14px 0 12px}
+.td-coord{padding:12px 8px 10px;display:flex;flex-direction:column;gap:3px;min-width:0}
+.td-supers{padding:10px 8px;display:flex;flex-direction:column;gap:4px;min-width:0}
+.td-acts{padding:10px 8px;display:flex;gap:4px;justify-content:flex-end;align-items:flex-start}
+.rlbl{font-size:9px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.4px;margin-bottom:1px}
+.pnm{font-size:12px;font-weight:600;color:var(--charcoal)}
+/* Supervisores como tags */
+.super-tags{display:flex;flex-wrap:wrap;gap:4px;margin-top:2px}
+.super-tag{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;background:var(--gray-10);color:var(--gray-70);display:flex;align-items:center;gap:4px}
+.super-tag-del{width:12px;height:12px;border-radius:50%;background:var(--gray-30);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:9px;line-height:1;padding:0;flex-shrink:0;transition:background .15s}
+.super-tag-del:hover{background:var(--red)}
+.coord-disp{font-size:12px;font-weight:600;color:var(--charcoal)}
+.ii{font-family:var(--font);font-size:12px;width:100%;padding:4px 8px;border:1px solid var(--green);border-radius:6px;outline:none;background:var(--white);box-shadow:0 0 0 2px rgba(10,225,140,.1)}
+/* Ações */
+.ra-btn{width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--tr);color:var(--gray-50);flex-shrink:0}
+.ra-btn svg{width:11px;height:11px}
+.ra-btn:hover{border-color:var(--green);color:var(--green-dark);background:var(--green-lt)}
+.ra-btn.del:hover{border-color:var(--red);color:var(--red);background:var(--red-lt)}
+.ra-btn.save{border-color:var(--green);color:var(--green-dark);background:var(--green-lt)}
+
+/* AUDITORIA */
+.ac-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+.ac{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.ac-top{padding:12px 14px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.ac-ico{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center}
+.ac-t{font-size:11px;font-weight:700;color:var(--charcoal)}
+.ac-s{font-size:10px;color:var(--gray-50);margin-top:1px}
+.ac-n{font-size:22px;font-weight:800;padding:10px 14px}
+.ac.ok .ac-n{color:var(--green-dark)}
+.ac.warn .ac-n{color:var(--red)}
+.ac.amb .ac-n{color:var(--amber)}
+
+.asec{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;margin-bottom:14px}
+.asec-head{padding:11px 14px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px;background:var(--gray-05)}
+.asec-ico{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center}
+.asec-title{font-size:12px;font-weight:700;color:var(--charcoal);flex:1}
+.asec-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:12px}
+.arow{display:grid;grid-template-columns:170px 70px 80px 1fr 150px;padding:0 14px;border-bottom:1px solid var(--border);align-items:center}
+.arow:last-child{border-bottom:none}
+.arow:hover{background:#FFFDF5}
+.ah{display:grid;grid-template-columns:170px 70px 80px 1fr 150px;padding:0 14px;background:var(--gray-05);border-bottom:1px solid var(--border)}
+.at{padding:8px 7px;font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.5px}
+.ad{padding:8px 7px;font-size:11px;color:var(--ink)}
+.spill{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px}
+.s-ok{background:var(--green-lt);color:var(--green-dark)}
+.s-warn{background:var(--red-lt);color:var(--red)}
+.dot{width:6px;height:6px;border-radius:50%}
+.d-ok{background:var(--green)}.d-warn{background:var(--red)}.d-amb{background:var(--amber)}
+.miss{font-size:10px;font-weight:600;color:var(--red);background:var(--red-lt);padding:2px 6px;border-radius:4px;margin:1px;display:inline-block}
+
+/* INCONSISTÊNCIAS */
+.ic-cards{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px}
+.icc{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);padding:14px;box-shadow:var(--shadow-sm)}
+.icc .n{font-size:22px;font-weight:800;display:block;margin-bottom:2px}
+.icc .lbl{font-size:11px;color:var(--gray-50);font-weight:600}
+.icc .sub{font-size:10px;color:var(--gray-30);margin-top:2px}
+
+.alert-info{border:1px solid;border-radius:var(--radius);padding:10px 14px;display:flex;align-items:flex-start;gap:8px;margin-bottom:14px;font-size:12px}
+.ai-amb{background:var(--amber-lt);border-color:#fed7aa;color:#92400e}
+.ai-red{background:var(--red-lt);border-color:#fca5a5;color:var(--red)}
+.alert-info svg{flex-shrink:0;margin-top:1px}
+.alert-info strong{font-weight:700}
+
+.inc-row{border-bottom:1px solid var(--border)}
+.inc-row:last-child{border-bottom:none}
+.inc-hdr{padding:10px 14px;display:flex;align-items:center;gap:8px;cursor:pointer;background:var(--white);transition:background .1s}
+.inc-hdr:hover{background:var(--gray-05)}
+.inc-gname{font-size:12px;font-weight:700;color:var(--charcoal);flex:1}
+.inc-iss{display:flex;gap:4px;flex-wrap:wrap}
+.ic-chip{font-size:10px;font-weight:600;padding:2px 7px;border-radius:12px}
+.ic-p{background:var(--red-lt);color:var(--red)}
+.ic-m{background:var(--amber-lt);color:var(--amber)}
+.inc-cnt{font-size:10px;color:var(--gray-50);white-space:nowrap}
+.inc-det{display:none;padding:10px 14px 14px;background:var(--gray-05);border-top:1px solid var(--border)}
+.inc-det.open{display:block}
+.inc-iss-desc{font-size:11px;font-weight:600;margin-bottom:4px}
+.icl{display:flex;flex-direction:column;gap:4px;margin-top:8px}
+.icl-row{display:grid;grid-template-columns:145px 1fr 120px 180px;gap:8px;align-items:center;padding:5px 8px;border-radius:7px;font-size:11px;background:var(--white);border:1px solid var(--border)}
+.icl-cnpj{font-family:monospace;font-size:10px;font-weight:600;color:var(--charcoal)}
+.icl-r{color:var(--gray-70);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+/* MODAL */
+
+/* Modal edição TAG */
+.modal-tag-edit .mbody{gap:14px}
+.super-tags-edit{display:flex;flex-wrap:wrap;gap:6px;padding:8px;border:1px solid var(--border);border-radius:var(--radius);min-height:38px;background:var(--gray-05)}
+.super-tag{font-size:11px;font-weight:600;padding:3px 10px;border-radius:20px;background:var(--gray-10);color:var(--gray-70);display:inline-flex;align-items:center;gap:5px}
+.super-tag-del{width:14px;height:14px;border-radius:50%;background:var(--gray-30);border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--white);font-size:10px;line-height:1;padding:0;flex-shrink:0;transition:background .15s}
+.super-tag-del:hover{background:var(--red)}
+.super-add-row{display:flex;gap:6px;margin-top:6px}
+.super-add-inp{font-family:var(--font);font-size:12px;flex:1;padding:7px 10px;border:1px dashed var(--border);border-radius:var(--radius);outline:none;background:var(--white);color:var(--ink)}
+.super-add-inp:focus{border-color:var(--green);border-style:solid;box-shadow:0 0 0 2px rgba(10,225,140,.1)}
+.super-add-inp::placeholder{color:var(--gray-30)}
+.super-add-btn{font-family:var(--font);font-size:11px;font-weight:700;padding:7px 12px;border-radius:var(--radius);border:1px solid var(--green);background:var(--green-lt);color:var(--green-dark);cursor:pointer;white-space:nowrap;transition:var(--tr)}
+.super-add-btn:hover{background:var(--green);color:var(--black)}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:300;align-items:center;justify-content:center}
+.overlay.open{display:flex}
+.modal{background:var(--white);border-radius:var(--radius-lg);box-shadow:var(--shadow-md);width:460px;max-width:95vw;max-height:90vh;overflow-y:auto;animation:su .2s ease}
+@keyframes su{from{transform:translateY(14px);opacity:0}to{transform:translateY(0);opacity:1}}
+.mh{display:flex;align-items:center;padding:18px 20px 14px;border-bottom:1px solid var(--border);gap:10px}
+.m-ico{width:32px;height:32px;border-radius:8px;background:var(--green-lt);display:flex;align-items:center;justify-content:center}
+.m-title{font-size:14px;font-weight:700;color:var(--charcoal)}
+.m-sub{font-size:11px;color:var(--gray-50);margin-top:1px}
+.m-close{margin-left:auto;width:26px;height:26px;border-radius:6px;border:1px solid var(--border);background:var(--white);display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--gray-50);transition:var(--tr)}
+.m-close:hover{background:var(--gray-05)}
+.mbody{padding:18px 20px;display:flex;flex-direction:column;gap:12px}
+.fg{display:flex;flex-direction:column;gap:4px}
+.fg2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.fl{font-size:10px;font-weight:700;color:var(--gray-70);text-transform:uppercase;letter-spacing:.5px}
+.fi{font-family:var(--font);font-size:12px;padding:8px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none;transition:var(--tr);width:100%}
+.fi:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(10,225,140,.1)}
+.fh{font-size:10px;color:var(--gray-50)}
+.mfoot{display:flex;gap:7px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--border);background:var(--gray-05);border-radius:0 0 var(--radius-lg) var(--radius-lg)}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--charcoal);color:var(--white);padding:11px 16px;border-radius:var(--radius);font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;box-shadow:var(--shadow-md);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.4,0,.2,1)}
+.toast.show{transform:translateY(0);opacity:1}
+.toast svg{width:13px;height:13px;color:var(--green)}
+</style>
+
+
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">P</div>
+  <div class="bc"><span>Portal</span><span>&#8250;</span><span>Acess&#243;rias</span><span>&#8250;</span><strong>Gest&#227;o de TAGs</strong></div>
+  <div class="tb-sp"></div>
+  <button onclick="syncEmpresasHub()" style="background:var(--green);color:var(--black);border:none;border-radius:7px;padding:7px 14px;font-family:var(--font);font-size:11px;font-weight:700;cursor:pointer">Enviar pro Hub</button>
+</div>
+
+<div class="tabs-bar">
+  <button class="tb act" onclick="setTab('tags',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>
+    Base de TAGs <span class="badge" id="bTags">22</span>
+  </button>
+  <button class="tb" onclick="setTab('empresas',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    Empresas por Grupo <span class="badge" id="bEmp">2.743</span>
+  </button>
+  <button class="tb" onclick="setTab('auditoria',this);if(EMPRESAS&&EMPRESAS.length>0)renderAuditoria();">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    Auditoria <span class="badge badge-r" id="bAud">—</span>
+  </button>
+  <button class="tb" onclick="setTab('inc',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+    Inconsist&#234;ncias <span class="badge badge-a" id="bInc">67</span>
+  </button>
+  <button class="tb" onclick="setTab('vinculo',this);if(EMPRESAS&&EMPRESAS.length>0)renderVinculo();">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    V&#237;nculo por Grupo <span class="badge" id="bVinc">&#8212;</span>
+  </button>
+    <button class="tb" onclick="setTab('cc',this);if(EMPRESAS&&EMPRESAS.length>0)renderCC();">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    Constru&#231;&#227;o Civil <span class="badge" style="background:var(--cc-lt);color:var(--cc-accent)" id="bCC">—</span>
+  </button>
+</div>
+
+<div class="main">
+
+<!-- ABA 1: BASE TAGs -->
+<div class="tc act" id="tab-tags">
+  <div class="ey">Acess&#243;rias &middot; Gest&#227;o de TAGs</div>
+  <div class="pt">Base de Equipes &#8212; TAGs</div>
+  <div class="ps">Clique no l&#225;pis de qualquer linha para editar coordena&#231;&#227;o e supervisores direto na tabela.</div>
+  <div class="toolbar">
+    <div class="sw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="tagSearch" placeholder="Buscar TAG, coordena&#231;&#227;o ou supervisor..." oninput="renderTags()"/>
+    </div>
+    <div class="tsp"></div>
+    <button class="btn btn-g" onclick="openAddTag()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="11" height="11"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nova TAG
+    </button>
+    <button class="btn" onclick="exportTags()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Exportar
+    </button>
+    <button class="btn btn-g" onclick="saveTags();showToast('Base de TAGs salva!')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+      Salvar base
+    </button>
+    <button class="btn" style="color:var(--red);border-color:#fca5a5" onclick="if(confirm('Limpar base salva e restaurar padrão?')){localStorage.removeItem(STORAGE_KEY);localStorage.removeItem(STORAGE_KEY+'_nextId');location.reload();}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.5"/></svg>
+      Restaurar
+    </button>
+  </div>
+  <div id="tagsGrid"></div>
+</div>
+
+<!-- ABA 2: EMPRESAS -->
+<div class="tc" id="tab-empresas">
+  <div class="ey">Acess&#243;rias &middot; Base de Empresas</div>
+  <div class="pt">Empresas por Grupo e TAG</div>
+  <div class="ps">CNPJs agrupados por Grupo de Empresas &mdash; 2.743 registros, 51 sem TAG de equipe</div>
+  <div class="stats-row">
+    <div class="sp s-all"><span>Total</span><span class="n" id="sTot">0</span></div>
+    <div class="sp s-warn"><span>Sem TAG</span><span class="n" id="sSem">0</span></div>
+    <div class="sp s-dp"><span>DP</span><span class="n" id="sDP">0</span></div>
+    <div class="sp s-fi"><span>Fiscal</span><span class="n" id="sFI">0</span></div>
+    <div class="sp s-co"><span>Cont&#225;bil</span><span class="n" id="sCO">0</span></div>
+    <div class="sp s-cc"><span>CC</span><span class="n" id="sCC">0</span></div>
+  </div>
+  <div class="toolbar">
+    <div class="sw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="empSearch" placeholder="Buscar CNPJ, raz&#227;o social ou grupo..." oninput="renderEmp()"/>
+    </div>
+    <select class="sel" id="tagFil" onchange="renderEmp()">
+      <option value="">Todas as TAGs</option>
+      <option value="__SEM__">&#9888; Sem TAG</option>
+      <option value="Equipe DP 1">Equipe DP 1</option><option value="Equipe DP 2">Equipe DP 2</option><option value="Equipe DP 4">Equipe DP 4</option>
+      <option value="Equipe Fiscal 1">Equipe Fiscal 1</option><option value="Equipe Fiscal 2">Equipe Fiscal 2</option><option value="Equipe Fiscal 3">Equipe Fiscal 3</option><option value="Equipe Fiscal 4">Equipe Fiscal 4</option><option value="Equipe Fiscal 5">Equipe Fiscal 5</option><option value="Equipe Fiscal 6">Equipe Fiscal 6</option><option value="Equipe Fiscal 7">Equipe Fiscal 7</option><option value="Equipe Fiscal 8">Equipe Fiscal 8</option>
+      <option value="Equipe Cont&#225;bil 1">Equipe Cont&#225;bil 1</option><option value="Equipe Cont&#225;bil 2">Equipe Cont&#225;bil 2</option><option value="Equipe Cont&#225;bil 3">Equipe Cont&#225;bil 3</option><option value="Equipe Cont&#225;bil 4">Equipe Cont&#225;bil 4</option><option value="Equipe Cont&#225;bil 5">Equipe Cont&#225;bil 5</option><option value="Equipe Cont&#225;bil 6">Equipe Cont&#225;bil 6</option><option value="Equipe Cont&#225;bil 7">Equipe Cont&#225;bil 7</option><option value="Equipe Cont&#225;bil 8">Equipe Cont&#225;bil 8</option><option value="Equipe Cont&#225;bil 9">Equipe Cont&#225;bil 9</option><option value="Equipe Cont&#225;bil 10">Equipe Cont&#225;bil 10</option>
+      <option value="Equipe CC 1">Equipe CC 1</option><option value="Equipe CC 2">Equipe CC 2</option><option value="Equipe CC 4">Equipe CC 4</option>
+      <option value="Equipe Integra&#231;&#227;o">Equipe Integra&#231;&#227;o</option><option value="Equipe Dedicada Canopus">Equipe Dedicada Canopus</option><option value="Equipe Dedicada Uniggel">Equipe Dedicada Uniggel</option>
+      <option value="Equipe CBF">Equipe CBF</option><option value="Equipe Fiscal Teste 1">Equipe Fiscal Teste 1</option><option value="Equipe Cont&#225;bil Teste 2">Equipe Cont&#225;bil Teste 2</option>
+    </select>
+    <select class="sel" id="viewMode" onchange="renderEmp()">
+      <option value="grupo">Agrupado por grupo</option>
+      <option value="flat">Listagem simples</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportEmp()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Exportar CSV
+    </button>
+  </div>
+  <div class="tw">
+    <div class="th-row" id="empTH" style="grid-template-columns:140px 1fr 120px 1fr">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o / Grupo</div><div class="th">Regime</div><div class="th">TAGs</div>
+    </div>
+    <div class="tb-body" id="empBody"></div>
+    <div class="pager" id="empPager"></div>
+  </div>
+</div>
+
+<!-- ABA 3: AUDITORIA -->
+<div class="tc" id="tab-auditoria">
+  <div class="ey">Acess&#243;rias &middot; Auditoria</div>
+  <div class="pt">Auditoria de TAGs</div>
+  <div class="ps">TAGs ativas nas empresas sem coordenador/supervisor na Base de Equipes</div>
+  <div class="ac-grid" id="acGrid"></div>
+  <div class="asec">
+    <div class="asec-head">
+      <div class="asec-ico" style="background:var(--red-lt)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="2" width="12" height="12"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/></svg></div>
+      <span class="asec-title">TAGs sem Coordenador/Supervisor</span>
+      <span class="asec-badge" style="background:var(--red-lt);color:var(--red)">9 cr&#237;ticas</span>
+    </div>
+    <div class="ah"><div class="at">TAG</div><div class="at">Empresas</div><div class="at">Status</div><div class="at">Situa&#231;&#227;o</div><div class="at">A&#231;&#227;o</div></div>
+    <div id="audWarn"></div>
+  </div>
+  <div class="asec" style="margin-top:14px">
+    <div class="asec-head">
+      <div class="asec-ico" style="background:var(--green-lt)"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green-dark)" stroke-width="2" width="12" height="12"><polyline points="20 6 9 17 4 12"/></svg></div>
+      <span class="asec-title">TAGs com Coordenador/Supervisor cadastrado</span>
+      <span class="asec-badge" style="background:var(--green-lt);color:var(--green-dark)">21 OK</span>
+    </div>
+    <div class="ah"><div class="at">TAG</div><div class="at">Empresas</div><div class="at">Status</div><div class="at">Coordena&#231;&#227;o</div><div class="at">Supervis&#245;es</div></div>
+    <div id="audOk"></div>
+  </div>
+</div>
+
+<!-- ABA 4: INCONSISTENCIAS -->
+<div class="tc" id="tab-inc">
+  <div class="ey">Acess&#243;rias &middot; Valida&#231;&#227;o</div>
+  <div class="pt">Inconsist&#234;ncias por Grupo</div>
+  <div class="ps">Grupos com equipes diferentes entre CNPJs, ou servi&#231;os parciais &mdash; se um CNPJ tem DP/Fiscal/Cont&#225;bil, todos do grupo devem ter</div>
+  <div class="ic-cards" id="icCards"></div>
+  <div class="alert-info ai-amb">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Regra:</strong> Se qualquer CNPJ do grupo tem DP, Fiscal ou Cont&#225;bil, <em>todos os CNPJs do grupo devem ter</em>. CNPJs sem o servi&#231;o indicam aus&#234;ncia de contrato &mdash; confirme com o cliente.</span>
+  </div>
+  <div class="toolbar">
+    <div class="sw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="incSearch" placeholder="Buscar grupo..." oninput="renderInc()"/>
+    </div>
+    <select class="sel" id="incTipo" onchange="renderInc()">
+      <option value="">Todos os tipos</option>
+      <option value="PARCIAL">Servi&#231;o parcial</option>
+      <option value="MISTO">Equipes mistas</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportarInconsistencias()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>Exportar Excel</button>
+  </div>
+  <div class="tw" id="incWrap" style="overflow:visible">
+    <div class="tb-body" id="incBody"></div>
+  </div>
+</div>
+
+
+<!-- ABA CC: CONSTRUÇÃO CIVIL -->
+<div class="tc" id="tab-cc">
+  <div class="ey">Acess&#243;rias &middot; Constru&#231;&#227;o Civil</div>
+  <div class="pt">Empresas da Constru&#231;&#227;o Civil</div>
+  <div class="ps">TAGs: DP 4, CC 1, CC 2, CC 4, Dedicada Canopus — n&#227;o entram nas auditorias e inconsist&#234;ncias principais.</div>
+  <div class="stats-row">
+    <div class="sp s-all"><span>Total</span><span class="n" id="sCCTot">—</span></div>
+    <div class="sp s-cc"><span>CC 1</span><span class="n" id="sCC1">—</span></div>
+    <div class="sp s-cc"><span>CC 2</span><span class="n" id="sCC2">—</span></div>
+    <div class="sp s-cc"><span>CC 4</span><span class="n" id="sCC4">—</span></div>
+    <div class="sp s-dp"><span>DP 4</span><span class="n" id="sCCDP4">—</span></div>
+    <div class="sp s-int"><span>Canopus</span><span class="n" id="sCCCan">—</span></div>
+    
+  </div>
+  <div class="toolbar">
+    <div class="sw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="ccSearch" placeholder="Buscar CNPJ, raz&#227;o ou grupo..." oninput="renderCC()"/>
+    </div>
+    <select class="sel" id="ccTagFil" onchange="renderCC()">
+      <option value="">Todas as TAGs CC</option>
+      <option value="Equipe DP 4">Equipe DP 4</option>
+      <option value="Equipe CC 1">Equipe CC 1</option>
+      <option value="Equipe CC 2">Equipe CC 2</option>
+      <option value="Equipe CC 4">Equipe CC 4</option>
+      <option value="Equipe Dedicada Canopus">Equipe Dedicada Canopus</option>
+      </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportCC()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Exportar CSV
+    </button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:140px 1fr 120px 1fr">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o / Grupo</div>
+      <div class="th">Regime</div><div class="th">TAGs</div>
+    </div>
+    <div class="tb-body" id="ccBody"></div>
+    <div class="pager" id="ccPager"></div>
+  </div>
+</div>
+
+<!-- ABA VÍNCULO POR GRUPO -->
+<div class="tc" id="tab-vinculo">
+  <div class="ey">Acess&#243;rias &middot; Configura&#231;&#227;o</div>
+  <div class="pt">V&#237;nculo de Servi&#231;os por Grupo</div>
+  <div class="ps">Defina quais servi&#231;os (DP, Fiscal, Cont&#225;bil) cada grupo de empresas deveria ter contratado. Compare com o que est&#225; cadastrado hoje no S3D.</div>
+  <div class="ic-cards" id="vincCards"></div>
+  <div class="alert-info ai-amb">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Como funciona:</strong> a base &#233; gerada automaticamente a partir do que j&#225; existe no S3D na primeira gera&#231;&#227;o. Depois disso ela fica salva e voc&#234; pode editar manualmente. Em uploads futuros, o sistema compara o S3D atual contra essa base salva (n&#227;o recalcula sozinho), sinalizando o que mudou.</span>
+  </div>
+  <div class="toolbar">
+    <div class="sw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="vincSearch" placeholder="Buscar grupo..." oninput="renderVinculo()"/>
+    </div>
+    <select class="sel" id="vincFiltro" onchange="renderVinculo()">
+      <option value="">Todos os grupos</option>
+      <option value="divergente">S&#243; com diverg&#234;ncia</option>
+      <option value="ok">S&#243; conferindo</option>
+      <option value="sem_base">Sem base cadastrada</option>
+      <option value="parcial">Servi&#231;os parciais (1 ou 2 de 3)</option>
+      <option value="geral">Servi&#231;o geral (DP+Fiscal+Cont&#225;bil)</option>
+      <option value="so_contabil">S&#243; Cont&#225;bil</option>
+      <option value="so_fiscal">S&#243; Fiscal</option>
+      <option value="so_dp">S&#243; DP</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" id="btnGerarBase" onclick="gerarBaseVinculo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 2v6h-6M3 22v-6h6M21 8A9 9 0 0 0 6 5.3L3 8M3 16a9 9 0 0 0 15 2.7l3-2.7"/></svg>
+      Gerar base do S3D atual
+    </button>
+    <button class="btn" onclick="exportarVinculo()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Exportar Excel
+    </button>
+  </div>
+  <div class="tw" id="vincWrap">
+    <div class="th-row" style="grid-template-columns:1fr 90px 90px 90px 110px 140px">
+      <div class="th">Grupo</div>
+      <div class="th" style="text-align:center">DP</div>
+      <div class="th" style="text-align:center">Fiscal</div>
+      <div class="th" style="text-align:center">Cont&#225;bil</div>
+      <div class="th" style="text-align:center">CNPJs</div>
+      <div class="th">Status</div>
+    </div>
+    <div class="tb-body" id="vincBody"></div>
+    <div class="pager" id="vincPager"></div>
+  </div>
+</div>
+</div><!-- /main -->
+
+<!-- MODAL TAG -->
+<div class="overlay" id="modalTag">
+  <div class="modal">
+    <div class="mh">
+      <div class="m-ico"><svg viewBox="0 0 24 24" fill="none" stroke="var(--green-dark)" stroke-width="2" width="16" height="16"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg></div>
+      <div><div class="m-title" id="mTitle">Nova TAG</div><div class="m-sub">Preencha os dados da equipe</div></div>
+      <button class="m-close" onclick="closeModal()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="11" height="11"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+    </div>
+    <div class="mbody">
+      <div class="fg2">
+        <div class="fg"><label class="fl">TAG *</label><input class="fi" id="fTag" placeholder="ex: Fiscal - 9"/></div>
+        <div class="fg"><label class="fl">Departamento *</label>
+          <select class="fi" id="fDept"><option value="">Selecione...</option><option value="DP">DP</option><option value="Fiscal">Fiscal</option><option value="Cont&#225;bil">Cont&#225;bil</option><option value="CC">CC</option><option value="Outra">Outra</option></select>
+        </div>
+      </div>
+      <div class="fg2">
+        <div class="fg"><label class="fl">Gerente</label><input class="fi" id="fGerente" placeholder="Nome do gerente"/></div>
+        <div class="fg"><label class="fl">Coordena&#231;&#227;o *</label><input class="fi" id="fCoord" placeholder="Nome do coordenador"/></div>
+      </div>
+      <div class="fg"><label class="fl">Supervis&#245;es</label><input class="fi" id="fSupers" placeholder="Supervisor 1, Supervisor 2, ..."/><span class="fh">Separe por v&#237;rgula</span></div>
+      <input type="hidden" id="fId"/>
+    </div>
+    <div class="mfoot">
+      <button class="btn" onclick="closeModal()">Cancelar</button>
+      <button class="btn btn-g" onclick="saveTag()">Salvar TAG</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg><span id="toastMsg">OK</span></div>
+
+<script>
+// SVG vars
+
+// Tags Construção Civil — excluídas das análises principais
+var CC_TAGS = ["Equipe DP 4","Equipe CC 1","Equipe CC 2","Equipe CC 4","Equipe Dedicada Canopus"];
+function isCCTag(t){return CC_TAGS.indexOf(t)>-1;}
+function isCCEmpresa(e){return e.tags.length>0 && e.tags.every(function(t){return isCCTag(t)||t==="CX";});}
+var SVG_EDIT='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">'
+  +'<path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>'
+  +'<path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>';
+var SVG_GRUPO='<svg viewBox="0 0 24 24" fill="none" stroke="var(--gray-30)"'
+  +' stroke-width="2" width="12" height="12" style="flex-shrink:0">'
+  +'<rect x="2" y="7" width="20" height="14" rx="2"/>'
+  +'<path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>';
+var SVG_ARR='<svg style="flex-shrink:0;transition:transform .2s;'
+  +'color:var(--gray-30);margin-left:6px" viewBox="0 0 24 24"'
+  +' fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">'
+  +'<polyline points="6 9 12 15 18 9"/></svg>';
+var SVG_UPL1='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+  +' stroke-width="1.5" width="44" height="44" style="opacity:.3">'
+  +'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
+  +'<polyline points="7 10 12 15 17 10"/>'
+  +'<line x1="12" y1="15" x2="12" y2="3"/></svg>';
+var SVG_UPL2='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"'
+  +' stroke-width="2" width="13" height="13">'
+  +'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>'
+  +'<polyline points="7 10 12 15 17 10"/>'
+  +'<line x1="12" y1="15" x2="12" y2="3"/></svg>';
+// ══ DADOS via JSON.parse — isola do parser HTML/JS ══
+var EMPRESAS = [];
+var INCONSISTENCIAS = [];
+var DATA_LOADED = false;
+
+// Remapeia chaves compactas para nomes legíveis
+EMPRESAS = EMPRESAS.map(function(e){
+  return {cnpj:e.c, razao:e.r, regime:e.e, grupo:e.g, tags:e.t, sem_tag:e.s};
+});
+INCONSISTENCIAS = INCONSISTENCIAS.map(function(i){
+  return {grupo:i.g, n_cnpj:i.n, issues:i.i.map(function(x){return {tipo:x.p,desc:x.d};}), cnpjs:i.k.map(function(c){return {cnpj:c.c,razao:c.r,tags:c.t};})};
+});
+
+// ══ BASE DE TAGs ══
+var TAGS = [
+  {id:1, key:"Equipe DP 1",        label:"DP - 1",           dept:"DP",       coord:"Mariana Rezende",    supers:"Ana Santos, Lucas Dias, Beatriz"},
+  {id:2, key:"Equipe DP 2",        label:"DP - 2",           dept:"DP",       coord:"Renata Soares",      supers:"Emily Santos, Italo Campos"},
+  {id:3, key:"Equipe DP 4",        label:"DP - 4",           dept:"DP",       coord:"Construção Civil", supers:""},
+  {id:4, key:"Equipe Fiscal 1",    label:"Fiscal - 1",       dept:"Fiscal",   coord:"Nathaly Alves",      supers:"Elivane Tolintino, Fabricio Sales"},
+  {id:5, key:"Equipe Fiscal 2",    label:"Fiscal - 2",       dept:"Fiscal",   coord:"Yuri Bessa",         supers:"Amanda Santos, Pedro Andrade, Lucas"},
+  {id:6, key:"Equipe Fiscal 3",    label:"Fiscal - 3",       dept:"Fiscal",   coord:"Jessica Amaral",     supers:"Marina Felix, Rhandria Naves"},
+  {id:7, key:"Equipe Fiscal 4",    label:"Fiscal - 4",       dept:"Fiscal",   coord:"Rejane Morais",      supers:"Katrine Tanimoto, Wemerson Borges"},
+  {id:8, key:"Equipe Fiscal 5",    label:"Fiscal - 5",       dept:"Fiscal",   coord:"Ingrid Bernardi",    supers:"Jaine França"},
+  {id:9, key:"Equipe Fiscal 6",    label:"Fiscal - 6",       dept:"Fiscal",   coord:"Jusely Prado",       supers:"Patricia Oliveira, Sirleide Souza, Wesley Pereira"},
+  {id:10,key:"Equipe Fiscal 7",    label:"Fiscal - 7",       dept:"Fiscal",   coord:"Cristiana Barbosa",  supers:"Gabriela Martins, Tarcísio Lopes"},
+  {id:11,key:"Equipe Fiscal 8",    label:"Fiscal - 8",       dept:"Fiscal",   coord:"Arynna Marques",     supers:"Raquel Fernandes"},
+  {id:12,key:"Equipe Contábil 1",   label:"Contábil - 1",    dept:"Contábil", coord:"Lusanna Melo",       supers:"Veronica Tavares"},
+  {id:13,key:"Equipe Contábil 2",   label:"Contábil - 2",    dept:"Contábil", coord:"Maysa Caixeta",      supers:"Emanuela Silva"},
+  {id:14,key:"Equipe Contábil 3",   label:"Contábil - 3",    dept:"Contábil", coord:"Tatyanne Carvalho",  supers:"Marcia Oliveira, Tabita Bessa"},
+  {id:15,key:"Equipe Contábil 4",   label:"Contábil - 4",    dept:"Contábil", coord:"Rodney Silva",       supers:"Erica Soares"},
+  {id:16,key:"Equipe Contábil 5",   label:"Contábil - 5",    dept:"Contábil", coord:"Rodney Silva",       supers:"Flaviane Leal, Nathalia Melo"},
+  {id:17,key:"Equipe Contábil 6",   label:"Contábil - 6",    dept:"Contábil", coord:"Natalia Xaves",      supers:"Thais Magalhaes, Victor Nascimento"},
+  {id:18,key:"Equipe Contábil 7",   label:"Contábil - 7",    dept:"Contábil", coord:"Gisely Alves",       supers:"Gustavo Mamede, Victor Nascimento"},
+  {id:19,key:"Equipe Contábil 8",   label:"Contábil - 8",    dept:"Contábil", coord:"Matheus Mendonça", supers:"Lucas Benicio"},
+  {id:20,key:"Equipe Contábil 9",   label:"Contábil - 9",    dept:"Contábil", coord:"Hugo Leonardo",      supers:"Luna Cecille"},
+  {id:21,key:"Equipe Contábil 10",  label:"Contábil - 10",   dept:"Contábil", coord:"Delmira Marques",    supers:""},
+  {id:22,key:"Equipe Dedicada Uniggel",label:"Dedicada Uniggel",dept:"Contábil",coord:"Roberta Oliveira",supers:"Natalia Aguiar"}
+];
+var nextId = 100;
+
+// ── Persistência da base de TAGs ──
+var STORAGE_KEY = "acessorias_tags_v1";
+
+function saveTags(){
+  try{
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(TAGS));
+    localStorage.setItem(STORAGE_KEY+"_nextId", nextId);
+  }catch(e){}
+}
+
+function loadTags(){
+  try{
+    var saved = localStorage.getItem(STORAGE_KEY);
+    if(saved){
+      TAGS = JSON.parse(saved);
+      nextId = parseInt(localStorage.getItem(STORAGE_KEY+"_nextId")||"100");
+      return true;
+    }
+  }catch(e){}
+  return false;
+}
+
+// ══ HELPERS ══
+function esc(s){return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");}
+function chipCls(t){
+  if(t.indexOf("DP")>-1&&t.indexOf("Dedicada")<0)return "c-dp";
+  if(t.indexOf("Fiscal")>-1&&t.indexOf("Teste")<0)return "c-fi";
+  if(t.indexOf("Cont")>-1&&t.indexOf("Teste")<0)return "c-co";
+  if(t.indexOf(" CC")>-1)return "c-cc";
+  if(t.indexOf("Integra")>-1||t.indexOf("Dedicada")>-1)return "c-int";
+  return "c-warn";
+}
+function chip(t){return '<span class="chip '+chipCls(t)+'">'+esc(t)+'</span>';}
+function deptCls(d){if(d==="DP")return "c-dp";if(d==="Fiscal")return "c-fi";if(d==="Contábil")return "c-co";if(d==="CC")return "c-cc";return "c-gray";}
+
+// ══ ABA 1: BASE DE TAGs ══
+function renderTags(){
+  var q=(document.getElementById("tagSearch").value||"").toLowerCase();
+  var order=["DP","Fiscal","Contábil","CC","Outra"];
+  var depts={};
+  order.forEach(function(d){depts[d]=[];});
+  for(var i=0;i<TAGS.length;i++){
+    var t=TAGS[i];
+    var ok=!q||(t.label||t.tag).toLowerCase().indexOf(q)>-1||t.coord.toLowerCase().indexOf(q)>-1||(t.gerente||"").toLowerCase().indexOf(q)>-1||t.supers.toLowerCase().indexOf(q)>-1;
+    if(ok){var b=depts[t.dept]||(depts["Outra"]);b.push(t);}
+  }
+  var colors={};
+  colors.DP=["var(--dp-lt)","var(--dp-accent)"];
+  colors.Fiscal=["var(--fi-lt)","var(--fi-accent)"];
+  colors["Contábil"]=["var(--co-lt)","var(--co-accent)"];
+  colors.CC=["var(--cc-lt)","var(--cc-accent)"];
+  colors.Outra=["var(--gray-05)","var(--gray-70)"];
+
+  var h='<div class="tags-list-wrap">';
+  for(var di=0;di<order.length;di++){
+    var dept=order[di];
+    var list=depts[dept];
+    if(!list||list.length===0)continue;
+    var co=colors[dept]||colors["Outra"];
+    var deptId="dept-"+dept.replace(/[^a-z]/gi,"");
+    h+='<div class="dept-header" onclick="toggleDept(\''+deptId+'\')">';
+    h+='<div class="dept-header-ico" style="background:'+co[0]+'">';
+    h+='<svg viewBox="0 0 24 24" fill="none" stroke="'+co[1]+'" stroke-width="1.8" width="12" height="12">';
+    h+='<path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>';
+    h+='<path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg></div>';
+    h+='<span class="dept-header-title">'+esc(dept)+'</span>';
+    h+='<span class="dept-header-cnt">'+list.length+' TAG'+(list.length>1?"s":"")+'</span>';
+    h+='<button class="btn btn-sm" onclick="event.stopPropagation();openAddTag(\''+dept+'\')">+ Add TAG</button>';
+    h+='<svg class="dept-header-arr open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>';
+    h+='</div>';
+    h+='<div class="dept-body" id="'+deptId+'">';
+    h+='<div class="tag-list-hdr"><span>TAG</span><span>Gerente</span><span>Coordena&ccedil;&atilde;o</span><span>Supervis&otilde;es</span><span style="text-align:right">A&ccedil;&otilde;es</span></div>';
+    for(var ri=0;ri<list.length;ri++){
+      var t=list[ri];
+      var supArr=t.supers?t.supers.split(",").map(function(s){return s.trim();}).filter(Boolean):[];
+      var supChips=supArr.length
+        ?supArr.map(function(s){return '<span class="super-tag">'+esc(s)+'</span>';}).join("")
+        :'<span style="font-size:11px;color:var(--gray-30)">Sem supervisores</span>';
+      h+='<div class="tag-row">';
+      h+='<div class="td-badge"><span class="chip '+deptCls(dept)+'" style="font-size:9px">'+esc(t.label||t.tag)+'</span></div>';
+      h+='<div class="td-coord"><span class="coord-disp" style="color:var(--gray-70);font-weight:500">'+esc(t.gerente||"—")+'</span></div>';
+      h+='<div class="td-coord"><span class="coord-disp">'+esc(t.coord||"—")+'</span></div>';
+      h+='<div class="td-supers"><div class="super-tags">'+supChips+'</div></div>';
+      h+='<div class="td-acts">';
+      h+='<button class="ra-btn" title="Editar" onclick="openEditTag('+t.id+')">';
+      h+='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg></button>';
+      h+='<button class="ra-btn del" title="Excluir" onclick="delTag('+t.id+')">';
+      h+='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/></svg></button>';
+      h+='</div></div>';
+    }
+    h+='</div>';
+  }
+  h+='</div>';
+  if(!h.match(/tag-row/)){h='<div class="empty" style="padding:40px"><strong>Nenhuma TAG encontrada</strong></div>';}
+  document.getElementById("tagsGrid").innerHTML=h;
+  document.getElementById("bTags").textContent=TAGS.length;
+}
+
+function toggleDept(id){
+  var el=document.getElementById(id);
+  var hdr=el.previousElementSibling;
+  var arr=hdr.querySelector(".dept-header-arr");
+  if(el.style.display==="none"){
+    el.style.display="flex";el.style.flexDirection="column";arr.classList.add("open");
+  } else {
+    el.style.display="none";arr.classList.remove("open");
+  }
+}
+
+// Supervisores no modal
+var _modalSupers=[];
+
+function syncModalSupers(){
+  var wrap=document.getElementById("fSupersWrap");
+  if(!wrap)return;
+  wrap.innerHTML=_modalSupers.map(function(s,i){
+    return '<span class="super-tag">'+esc(s)
+      +'<button class="super-tag-del" onclick="removeModalSuper('+i+')">&times;</button></span>';
+  }).join("");
+  document.getElementById("fSupers").value=_modalSupers.join(", ");
+}
+
+function addModalSuper(){
+  var inp=document.getElementById("fSuperInp");
+  var val=(inp.value||"").trim();
+  if(!val)return;
+  // Aceita múltiplos separados por vírgula
+  val.split(",").forEach(function(s){
+    s=s.trim();if(s)_modalSupers.push(s);
+  });
+  inp.value="";
+  syncModalSupers();
+  inp.focus();
+}
+
+function removeModalSuper(i){
+  _modalSupers.splice(i,1);
+  syncModalSupers();
+}
+
+function openEditTag(id){
+  var t=TAGS.find(function(x){return x.id===id;});if(!t)return;
+  document.getElementById("mTitle").textContent="Editar TAG";
+  document.getElementById("fTag").value=t.label||t.tag;
+  document.getElementById("fDept").value=t.dept;
+  document.getElementById("fCoord").value=t.coord;
+  document.getElementById("fGerente").value=t.gerente||"";
+  _modalSupers=t.supers?t.supers.split(",").map(function(s){return s.trim();}).filter(Boolean):[];
+  syncModalSupers();
+  var fSupersEl=document.getElementById("fSupers");
+  if(fSupersEl)fSupersEl.value=t.supers||"";
+  document.getElementById("fId").value=t.id;
+  document.getElementById("modalTag").classList.add("open");
+}
+
+function startEdit(id){openEditTag(id);}
+function saveInline(id){}
+function editCoord(id){openEditTag(id);}
+function saveCoord(id){}
+function addSuper(id){}
+function removeSuper(id,si){}
+
+function delTag(id){
+  var t=TAGS.find(function(x){return x.id===id;});if(!t)return;
+  if(!confirm('Excluir a TAG '+t.tag+'?'))return;
+  TAGS=TAGS.filter(function(x){return x.id!==id;});
+  renderTags();showToast("TAG excluida");
+}
+
+
+// ══ ABA 2: EMPRESAS ══
+var empPage=1;var PER=50;var filtEmp=[];
+
+function renderEmp(){
+  empPage=1;
+  var q=(document.getElementById("empSearch").value||"").toLowerCase();
+  var tf=document.getElementById("tagFil").value;
+  filtEmp=EMPRESAS.filter(function(e){if(e.tags.some(function(t){return isCCTag(t);}))return false;
+    var mq=!q||e.cnpj.toLowerCase().indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1||(e.grupo||"").toLowerCase().indexOf(q)>-1;
+    var mt=!tf||(tf==="__SEM__"?e.sem_tag:e.tags.indexOf(tf)>-1);
+    return mq&&mt;
+  });
+  document.getElementById("sTot").textContent=filtEmp.length.toLocaleString("pt-BR");
+  document.getElementById("sSem").textContent=filtEmp.filter(function(e){return e.sem_tag;}).length;
+  document.getElementById("sDP").textContent=filtEmp.filter(function(e){return e.tags.some(function(t){return t.indexOf("DP")>-1&&t.indexOf("Dedicada")<0;});}).length;
+  document.getElementById("sFI").textContent=filtEmp.filter(function(e){return e.tags.some(function(t){return t.indexOf("Fiscal")>-1;});}).length;
+  document.getElementById("sCO").textContent=filtEmp.filter(function(e){return e.tags.some(function(t){return t.indexOf("Cont")>-1;});}).length;
+  document.getElementById("sCC").textContent=filtEmp.filter(function(e){return e.tags.some(function(t){return t.indexOf(" CC")>-1;});}).length;
+  if(document.getElementById("viewMode").value==="grupo")drawGrupos();
+  else drawFlat();
+}
+
+function drawFlat(){
+  var start=(empPage-1)*PER,slice=filtEmp.slice(start,start+PER);
+  var html=slice.length?slice.map(function(e){
+    return '<div class="tr" style="grid-template-columns:140px 1fr 120px 1fr">'
+      +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+      +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div><div class="sub">'+esc(e.grupo)+'</div></div>'
+      +'<div class="td"><div class="sub">'+esc(e.regime)+'</div></div>'
+      +'<div class="td"><div class="chips">'+(e.sem_tag?'<span class="chip c-warn">&#9888; Sem TAG</span>':e.tags.map(chip).join(""))+'</div></div>'
+      +'</div>';
+  }).join(""):emptyHTML();
+  document.getElementById("empBody").innerHTML=html;
+  renderPager(filtEmp.length);
+}
+
+function drawGrupos(){
+  var byG={};
+  filtEmp.forEach(function(e){var g=e.grupo||"(Sem grupo)";if(!byG[g])byG[g]=[];byG[g].push(e);});
+  var keys=Object.keys(byG).sort();
+  var start=(empPage-1)*PER,slice=keys.slice(start,start+PER);
+  document.getElementById("empTH").innerHTML="";
+  document.getElementById("empTH").style.gridTemplateColumns="none";
+  var html=slice.map(function(g){
+    var emps=byG[g];
+    var inc=INCONSISTENCIAS.find(function(i){return i.grupo===g;});
+    var icHtml=inc?inc.issues.map(function(is){return '<span class="ic-chip '+(is.tipo.indexOf("PARCIAL")>-1?"ic-p":"ic-m")+'" title="'+esc(is.desc)+'">'+labelI(is.tipo)+'</span>';}).join(""):"";
+    var subRows=emps.map(function(e){
+      return '<div class="tr tr-sub" style="grid-template-columns:30px 140px 1fr 110px 1fr">'
+        +'<div class="td" style="color:var(--gray-30);padding-left:4px;font-size:10px">&#8627;</div>'
+        +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+        +'<div class="td"><div class="razao" title="'+esc(e.razao)+'" style="font-weight:500">'+esc(e.razao)+'</div></div>'
+        +'<div class="td"><div class="sub">'+esc(e.regime)+'</div></div>'
+        +'<div class="td"><div class="chips">'+(e.sem_tag?'<span class="chip c-warn">&#9888; Sem TAG</span>':e.tags.map(chip).join(""))+'</div></div>'
+        +'</div>';
+    }).join("");
+    return '<div>'
+      +'<div class="grp-hdr" onclick="toggleGrp(this)">'
+      +SVG_GRUPO
+      +'<span class="grp-nm">'+esc(g)+'</span>'
+      +'<span class="grp-cnt">'+emps.length+' CNPJ'+(emps.length>1?"s":"")+'</span>'
+      +(icHtml?'<div class="inc-iss">'+icHtml+'</div>':"")
+      +'<svg class="grp-arr open" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><polyline points="6 9 12 15 18 9"/></svg>'
+      +'</div>'
+      +'<div class="grp-det" style="display:block">'+subRows+'</div></div>';
+  }).join("");
+  document.getElementById("empBody").innerHTML=html||emptyHTML();
+  renderPager(keys.length);
+}
+
+function toggleGrp(el){
+  var det=el.nextElementSibling;
+  var arr=el.querySelector(".grp-arr");
+  if(det.style.display==="none"){det.style.display="block";arr.classList.add("open");}
+  else{det.style.display="none";arr.classList.remove("open");}
+}
+
+function renderPager(total){
+  var pages=Math.ceil(total/PER);
+  var start=(empPage-1)*PER+1,end=Math.min(empPage*PER,total);
+  var p1=Math.max(1,empPage-3),p2=Math.min(pages,p1+6);
+  var btns="";for(var p=p1;p<=p2;p++)btns+='<button class="pg-btn'+(p===empPage?" cur":"")+'" onclick="goPage('+p+')">'+p+'</button>';
+  var _pi='';
+  _pi+='<span class="pg-info">';
+  _pi+=start.toLocaleString("pt-BR")+"&ndash;"+end.toLocaleString("pt-BR")+" de "+total.toLocaleString("pt-BR");
+  _pi+='</span><div class="pg-btns">';
+  _pi+='<button class="pg-btn" onclick="goPage('+(empPage-1)+')" '+(empPage<=1?"disabled":"")+'>&#8249;</button>';
+  _pi+=btns;
+  _pi+='<button class="pg-btn" onclick="goPage('+(empPage+1)+')" '+(empPage>=pages?"disabled":"")+'>&#8250;</button></div>';
+  document.getElementById("empPager").innerHTML=_pi;
+}
+
+function goPage(p){
+  var total=document.getElementById("viewMode").value==="grupo"
+    ?Object.keys(filtEmp.reduce(function(a,e){a[e.grupo||"(Sem grupo)"]=1;return a},{})).length
+    :filtEmp.length;
+  var pages=Math.ceil(total/PER);
+  if(p<1||p>pages)return;empPage=p;
+  if(document.getElementById("viewMode").value==="grupo")drawGrupos();else drawFlat();
+}
+
+function exportEmp(){
+  var rows=[["CNPJ","Razao Social","Grupo","Regime","TAGs"]];
+  filtEmp.forEach(function(e){rows.push([e.cnpj,e.razao,e.grupo,e.regime,e.tags.join("; ")]);});
+  dlCSV(rows,"empresas_por_tag.csv");
+}
+
+// ══ ABA 3: AUDITORIA ══
+function renderAuditoria(){
+  // Contagem de empresas por TAG (apenas não-CC)
+  var tc={};
+  EMPRESAS.forEach(function(e){
+    e.tags.forEach(function(t){
+      if(!isCCTag(t)) tc[t]=(tc[t]||0)+1;
+    });
+  });
+
+  // Monta EMAP a partir do array TAGS (sempre atualizado)
+  var EMAP={};
+  TAGS.forEach(function(t){
+    // Mapeia "DP - 1" -> "Equipe DP 1", "Contábil - 2" -> "Equipe Contábil 2", etc.
+    var key=t.key||("Equipe "+t.tag.replace(" - "," "));
+    EMAP[key]={coord:t.coord,supers:t.supers,id:t.id,label:t.label||t.tag};
+  });
+
+  // Todas as TAGs únicas presentes nas empresas (excl CC)
+  var allTagsInUse=Object.keys(tc);
+
+  // TAGs sem coordenador: estão nas empresas mas NÃO têm entrada no EMAP com coord
+  var semCoord=allTagsInUse.filter(function(tag){
+    var b=EMAP[tag];
+    return !b||!b.coord||b.coord.trim()==="";
+  });
+
+  // TAGs com coordenador: estão nas empresas E têm coord no EMAP
+  var comCoord=allTagsInUse.filter(function(tag){
+    var b=EMAP[tag];
+    return b&&b.coord&&b.coord.trim()!=="";
+  });
+
+  var afet=semCoord.reduce(function(s,t){return s+(tc[t]||0);},0);
+  var total=allTagsInUse.length;
+
+  document.getElementById("bAud").textContent=semCoord.length;
+  document.getElementById("acGrid").innerHTML=
+    acCard("warn","var(--red-lt)","var(--red)",semCoord.length.toString(),
+      "TAGs sem Coordenador","Vinculacao pendente",
+      '<path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>'
+      +'<line x1="12" y1="9" x2="12" y2="13"/>'
+    )
+    +acCard("warn","var(--red-lt)","var(--red)",afet.toLocaleString("pt-BR"),
+      "Empresas Afetadas","Com TAG sem responsavel",
+      '<rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/>'
+    )
+    +acCard("ok","var(--green-lt)","var(--green-dark)",comCoord.length.toString(),
+      "TAGs com Coordenador","Base completa",
+      '<polyline points="20 6 9 17 4 12"/>'
+    )
+    +acCard("amb","var(--amber-lt)","var(--amber)",comCoord.length+"/"+total,
+      "Cobertura","TAGs com responsavel / Total",
+      '<circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/>'
+      +'<line x1="12" y1="16" x2="12.01" y2="16"/>'
+    );
+
+  // Seção vermelha: TAGs sem coordenador
+  document.getElementById("audWarn").innerHTML=semCoord.length
+    ? semCoord.map(function(tag){
+        return '<div class="arow"><div class="ad">'+chip(tag)+'</div>'
+          +'<div class="ad" style="font-weight:700">'+(tc[tag]||0)+'</div>'
+          +'<div class="ad"><span class="spill s-warn"><span class="dot d-warn"></span>Sem base</span></div>'
+          +'<div class="ad"><span class="miss">&#9888; Sem Coordenador</span></div>'
+          +'<div class="ad"><button class="btn btn-g btn-sm" data-tag="'+esc(tag)+'" onclick="goToAddTag(this.dataset.tag)">+ Vincular Coord.</button></div></div>';
+      }).join("")
+    : '<div class="empty" style="padding:20px"><strong style="color:var(--green-dark)">Todas as TAGs possuem coordenador!</strong></div>';
+
+  // Seção verde: TAGs com coordenador
+  document.getElementById("audOk").innerHTML=comCoord.sort().map(function(tag){
+    var b=EMAP[tag]||{};
+    var cnt=(tc[tag]||0).toLocaleString("pt-BR");
+    var hasSup=b.supers&&b.supers.trim();
+    return '<div class="arow"><div class="ad">'+chip(tag)+'</div>'
+      +'<div class="ad" style="font-weight:700">'+cnt+'</div>'
+      +'<div class="ad"><span class="spill s-ok"><span class="dot d-ok"></span>OK</span></div>'
+      +'<div class="ad" style="font-weight:600;font-size:11px">'+esc(b.coord||"—")+'</div>'
+      +'<div class="ad" style="font-size:10px;color:var(--gray-70)">'+(hasSup?esc(b.supers):'<span style="color:var(--amber)">Sem supervisores</span>')+'</div></div>';
+  }).join("");
+}
+
+function acCard(cls,ibg,ic,n,t,s,path){
+  return '<div class="ac '+cls+'"><div class="ac-top"><div class="ac-ico" style="background:'+ibg+'">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="'+ic+'" stroke-width="2" width="13" height="13">'+path+'</svg>'
+    +'</div><div><div class="ac-t">'+t+'</div><div class="ac-s">'+s+'</div></div></div>'
+    +'<div class="ac-n">'+n+'</div></div>';
+}
+
+function goToAddTag(tag){
+  setTab("tags",document.querySelector(".tb"));
+  openAddTag();
+  document.getElementById("fTag").value=tag.replace("Equipe ","");
+  showToast("Adicione o coordenador para: "+tag);
+}
+
+// ══ ABA 4: INCONSISTÊNCIAS ══
+function exportarInconsistencias(){
+  var q=(document.getElementById("incSearch").value||"").toLowerCase();
+  var tipo=document.getElementById("incTipo").value;
+  var INCONC=INCONSISTENCIAS.filter(function(i){
+    var ccIssue=i.issues.every(function(x){
+      var parts=x.desc.split(":");
+      if(parts.length<2)return false;
+      var equipes=parts[1].split(",").map(function(s){return s.trim();});
+      return equipes.every(function(eq){return isCCTag(eq);});
+    });
+    if(ccIssue)return false;
+    var allCC=i.cnpjs.every(function(c){
+      return c.tags.length===0||c.tags.every(function(t){return isCCTag(t);});
+    });
+    return !allCC;
+  });
+  var fil=INCONC.filter(function(i){
+    return (!q||i.grupo.toLowerCase().indexOf(q)>-1)&&(!tipo||i.issues.some(function(x){return x.tipo.indexOf(tipo)>-1;}));
+  });
+
+  if(!fil.length){showToast("Nenhuma inconsistência para exportar");return;}
+
+  var rows=[["Grupo","Qtd CNPJs no Grupo","Tipo de Inconsistência","Descrição","CNPJ","Razão Social","Regime","Status","TAGs do CNPJ"]];
+  fil.forEach(function(i){
+    var tipos=i.issues.map(function(is){return labelI(is.tipo);}).join(" | ");
+    var descs=i.issues.map(function(is){return is.desc;}).join(" | ");
+    i.cnpjs.forEach(function(c){
+      rows.push([
+        i.grupo,
+        i.n_cnpj,
+        tipos,
+        descs,
+        c.cnpj,
+        c.razao,
+        c.regime||"—",
+        c.esperado?"Esperado (regime justifica)":"Pendente real",
+        c.tags.length?c.tags.join(", "):"Sem TAG"
+      ]);
+    });
+  });
+
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:28},{wch:16},{wch:18},{wch:32},{wch:20},{wch:38},{wch:24},{wch:24},{wch:30}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Inconsistências");
+  var fname="inconsistencias_tags_"+new Date().toISOString().slice(0,10)+".xlsx";
+  XLSX.writeFile(wb,fname);
+  showToast("Excel exportado! ("+fil.length+" grupos, "+(rows.length-1)+" CNPJs)");
+}
+
+function renderInc(){
+  var q=(document.getElementById("incSearch").value||"").toLowerCase();
+  var tipo=document.getElementById("incTipo").value;
+  var INCONC=INCONSISTENCIAS.filter(function(i){
+  // Exclui grupos que têm QUALQUER cnpj com tag CC nos issues
+  var ccIssue=i.issues.every(function(x){
+    var parts=x.desc.split(":");
+    if(parts.length<2)return false;
+    var equipes=parts[1].split(",").map(function(s){return s.trim();});
+    return equipes.every(function(eq){return isCCTag(eq);});
+  });
+  if(ccIssue)return false;
+  // Exclui se todos os cnpjs do grupo têm só tags CC
+  var allCC=i.cnpjs.every(function(c){
+    return c.tags.length===0||c.tags.every(function(t){return isCCTag(t);});
+  });
+  return !allCC;
+});
+  var fil=INCONC.filter(function(i){
+    return (!q||i.grupo.toLowerCase().indexOf(q)>-1)&&(!tipo||i.issues.some(function(x){return x.tipo.indexOf(tipo)>-1;}));
+  });
+  var parcial=INCONC.filter(function(i){return i.issues.some(function(x){return x.tipo.indexOf("PARCIAL")>-1;});}).length;
+  var misto=INCONC.filter(function(i){return i.issues.some(function(x){return x.tipo.indexOf("MISTO")>-1;});}).length;
+  document.getElementById("icCards").innerHTML=
+    '<div class="icc"><span class="n" style="color:var(--amber)">'+INCONSISTENCIAS.length+'</span><div class="lbl">Grupos com inconsistencia</div></div>'
+    +'<div class="icc"><span class="n" style="color:var(--red)">'+parcial+'</span><div class="lbl">Servico parcial no grupo</div><div class="sub">DP/Fiscal/Contabil em parte dos CNPJs</div></div>'
+    +'<div class="icc"><span class="n" style="color:var(--amber)">'+misto+'</span><div class="lbl">Equipes mistas</div><div class="sub">CNPJs do mesmo grupo com equipes diferentes</div></div>';
+
+  var html=fil.map(function(i){
+    var icHtml=i.issues.map(function(is){return '<span class="ic-chip '+(is.tipo.indexOf("PARCIAL")>-1?"ic-p":"ic-m")+'" title="'+esc(is.desc)+'">'+labelI(is.tipo)+'</span>';}).join("");
+    var descHtml=i.issues.map(function(is){return '<div class="inc-iss-desc" style="color:'+(is.tipo.indexOf("PARCIAL")>-1?"var(--red)":"var(--amber)")+'">&#9888; '+esc(is.desc)+'</div>';}).join("");
+    var cnpjRows=i.cnpjs.map(function(c){
+      var regimeHtml=c.esperado
+        ?'<span style="font-size:9px;color:var(--green-dark)" title="Regime justifica ausência de serviço">&#10003; '+esc((c.regime||"").substring(0,16))+'</span>'
+        :'<span style="font-size:10px;color:var(--gray-50)" title="'+esc(c.regime||"")+'">'+esc((c.regime||"—").substring(0,18))+'</span>';
+      return '<div class="icl-row" style="'+(c.esperado?"opacity:.55":"")+'"><span class="icl-cnpj">'+esc(c.cnpj)+'</span>'
+        +'<span class="icl-r" title="'+esc(c.razao)+'">'+esc(c.razao)+'</span>'
+        +'<span>'+regimeHtml+'</span>'
+        +'<div class="chips">'+(c.tags.length?c.tags.map(chip).join(""):'<span class="chip c-warn">&#9888; Sem TAG</span>')+'</div></div>';
+    }).join("");
+    return '<div class="inc-row"><div class="inc-hdr" onclick="toggleInc(this)">'
+      +'<span class="inc-gname">'+esc(i.grupo)+'</span>'
+      +'<span class="inc-cnt">'+i.n_cnpj+' CNPJs</span>'
+      +'<div class="inc-iss">'+icHtml+'</div>'
+      +SVG_ARR
+      +'</div><div class="inc-det">'+descHtml+'<div class="icl" style="margin-top:8px">'
+      +'<div style="display:grid;grid-template-columns:145px 1fr 180px;gap:8px;padding:3px 8px;font-size:9px;font-weight:700;color:var(--gray-50);text-transform:uppercase">'
+      +'<span>CNPJ</span><span>Razao Social</span><span>TAGs</span></div>'
+      +cnpjRows+'</div></div></div>';
+  }).join("")||'<div class="empty" style="padding:32px"><strong>Nenhuma inconsistencia com esses filtros</strong></div>';
+  document.getElementById("incBody").innerHTML=html;
+}
+
+function toggleInc(el){
+  var det=el.nextElementSibling;
+  var arr=el.querySelector("svg:last-child");
+  if(det.classList.contains("open")){det.classList.remove("open");arr.style.transform="";}
+  else{det.classList.add("open");arr.style.transform="rotate(180deg)";}
+}
+
+function labelI(t){
+  if(t==="DP_PARCIAL")return "DP parcial";
+  if(t==="FI_PARCIAL")return "Fiscal parcial";
+  if(t==="CO_PARCIAL")return "Contabil parcial";
+  if(t==="DP_MISTO")return "DP misto";
+  if(t==="FI_MISTO")return "Fiscal misto";
+  if(t==="CO_MISTO")return "Contabil misto";
+  return t;
+}
+
+// ══ TABS ══
+function setTab(id,btn){
+  document.querySelectorAll(".tc").forEach(function(t){t.classList.remove("act");});
+  document.querySelectorAll(".tb").forEach(function(b){b.classList.remove("act");});
+  document.getElementById("tab-"+id).classList.add("act");
+  if(btn)btn.classList.add("act");
+}
+
+// ══ UTILS ══
+
+function openAddTag(dept){
+  document.getElementById("mTitle").textContent="Nova TAG";
+  document.getElementById("fTag").value="";
+  document.getElementById("fDept").value=dept||"";
+  document.getElementById("fCoord").value="";
+  _modalSupers=[];
+  syncModalSupers();
+  var fSupersEl=document.getElementById("fSupers");
+  if(fSupersEl)fSupersEl.value="";
+  document.getElementById("fGerente").value="";
+  document.getElementById("fId").value="";
+  document.getElementById("modalTag").classList.add("open");
+}
+
+function saveTag(){
+  var tag=document.getElementById("fTag").value.trim();
+  var dept=document.getElementById("fDept").value;
+  var coord=document.getElementById("fCoord").value.trim();
+  // Lê supervisores direto do campo de texto (fSupers) — fonte de verdade
+  var fSupersEl=document.getElementById("fSupers");
+  var supers=fSupersEl?fSupersEl.value.split(",").map(function(s){return s.trim();}).filter(Boolean).join(", "):_modalSupers.join(", ");
+  var gerente=document.getElementById("fGerente").value.trim();
+  var id=document.getElementById("fId").value;
+  if(!tag||!dept||!coord){alert("Preencha TAG, Departamento e Coordenacao.");return;}
+  if(id){
+    var idx=TAGS.findIndex(function(t){return t.id===parseInt(id);});
+    if(idx>=0)TAGS[idx]=Object.assign({},TAGS[idx],{label:tag,tag:tag,dept:dept,coord:coord,gerente:gerente,supers:supers});
+    showToast("TAG atualizada!");
+  } else {
+    TAGS.push({id:nextId++,tag:tag,label:tag,key:"Equipe "+tag,dept:dept,coord:coord,gerente:gerente,supers:supers});
+    showToast("TAG adicionada!");
+  }
+  saveTags();
+  closeModal();
+  renderTags();
+  if(EMPRESAS&&EMPRESAS.length>0)renderAuditoria();
+}
+
+function closeModal(){document.getElementById("modalTag").classList.remove("open");}
+document.getElementById("modalTag").addEventListener("click",function(e){if(e.target===this)closeModal();});
+function emptyHTML(){
+  var h = '<div class="empty">';
+  h += '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="34" height="34">';
+  h += '<circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>';
+  h += '<strong>Nenhum resultado</strong><span>Ajuste os filtros</span></div>';
+  return h;
+}
+function dlCSV(rows,name){
+  var csv=rows.map(function(r){
+    return r.map(function(v){
+      return '"'+String(v||"").replace(/"/g,'""')+'"';
+    }).join(",");
+  }).join("\n");
+  var blob=new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+  var a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  showToast("CSV exportado!");
+}
+var tTimer;
+function showToast(msg){
+  var t=document.getElementById("toast");
+  document.getElementById("toastMsg").textContent=msg;
+  t.classList.add("show");
+  clearTimeout(tTimer);
+  tTimer=setTimeout(function(){t.classList.remove("show");},2800);
+}
+
+
+function showUploadState() {
+  var tabs = ["empBody","audWarn","audOk","incBody","acGrid","icCards"];
+  // Aba empresas: mostra botão de upload
+  var empB = document.getElementById("empBody");
+  if(empB) empB.innerHTML = '<div class="empty" style="padding:48px 22px;gap:14px">'
+    +SVG_UPL1
+    +'<strong>Carregue a planilha de empresas</strong>'
+    +'<span style="font-size:11px;color:var(--gray-50)">Arquivo S3D_empresas xlsx com as colunas CNPJ, Razao Social, Grupo e Tags</span>'
+    +'<label class="btn btn-g" style="cursor:pointer;margin-top:4px">'
+    +SVG_UPL2
+    +' Selecionar xlsx'
+    +'<input type="file" accept=".xlsx,.xls" style="display:none" onchange="handleXlsx(this.files[0])"/>'
+    +'</label></div>';
+  // Aba auditoria e inc: avisa para carregar primeiro
+  ["audWarn","incBody"].forEach(function(id){
+    var el=document.getElementById(id);
+    if(el) el.innerHTML='<div class="empty" style="padding:24px"><span>Carregue a planilha na aba Empresas primeiro</span></div>';
+  });
+}
+
+function handleXlsx(file) {
+  if(!file) return;
+  if(typeof XLSX === "undefined") {
+    showToast("Aguarde — carregando biblioteca...");
+    var s = document.createElement("script");
+    s.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
+    s.onload = function(){ processXlsx(file); };
+    document.head.appendChild(s);
+  } else {
+    processXlsx(file);
+  }
+}
+
+function processXlsx(file) {
+  showToast("Processando...");
+  var reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      var wb = XLSX.read(e.target.result, {type:"binary"});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+      var hdr = rows[0].map(function(h){return String(h).trim();});
+      var ci = hdr.indexOf("CNPJ");
+      var ri = hdr.indexOf("Razão social");
+      var gi = hdr.indexOf("Grupo de Empresas");
+      var ei = hdr.indexOf("Regime");
+      var ti = hdr.indexOf("Tags");
+      if(ci<0||ti<0){showToast("Colunas CNPJ ou Tags nao encontradas");return;}
+      EMPRESAS = [];
+      for(var i=1;i<rows.length;i++){
+        var row=rows[i];
+        var cnpj=String(row[ci]||"").trim();
+        if(!cnpj)continue;
+        var tagsRaw=String(row[ti]||"").trim();
+        var allTags=tagsRaw?tagsRaw.split(",").map(function(t){return t.trim();}).filter(Boolean):[];
+        var equipes=allTags.filter(function(t){return t!=="CX"&&(t.indexOf("Equipe")>-1||t.indexOf("Integra")>-1);});
+        EMPRESAS.push({
+          cnpj:cnpj,
+          razao:String(row[ri]||"").trim().substring(0,65),
+          regime:String(row[ei]||"").trim().substring(0,30),
+          grupo:String(row[gi]||"").trim().substring(0,45),
+          tags:equipes,
+          sem_tag:equipes.length===0
+        });
+      }
+      // Calcula inconsistencias
+      calcInconsistencias();
+      showToast(EMPRESAS.length.toLocaleString("pt-BR")+" empresas carregadas!");
+      renderEmp();
+      renderAuditoria();
+      renderInc();
+      // ─── Sincroniza pro Hub (consulta /consulta/empresas) ───
+      syncEmpresasHub();
+    } catch(err) {
+      showToast("Erro ao ler arquivo: "+err.message);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+// ══ SINCRONIZAÇÃO COM O HUB ══
+var HUB_URL = "https://aqrnmxkdmqknzojvxaqt.supabase.co";
+var HUB_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImFxcm5teGtkbXFrbnpvanZ4YXF0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODE3NzYyMTAsImV4cCI6MjA5NzM1MjIxMH0.dFXzTcCcZgIvCbj_HW8hm-NrltD6gefwHpw51D2kXtw";
+
+async function syncEmpresasHub() {
+  await syncTagsHub();
+  if(!EMPRESAS || EMPRESAS.length === 0) {
+    showToast("TAGs sincronizadas. Carregue a planilha pra enviar empresas.");
+    return;
+  }
+  var BATCH = 200;
+  var syncStart = new Date().toISOString();
+  var total = 0;
+  showToast("Enviando "+EMPRESAS.length.toLocaleString("pt-BR")+" empresas pro Hub...");
+  try {
+    for(var i=0; i<EMPRESAS.length; i+=BATCH) {
+      var slice = EMPRESAS.slice(i, i+BATCH).map(function(e){
+        return {
+          cnpj: e.cnpj,
+          razao: e.razao || null,
+          regime: e.regime || null,
+          grupo: e.grupo || null,
+          tags: e.tags || [],
+          sem_tag: !!e.sem_tag,
+          atualizado_em: new Date().toISOString()
+        };
+      });
+      // upsert por PK (cnpj) — não precisa deletar tudo antes
+      var r = await fetch(HUB_URL+"/rest/v1/empresas_tags?on_conflict=cnpj", {
+        method: "POST",
+        headers: {
+          apikey: HUB_KEY,
+          Authorization: "Bearer "+HUB_KEY,
+          "Content-Type": "application/json",
+          Prefer: "resolution=merge-duplicates,return=minimal"
+        },
+        body: JSON.stringify(slice)
+      });
+      if(!r.ok) {
+        var txt = await r.text();
+        console.error("[hub-sync] lote "+i+" falhou", r.status, txt);
+        throw new Error("lote "+i+" → "+r.status+" "+txt.slice(0,200));
+      }
+      total += slice.length;
+      if(i % 1000 === 0) showToast("Enviando... "+total.toLocaleString("pt-BR")+"/"+EMPRESAS.length.toLocaleString("pt-BR"));
+    }
+    // remove empresas que sumiram do S3D (não foram tocadas nesse sync)
+    var delR = await fetch(HUB_URL+"/rest/v1/empresas_tags?atualizado_em=lt."+encodeURIComponent(syncStart), {
+      method: "DELETE",
+      headers: { apikey: HUB_KEY, Authorization: "Bearer "+HUB_KEY, Prefer: "return=minimal" }
+    });
+    if(!delR.ok) console.warn("[hub-sync] limpeza falhou:", delR.status);
+    showToast("✓ "+total.toLocaleString("pt-BR")+" empresas sincronizadas no Hub");
+  } catch(err) {
+    console.error("[hub-sync] erro", err);
+    showToast("Erro ao sincronizar: "+err.message);
+    alert("Erro ao sincronizar com o Hub:\n\n"+err.message+"\n\nVeja o console pra detalhes.");
+  }
+}
+
+async function syncTagsHub() {
+  if(!TAGS || TAGS.length === 0) return;
+  try {
+    await fetch(HUB_URL+"/rest/v1/tags_base?key=neq.__noop__", {
+      method: "DELETE",
+      headers: { apikey: HUB_KEY, Authorization: "Bearer "+HUB_KEY }
+    });
+    var rows = TAGS.map(function(t, i){
+      var supers = t.supers
+        ? t.supers.split(",").map(function(s){return s.trim();}).filter(Boolean)
+        : [];
+      return {
+        key: t.key,
+        label: t.label || t.key,
+        dept: t.dept || "Outra",
+        coord: t.coord || null,
+        gerente: t.gerente || null,
+        supers: supers,
+        ordem: typeof t.id === "number" ? t.id : i,
+        atualizado_em: new Date().toISOString()
+      };
+    });
+    var r = await fetch(HUB_URL+"/rest/v1/tags_base", {
+      method: "POST",
+      headers: {
+        apikey: HUB_KEY,
+        Authorization: "Bearer "+HUB_KEY,
+        "Content-Type": "application/json",
+        Prefer: "resolution=merge-duplicates,return=minimal"
+      },
+      body: JSON.stringify(rows)
+    });
+    if(r.ok) showToast("✓ "+rows.length+" TAGs sincronizadas no Hub");
+  } catch(e) { /* silencioso */ }
+}
+
+// Regimes que justificam ausência de serviços (não são inconsistência real)
+var REGIMES_ESPERADOS=["Domésticas","CEI","CAEPF","Produtor Rural","MEI","Micro Empreendedor","ImuneIsenta"];
+function isRegimeEsperado(regime){
+  if(!regime)return false;
+  return REGIMES_ESPERADOS.some(function(r){return regime.indexOf(r)>-1;});
+}
+
+function calcInconsistencias() {
+  var byG = {};
+  EMPRESAS.forEach(function(e){
+    var g=e.grupo||"(Sem grupo)";
+    if(!byG[g])byG[g]=[];
+    byG[g].push(e);
+  });
+  INCONSISTENCIAS = [];
+  Object.keys(byG).forEach(function(g){
+    var emps=byG[g];
+    if(emps.length<2)return;
+    var dp=emps.map(function(e){return e.tags.filter(function(t){return t.indexOf("DP")>-1&&t.indexOf("Dedicada")<0;});});
+    var fi=emps.map(function(e){return e.tags.filter(function(t){return t.indexOf("Fiscal")>-1&&t.indexOf("Teste")<0;});});
+    var co=emps.map(function(e){return e.tags.filter(function(t){return t.indexOf("Cont")>-1&&t.indexOf("Teste")<0;});});
+    var issues=[];
+    var hdp=dp.map(function(x){return x.length>0;});
+    var hfi=fi.map(function(x){return x.length>0;});
+    var hco=co.map(function(x){return x.length>0;});
+    // Considera "esperado" (não conta como faltante) se regime justifica ausência
+    var espRegime=emps.map(function(e){return isRegimeEsperado(e.regime);});
+
+    var dpFaltam=hdp.filter(function(h,idx){return !h&&!espRegime[idx];}).length;
+    var fiFaltam=hfi.filter(function(h,idx){return !h&&!espRegime[idx];}).length;
+    var coFaltam=hco.filter(function(h,idx){return !h&&!espRegime[idx];}).length;
+    var dpTem=hdp.filter(Boolean).length, fiTem=hfi.filter(Boolean).length, coTem=hco.filter(Boolean).length;
+
+    if(dpTem>0&&dpFaltam>0) issues.push({tipo:"DP_PARCIAL",desc:"DP em "+dpTem+"/"+emps.length+" CNPJs ("+dpFaltam+" pendente(s) real)"});
+    if(fiTem>0&&fiFaltam>0) issues.push({tipo:"FI_PARCIAL",desc:"Fiscal em "+fiTem+"/"+emps.length+" CNPJs ("+fiFaltam+" pendente(s) real)"});
+    if(coTem>0&&coFaltam>0) issues.push({tipo:"CO_PARCIAL",desc:"Contabil em "+coTem+"/"+emps.length+" CNPJs ("+coFaltam+" pendente(s) real)"});
+
+    var udp=[...new Set(dp.flat())].sort(); var ufi=[...new Set(fi.flat())].sort(); var uco=[...new Set(co.flat())].sort();
+    var sdp=[...new Set(dp.map(function(x){return x.sort().join("|");}))].filter(Boolean);
+    var sfi=[...new Set(fi.map(function(x){return x.sort().join("|");}))].filter(Boolean);
+    var sco=[...new Set(co.map(function(x){return x.sort().join("|");}))].filter(Boolean);
+    if(sdp.length>1) issues.push({tipo:"DP_MISTO",desc:"Equipes DP mistas: "+udp.join(", ")});
+    if(sfi.length>1) issues.push({tipo:"FI_MISTO",desc:"Equipes Fiscal mistas: "+ufi.join(", ")});
+    if(sco.length>1) issues.push({tipo:"CO_MISTO",desc:"Equipes Contabil mistas: "+uco.join(", ")});
+    if(issues.length>0){
+      INCONSISTENCIAS.push({grupo:g,n_cnpj:emps.length,issues:issues,
+        cnpjs:emps.map(function(e){return {cnpj:e.cnpj,razao:e.razao,tags:e.tags,regime:e.regime,esperado:isRegimeEsperado(e.regime)};})});
+    }
+  });
+  document.getElementById("bInc").textContent=INCONSISTENCIAS.length;
+}
+
+
+
+// ══ ABA CC: CONSTRUÇÃO CIVIL ══
+var ccPage=1; var filtCC=[];
+function renderCC(){
+  ccPage=1;
+  var q=(document.getElementById("ccSearch").value||"").toLowerCase();
+  var tf=document.getElementById("ccTagFil").value;
+  filtCC=EMPRESAS.filter(function(e){
+    var hasCC=e.tags.some(function(t){return isCCTag(t);});
+    if(!hasCC)return false;
+    var mq=!q||e.cnpj.toLowerCase().indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1||(e.grupo||"").toLowerCase().indexOf(q)>-1;
+    var mt=!tf||e.tags.indexOf(tf)>-1;
+    return mq&&mt;
+  });
+  document.getElementById("sCCTot").textContent=filtCC.length.toLocaleString("pt-BR");
+  document.getElementById("sCC1").textContent=filtCC.filter(function(e){return e.tags.indexOf("Equipe CC 1")>-1;}).length;
+  document.getElementById("sCC2").textContent=filtCC.filter(function(e){return e.tags.indexOf("Equipe CC 2")>-1;}).length;
+  document.getElementById("sCC4").textContent=filtCC.filter(function(e){return e.tags.indexOf("Equipe CC 4")>-1;}).length;
+  document.getElementById("sCCDP4").textContent=filtCC.filter(function(e){return e.tags.indexOf("Equipe DP 4")>-1;}).length;
+  document.getElementById("sCCCan").textContent=filtCC.filter(function(e){return e.tags.indexOf("Equipe Dedicada Canopus")>-1;}).length;
+  
+  document.getElementById("bCC").textContent=filtCC.length;
+  drawCCFlat();
+}
+function drawCCFlat(){
+  var start=(ccPage-1)*50,slice=filtCC.slice(start,start+50);
+  document.getElementById("ccBody").innerHTML=slice.length?slice.map(function(e){
+    return '<div class="tr" style="grid-template-columns:140px 1fr 120px 1fr">'      +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'      +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div><div class="sub">'+esc(e.grupo)+'</div></div>'      +'<div class="td"><div class="sub">'+esc(e.regime)+'</div></div>'      +'<div class="td"><div class="chips">'+e.tags.map(chip).join("")+'</div></div></div>';
+  }).join(""):emptyHTML();
+  var total=filtCC.length,pages=Math.ceil(total/50);
+  var start2=(ccPage-1)*50+1,end2=Math.min(ccPage*50,total);
+  var btns="";
+  for(var p=Math.max(1,ccPage-3);p<=Math.min(pages,ccPage+3);p++)
+    btns+='<button class="pg-btn'+(p===ccPage?" cur":"")+'" onclick="goCCPage('+p+')">'+p+'</button>';
+  var pi='<span class="pg-info">'+start2.toLocaleString("pt-BR")+"&ndash;"+end2.toLocaleString("pt-BR")+" de "+total.toLocaleString("pt-BR")+'</span>';
+  pi+='<div class="pg-btns"><button class="pg-btn" onclick="goCCPage('+(ccPage-1)+')" '+(ccPage<=1?"disabled":"")+'>&#8249;</button>'+btns;
+  pi+='<button class="pg-btn" onclick="goCCPage('+(ccPage+1)+')" '+(ccPage>=pages?"disabled":"")+'>&#8250;</button></div>';
+  document.getElementById("ccPager").innerHTML=pi;
+}
+function goCCPage(p){var pages=Math.ceil(filtCC.length/50);if(p<1||p>pages)return;ccPage=p;drawCCFlat();}
+function exportCC(){
+  var rows=[["CNPJ","Razao Social","Grupo","Regime","TAGs"]];
+  filtCC.forEach(function(e){rows.push([e.cnpj,e.razao,e.grupo,e.regime,e.tags.join("; ")]);});
+  dlCSV(rows,"cc_construcao_civil.csv");
+}
+
+// ── Filtra CC das análises principais
+function empSemCC(e){return !e.tags.some(function(t){return isCCTag(t);});}
+function incSemCC(i){return !CC_TAGS.some(function(t){return i.grupo && false;}) && 
+  !i.issues.every(function(x){return false;}) &&
+  i.cnpjs.every(function(c){return !c.tags.every(function(t){return isCCTag(t);});});}
+
+// INIT
+loadTags();
+renderTags();
+// Dados carregados via upload na aba Empresas
+showUploadState();
+// ══ VÍNCULO POR GRUPO ══
+var VINC_KEY="acessorias_vinculo_grupo_v1";
+var BASE_VINC={}; // {grupo: {dp:bool, fiscal:bool, contabil:bool}}
+var vincPage=1, filtVinc=[];
+
+function loadBaseVinc(){
+  try{
+    var raw=localStorage.getItem(VINC_KEY);
+    BASE_VINC=raw?JSON.parse(raw):{};
+  }catch(e){BASE_VINC={};}
+}
+function saveBaseVinc(){
+  try{localStorage.setItem(VINC_KEY,JSON.stringify(BASE_VINC));}catch(e){}
+}
+loadBaseVinc();
+
+function servicosAtuais(emps){
+  var dp=emps.some(function(e){return e.tags.some(function(t){return t.indexOf("DP")>-1&&t.indexOf("Dedicada")<0;});});
+  var fiscal=emps.some(function(e){return e.tags.some(function(t){return t.indexOf("Fiscal")>-1&&t.indexOf("Teste")<0;});});
+  var contabil=emps.some(function(e){return e.tags.some(function(t){return t.indexOf("Cont")>-1&&t.indexOf("Teste")<0;});});
+  return {dp:dp,fiscal:fiscal,contabil:contabil};
+}
+
+function isGrupoCC(emps){
+  return emps.every(function(e){return e.tags.length===0||e.tags.every(function(t){return isCCTag(t)||t==="CX";});});
+}
+
+function gerarBaseVinculo(){
+  if(!EMPRESAS||!EMPRESAS.length){showToast("Carregue a planilha primeiro");return;}
+  var byG={};
+  EMPRESAS.forEach(function(e){
+    var g=e.grupo||"(Sem grupo)";
+    if(!byG[g])byG[g]=[];
+    byG[g].push(e);
+  });
+  var count=0;
+  Object.keys(byG).forEach(function(g){
+    if(isGrupoCC(byG[g]))return; // desconsidera grupos de Construção Civil
+    var atual=servicosAtuais(byG[g]);
+    BASE_VINC[g]=atual;
+    count++;
+  });
+  saveBaseVinc();
+  renderVinculo();
+  showToast("Base gerada para "+count.toLocaleString("pt-BR")+" grupos!");
+}
+
+function renderVinculo(){
+  vincPage=1;
+  if(!EMPRESAS||!EMPRESAS.length){
+    document.getElementById("vincCards").innerHTML="";
+    document.getElementById("vincBody").innerHTML='<div class="empty" style="padding:32px"><strong>Carregue a planilha na aba \'Empresas por Grupo\' primeiro</strong></div>';
+    document.getElementById("vincPager").innerHTML="";
+    return;
+  }
+  var byG={};
+  EMPRESAS.forEach(function(e){
+    var g=e.grupo||"(Sem grupo)";
+    if(!byG[g])byG[g]=[];
+    byG[g].push(e);
+  });
+
+  var grupos=Object.keys(byG).filter(function(g){return !isGrupoCC(byG[g]);}).map(function(g){
+    var emps=byG[g];
+    var atual=servicosAtuais(emps);
+    var base=BASE_VINC[g];
+    var temBase=!!base;
+    var div=[];
+    if(temBase){
+      if(base.dp!==atual.dp)div.push("DP");
+      if(base.fiscal!==atual.fiscal)div.push("Fiscal");
+      if(base.contabil!==atual.contabil)div.push("Contábil");
+    }
+    return {grupo:g,n_cnpj:emps.length,atual:atual,base:base,temBase:temBase,divergente:div.length>0,divCampos:div};
+  });
+
+  var divCount=grupos.filter(function(g){return g.divergente;}).length;
+  var okCount=grupos.filter(function(g){return g.temBase&&!g.divergente;}).length;
+  var semBaseCount=grupos.filter(function(g){return !g.temBase;}).length;
+
+  document.getElementById("bVinc").textContent=divCount;
+  document.getElementById("vincCards").innerHTML=
+    '<div class="icc"><span class="n" style="color:var(--charcoal)">'+grupos.length.toLocaleString("pt-BR")+'</span><div class="lbl">Total de grupos</div></div>'
+    +'<div class="icc"><span class="n" style="color:var(--red)">'+divCount.toLocaleString("pt-BR")+'</span><div class="lbl">Com diverg&#234;ncia</div><div class="sub">Mudou desde a base salva</div></div>'
+    +'<div class="icc"><span class="n" style="color:var(--green-dark)">'+okCount.toLocaleString("pt-BR")+'</span><div class="lbl">Conferindo</div></div>'
+    +'<div class="icc"><span class="n" style="color:var(--gray-50)">'+semBaseCount.toLocaleString("pt-BR")+'</span><div class="lbl">Sem base cadastrada</div><div class="sub">Clique em "Gerar base"</div></div>';
+
+  var q=(document.getElementById("vincSearch").value||"").toLowerCase();
+  var filtro=document.getElementById("vincFiltro").value;
+  var fil=grupos.filter(function(g){
+    if(q&&g.grupo.toLowerCase().indexOf(q)<0)return false;
+    var a=g.atual;
+    var nServ=(a.dp?1:0)+(a.fiscal?1:0)+(a.contabil?1:0);
+    if(filtro==="divergente")return g.divergente;
+    if(filtro==="ok")return g.temBase&&!g.divergente;
+    if(filtro==="sem_base")return !g.temBase;
+    if(filtro==="parcial")return nServ===1||nServ===2;
+    if(filtro==="geral")return a.dp&&a.fiscal&&a.contabil;
+    if(filtro==="so_contabil")return a.contabil&&!a.dp&&!a.fiscal;
+    if(filtro==="so_fiscal")return a.fiscal&&!a.dp&&!a.contabil;
+    if(filtro==="so_dp")return a.dp&&!a.fiscal&&!a.contabil;
+    return true;
+  });
+  fil.sort(function(a,b){
+    if(a.divergente!==b.divergente)return a.divergente?-1:1;
+    return a.grupo.localeCompare(b.grupo);
+  });
+  filtVinc=fil;
+  drawVinc();
+}
+
+function checkIco(val,divergente){
+  if(divergente){
+    return '<span class="chip" style="background:var(--red-lt);color:var(--red);font-weight:700">'+(val?"&#10003; Sim":"&#10007; N&#227;o")+'</span>';
+  }
+  if(val){
+    return '<span class="chip" style="background:var(--green-lt);color:var(--green-dark);font-weight:700">&#10003;</span>';
+  }
+  return '<span style="color:var(--gray-30);font-size:13px">&#8212;</span>';
+}
+
+function rowVinc(g){
+  var statusHtml;
+  if(!g.temBase){
+    statusHtml='<span class="chip" style="background:var(--gray-10);color:var(--gray-70)">Sem base</span>';
+  }else if(g.divergente){
+    statusHtml='<span class="chip c-warn">&#9888; '+g.divCampos.join(", ")+'</span>';
+  }else{
+    statusHtml='<span class="chip" style="background:var(--green-lt);color:var(--green-dark)">Conferindo</span>';
+  }
+  return '<div class="tr" style="grid-template-columns:1fr 90px 90px 90px 110px 140px;display:grid;padding:0 14px;border-bottom:1px solid var(--border);align-items:center;min-height:42px">'
+    +'<div class="td" style="padding:8px 7px;font-size:12px;font-weight:600;color:var(--charcoal)">'+esc(g.grupo)+'</div>'
+    +'<div class="td" style="text-align:center">'+checkIco(g.atual.dp,g.temBase&&g.base.dp!==g.atual.dp)+'</div>'
+    +'<div class="td" style="text-align:center">'+checkIco(g.atual.fiscal,g.temBase&&g.base.fiscal!==g.atual.fiscal)+'</div>'
+    +'<div class="td" style="text-align:center">'+checkIco(g.atual.contabil,g.temBase&&g.base.contabil!==g.atual.contabil)+'</div>'
+    +'<div class="td" style="text-align:center;font-size:11px;color:var(--gray-50)">'+g.n_cnpj+'</div>'
+    +'<div class="td" style="padding:8px 7px">'+statusHtml+'</div>'
+    +'</div>';
+}
+
+function drawVinc(){
+  var PER=50,total=filtVinc.length,slice=filtVinc.slice((vincPage-1)*PER,vincPage*PER);
+  var body=document.getElementById("vincBody"),pager=document.getElementById("vincPager");
+  if(!slice.length){
+    body.innerHTML='<div class="empty" style="padding:32px"><strong>Nenhum grupo encontrado</strong></div>';
+    pager.innerHTML="";return;
+  }
+  body.innerHTML=slice.map(rowVinc).join("");
+  var pt=Math.ceil(total/PER),s=(vincPage-1)*PER+1,en=Math.min(vincPage*PER,total);
+  var btns="";
+  for(var pp=Math.max(1,vincPage-3);pp<=Math.min(pt,vincPage+3);pp++)
+    btns+='<button class="pg-btn'+(pp===vincPage?" cur":"")+'" onclick="goVincPage('+pp+')">'+pp+'</button>';
+  pager.innerHTML='<span class="pg-info">'+s.toLocaleString("pt-BR")+"&ndash;"+en.toLocaleString("pt-BR")+" de "+total.toLocaleString("pt-BR")+'</span>'
+    +'<div class="pg-btns"><button class="pg-btn" onclick="goVincPage('+(vincPage-1)+')" '+(vincPage<=1?"disabled":"")+'>&#8249;</button>'+btns+'<button class="pg-btn" onclick="goVincPage('+(vincPage+1)+')" '+(vincPage>=pt?"disabled":"")+'>&#8250;</button></div>';
+}
+function goVincPage(p){
+  var pt=Math.ceil(filtVinc.length/50);
+  if(p<1||p>pt)return;
+  vincPage=p;drawVinc();
+}
+
+function exportarVinculo(){
+  if(!filtVinc.length){showToast("Nada para exportar");return;}
+  var rows=[["Grupo","DP Base","DP Atual","Fiscal Base","Fiscal Atual","Contábil Base","Contábil Atual","CNPJs","Status"]];
+  filtVinc.forEach(function(g){
+    rows.push([
+      g.grupo,
+      g.temBase?(g.base.dp?"Sim":"Não"):"—",
+      g.atual.dp?"Sim":"Não",
+      g.temBase?(g.base.fiscal?"Sim":"Não"):"—",
+      g.atual.fiscal?"Sim":"Não",
+      g.temBase?(g.base.contabil?"Sim":"Não"):"—",
+      g.atual.contabil?"Sim":"Não",
+      g.n_cnpj,
+      !g.temBase?"Sem base":(g.divergente?"Divergente: "+g.divCampos.join(", "):"Conferindo")
+    ]);
+  });
+  var ws=XLSX.utils.aoa_to_sheet(rows);
+  ws['!cols']=[{wch:30},{wch:10},{wch:10},{wch:10},{wch:10},{wch:12},{wch:12},{wch:8},{wch:28}];
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,"Vínculo por Grupo");
+  XLSX.writeFile(wb,"vinculo_grupo_"+new Date().toISOString().slice(0,10)+".xlsx");
+  showToast("Excel exportado!");
+}
+
+</script>
+</body>
+</html>
