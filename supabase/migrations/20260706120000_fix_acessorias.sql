@@ -1,0 +1,1 @@
+ALTER TABLE public.acessorias_obrigacoes DROP CONSTRAINT IF EXISTS acessorias_obrigacoes_nome_key;
