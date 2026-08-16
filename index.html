@@ -1307,9 +1307,9 @@ async function cruzSincronizar(cnpj, comp){
   var res = document.getElementById('crz-result');
   res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">Sincronizando com Acessórias...</div>';
   try {
-    var resp = await fetch('/.netlify/functions/sync-acessorias', {
+    var resp = await fetch(SUPA_URL+'/functions/v1/sync-acessorias', {
       method: 'POST',
-      headers:{ 'Content-Type':'application/json' },
+      headers:{ 'Content-Type':'application/json', 'Authorization':'Bearer '+SUPA_KEY, 'apikey':SUPA_KEY },
       body: JSON.stringify({ cnpj: cnpj, competencia: comp })
     });
     var data = await resp.json();
