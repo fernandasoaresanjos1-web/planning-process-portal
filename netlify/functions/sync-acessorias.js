@@ -9,6 +9,8 @@ const CORS = {
   "Access-Control-Allow-Methods": "GET,POST,OPTIONS"
 };
 
+const sleep = ms => new Promise(r => setTimeout(r, ms));
+
 export const handler = async function(event) {
   if(event.httpMethod === "OPTIONS") return { statusCode:200, headers:CORS, body:"" };
 
@@ -25,22 +27,35 @@ export const handler = async function(event) {
     console.log(`Sync | comp=${compParam} | cnpj=${cnpjFiltro||'todos'}`);
 
     const logId = await dbInsertLog(compParam);
-    const empresas = cnpjFiltro ? [{ cnpj: cnpjFiltro }] : await buscarEmpresas();
+
+    // Se CNPJ específico, busca só ele — sem rate limit
+    const empresas = cnpjFiltro
+      ? [{ cnpj: cnpjFiltro }]
+      : await buscarEmpresas();
+
     console.log(`Empresas: ${empresas.length}`);
 
     let totalEntregas = 0;
     const erros = [];
 
-    for(const emp of empresas) {
+    for(let i = 0; i < empresas.length; i++) {
+      const emp = empresas[i];
       try {
         const entregas = await buscarEntregas(emp.cnpj, dtIni, dtFim);
         if(entregas.length > 0) {
           await salvarEntregas(emp.cnpj, compParam, entregas);
           totalEntregas += entregas.length;
         }
+        // Delay entre empresas para respeitar rate limit (100 req/min)
+        // 1 empresa = ~2 requests (list + deliveries), então aguarda 1.5s
+        if(!cnpjFiltro && i < empresas.length - 1) {
+          await sleep(1500);
+        }
       } catch(err) {
         console.error(`Erro ${emp.cnpj}:`, err.message);
         erros.push({ cnpj: emp.cnpj, erro: err.message });
+        // Se 429, aguarda mais
+        if(err.message.includes('429')) await sleep(10000);
       }
     }
 
@@ -70,12 +85,14 @@ async function buscarEmpresas() {
     const res = await fetch(`${ACESS_API}/companies/ListAll?ativa=S&Pagina=${pagina}`, {
       headers:{ Authorization:`Bearer ${ACESS_TOKEN}` }
     });
+    if(res.status === 429) { await sleep(10000); continue; }
     if(!res.ok) throw new Error(`Empresas HTTP ${res.status}`);
     const data = await res.json();
     if(!Array.isArray(data) || data.length === 0) break;
     todas.push(...data.map(e => ({ cnpj: e.Identificador })));
     if(data.length < 20) break;
     pagina++;
+    await sleep(700); // delay entre páginas
   }
   return todas;
 }
@@ -84,6 +101,7 @@ async function buscarEntregas(cnpj, dtIni, dtFim) {
   const url = `${ACESS_API}/deliveries/${encodeURIComponent(cnpj)}?DtInitial=${dtIni}&DtFinal=${dtFim}&attachments&config`;
   const res  = await fetch(url, { headers:{ Authorization:`Bearer ${ACESS_TOKEN}` } });
   if(res.status === 204) return [];
+  if(res.status === 429) throw new Error("429 rate limit");
   if(!res.ok) throw new Error(`Entregas HTTP ${res.status}`);
   const data = await res.json();
   const emp  = Array.isArray(data) ? data[0] : data;
