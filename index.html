@@ -129,7 +129,17 @@ select option{background:#0a0d12}
 .sys-btn.active{border-color:#38bdf8;background:rgba(56,189,248,0.14);color:#7dd3fc}
 .mod-btn{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:10px;color:#f1f5f9;font-size:13px;font-weight:600;text-align:left;cursor:pointer;padding:13px 16px;width:100%;font-family:inherit;transition:all 0.18s;display:flex;align-items:center;gap:11px}
 .mod-btn:hover{background:rgba(255,255,255,0.07);border-color:rgba(0,230,118,0.3);transform:translateX(3px)}
+
+/* === Abas Empresas === */
+.etab-bar{display:flex;gap:4px;margin-bottom:14px;border-bottom:1px solid #1e293b;padding-bottom:0}
+.etab-btn{padding:7px 16px;font-size:12px;font-weight:600;border-radius:6px 6px 0 0;cursor:pointer;border:none;background:transparent;color:#64748b;position:relative;bottom:-1px;border-bottom:2px solid transparent;transition:color .15s}
+.etab-btn.on{color:#f1f5f9;border-bottom:2px solid #00bf63;background:rgba(0,191,99,0.07)}
+.etab-btn:hover:not(.on){color:#94a3b8}
+.eact-bar{display:flex;gap:8px;margin-bottom:10px;justify-content:flex-end}
+.eact-btn{padding:5px 12px;font-size:11px;font-weight:600;border-radius:6px;cursor:pointer;border:1px solid;transition:opacity .15s}
+.eact-btn:hover{opacity:.8}
 </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </head>
 <body>
 
@@ -761,19 +771,40 @@ function openModulo(k){
 
 /* ===== MÓDULOS ===== */
 function rEmpresas(){
-  var html='<div class="kpi" style="margin-bottom:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'+
+  var kpiHtml='<div style="margin-bottom:16px;display:grid;grid-template-columns:repeat(3,1fr);gap:12px">'+
     '<div class="kpi" style="border-top:3px solid #38bdf8"><div class="kpi-l">Total</div><div class="kpi-v" id="emp-total" style="color:#38bdf8">—</div><div class="kpi-s">cadastradas</div></div>'+
     '<div class="kpi" style="border-top:3px solid #4ade80"><div class="kpi-l">Ativas</div><div class="kpi-v" id="emp-ativas" style="color:#4ade80">—</div></div>'+
     '<div class="kpi" style="border-top:3px solid #f43f5e"><div class="kpi-l">Inativas</div><div class="kpi-v" id="emp-inativas" style="color:#f43f5e">—</div></div>'+
-  '</div>'+
-  '<div style="display:flex;gap:8px;margin-bottom:14px">'+
-  '<input id="es" oninput="fE()" placeholder="Buscar nome, CNPJ ou grupo..." style="flex:1">'+
-  '<select id="euf" onchange="fE()" style="min-width:80px"><option value="">UF</option></select>'+
-  '<select id="ereg" onchange="fE()" style="min-width:130px"><option value="">Regime</option></select>'+
-  '</div>'+
-  '<div class="panel"><table><thead><tr><th>CNPJ</th><th>Empresa</th><th>Grupo</th><th>TAG</th><th>Regime</th><th>UF</th><th>Status</th></tr></thead><tbody id="etb"><tr><td colspan="7" style="text-align:center;padding:24px;color:#475569">Carregando...</td></tr></tbody></table></div>';
+  '</div>';
 
-  // carrega do banco
+  var filtersHtml='<div style="display:flex;gap:8px;margin-bottom:12px">'+
+    '<input id="es" oninput="fE()" placeholder="Buscar nome, CNPJ ou grupo..." style="flex:1">'+
+    '<select id="euf" onchange="fE()" style="min-width:80px"><option value="">UF</option></select>'+
+    '<select id="ereg" onchange="fE()" style="min-width:140px"><option value="">Regime</option></select>'+
+    '<select id="etag" onchange="fE()" style="min-width:150px"><option value="">TAG</option></select>'+
+  '</div>';
+
+  var tabsHtml='<div class="etab-bar">'+
+    '<button class="etab-btn on" onclick="setETab(\'geral\',this)">Geral</button>'+
+    '<button class="etab-btn" onclick="setETab(\'fiscal\',this)">Fiscal</button>'+
+    '<button class="etab-btn" onclick="setETab(\'contabil\',this)">Contábil</button>'+
+    '<button class="etab-btn" onclick="setETab(\'folha\',this)">Folha / DP</button>'+
+  '</div>';
+
+  var actBar='<div class="eact-bar">'+
+    '<label class="eact-btn imp" style="cursor:pointer">'+
+      '&#8593; Importar'+
+      '<input type="file" id="e-imp-file" accept=".xlsx,.xls" style="display:none" onchange="eImportar(this)">'+
+    '</label>'+
+    '<button class="eact-btn exp" onclick="eExportar()">&#8595; Exportar Excel</button>'+
+  '</div>';
+
+  // tabela dinâmica — começa em Geral
+  var tblHtml='<div class="panel" id="emp-panel">'+actBar+'<table id="emp-table"><thead id="emp-thead"></thead><tbody id="etb"><tr><td colspan="7" style="text-align:center;padding:24px;color:#475569">Carregando...</td></tr></tbody></table></div>';
+
+  var html=kpiHtml+filtersHtml+tabsHtml+tblHtml;
+
+  // carrega dados
   Promise.all([carregarEmpresas(), carregarTags()]).then(function(results){
     var data=results[0];
     _dbEmpresas=data;
@@ -787,53 +818,193 @@ function rEmpresas(){
     if(euf){ufs.forEach(function(u){var o=document.createElement('option');o.value=u;o.textContent=u;euf.appendChild(o);});}
     var ereg=document.getElementById('ereg');
     if(ereg){regs.forEach(function(r){var o=document.createElement('option');o.value=r;o.textContent=r;ereg.appendChild(o);});}
-    // popula filtro de tags
     var allTags=[...new Set(Object.values(_dbTags).flat())].sort();
     var etag=document.getElementById('etag');
     if(etag){allTags.forEach(function(t){var o=document.createElement('option');o.value=t;o.textContent=t;etag.appendChild(o);});}
-    document.getElementById('etb').innerHTML=eRows(data);
+    renderETab('geral', data);
   }).catch(function(err){
-    document.getElementById('etb').innerHTML='<tr><td colspan="8" style="text-align:center;padding:24px;color:#f43f5e">Erro ao carregar: '+err.message+'</td></tr>';
+    document.getElementById('etb').innerHTML='<tr><td colspan="9" style="text-align:center;padding:24px;color:#f43f5e">Erro ao carregar: '+err.message+'</td></tr>';
   });
 
   return html;
 }
 
-function eRows(a){
-  if(!a||a.length===0)return'<tr><td colspan="7" style="text-align:center;padding:20px;color:#475569">Nenhuma empresa encontrada</td></tr>';
-  return a.map(function(e){
-    var cnpj=e.cnpj||'';
-    var fmt=cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5');
-    var st=e.status||'Ativa';
-    var stC=st.toLowerCase().indexOf('ativ')>=0?'#4ade80':'#f43f5e';
-    var stB=st.toLowerCase().indexOf('ativ')>=0?'rgba(74,222,128,0.14)':'rgba(244,63,94,0.14)';
-    return'<tr>'+
-      '<td style="font-family:monospace;font-size:10px;color:#475569">'+(fmt||cnpj)+'</td>'+
-      '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
-      '<td style="color:#94a3b8">'+(e.grupo||'—')+'</td>'+
-      '<td>'+((_dbTags[e.cnpj]||[]).map(function(t){return'<span class="badge" style="background:rgba(167,139,250,0.14);color:#c4b5fd;margin-right:2px">'+t+'</span>';}).join('')||'<span style="color:#334155">—</span>')+'</td>'+
-      '<td style="color:#94a3b8;font-size:10px">'+(e.regime||'—')+'</td>'+
-      '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
-      '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>'+
-    '</tr>';
-  }).join('');
+/* ── Aba atual ── */
+var _eTab='geral';
+
+function setETab(tab, btn){
+  _eTab=tab;
+  document.querySelectorAll('.etab-btn').forEach(function(b){b.classList.remove('on');});
+  btn.classList.add('on');
+  var filtered=fEFiltered();
+  renderETab(tab, filtered);
 }
 
-function fE(){
-  if(!_dbEmpresas||_dbEmpresas.length===0)return;
-  var q=(document.getElementById('es').value||'').toLowerCase();
+function fEFiltered(){
+  if(!_dbEmpresas||_dbEmpresas.length===0)return[];
+  var q=(document.getElementById('es')?document.getElementById('es').value||'':'').toLowerCase();
   var uf=(document.getElementById('euf')?document.getElementById('euf').value:'');
   var reg=(document.getElementById('ereg')?document.getElementById('ereg').value:'');
   var tag=(document.getElementById('etag')?document.getElementById('etag').value:'');
-  if(!q&&!uf&&!reg&&!tag){document.getElementById('etb').innerHTML=eRows(_dbEmpresas);return;}
-  var filtered=_dbEmpresas.filter(function(e){
+  if(!q&&!uf&&!reg&&!tag)return _dbEmpresas;
+  return _dbEmpresas.filter(function(e){
     if(uf&&e.uf!==uf)return false;
     if(reg&&e.regime!==reg)return false;
     if(tag){var ts=_dbTags[e.cnpj]||[];if(ts.indexOf(tag)<0)return false;}
     if(!q)return true;
     return (e.razao||'').toLowerCase().indexOf(q)>=0||(e.cnpj||'').indexOf(q)>=0||(e.grupo||'').toLowerCase().indexOf(q)>=0;
   });
-  document.getElementById('etb').innerHTML=eRows(filtered);
+}
+
+function fE(){
+  if(!_dbEmpresas||_dbEmpresas.length===0)return;
+  var filtered=fEFiltered();
+  renderETab(_eTab, filtered);
+}
+
+/* ── Cabeçalhos e linhas por aba ── */
+var _eCols={
+  geral:{
+    heads:['CNPJ','Empresa','Grupo','TAG','Regime','UF','Status'],
+    row:function(e,fmt,tags,st,stC,stB){
+      return '<td style="font-family:monospace;font-size:10px;color:#64748b">'+fmt+'</td>'+
+        '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
+        '<td style="color:#94a3b8;font-size:11px">'+(e.grupo||'—')+'</td>'+
+        '<td>'+tags+'</td>'+
+        '<td style="color:#94a3b8;font-size:11px">'+(e.regime||'—')+'</td>'+
+        '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
+        '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>';
+    }
+  },
+  fiscal:{
+    heads:['CNPJ','Empresa','Grupo','TAG Fiscal','Regime Federal','IE Normal','IE ST','Inscrição Municipal','UF','Status'],
+    row:function(e,fmt,tags,st,stC,stB){
+      var tagFisc=((_dbTags[e.cnpj]||[]).filter(function(t){return t.toLowerCase().indexOf('fiscal')>=0;})
+        .map(function(t){return'<span class="badge" style="background:rgba(250,148,50,0.14);color:#fb923c;margin-right:2px">'+t+'</span>';}).join(''))||'<span style="color:#334155">—</span>';
+      var ieNorm=e.ie_normal?('<span class="badge" style="background:rgba(74,222,128,0.14);color:#4ade80">'+e.ie_normal+'</span>'):'<span style="color:#334155">—</span>';
+      var ieST=e.ie_st?('<span class="badge" style="background:rgba(251,191,36,0.14);color:#fbbf24">'+e.ie_st+'</span>'):'<span style="color:#334155">—</span>';
+      var im=e.im?('<span class="badge" style="background:rgba(167,139,250,0.14);color:#c4b5fd">'+e.im+'</span>'):'<span style="color:#334155">—</span>';
+      return '<td style="font-family:monospace;font-size:10px;color:#64748b">'+fmt+'</td>'+
+        '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
+        '<td style="color:#94a3b8;font-size:11px">'+(e.grupo||'—')+'</td>'+
+        '<td>'+tagFisc+'</td>'+
+        '<td style="color:#94a3b8;font-size:11px">'+(e.regime||'—')+'</td>'+
+        '<td>'+ieNorm+'</td>'+
+        '<td>'+ieST+'</td>'+
+        '<td>'+im+'</td>'+
+        '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
+        '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>';
+    }
+  },
+  contabil:{
+    heads:['CNPJ','Empresa','Grupo','TAG Contábil','Regime','Periodicidade','Modalidade LR','Retenção Lucro','UF','Status'],
+    row:function(e,fmt,tags,st,stC,stB){
+      var tagCont=((_dbTags[e.cnpj]||[]).filter(function(t){return t.toLowerCase().indexOf('cont')>=0;})
+        .map(function(t){return'<span class="badge" style="background:rgba(0,191,99,0.14);color:#4ade80;margin-right:2px">'+t+'</span>';}).join(''))||'<span style="color:#334155">—</span>';
+      var per=e.fechamento_contabil?('<span class="badge" style="background:rgba(99,102,241,0.14);color:#818cf8">'+e.fechamento_contabil+'</span>'):'<span style="color:#334155">—</span>';
+      var mod=e.modalidade_lucro_real?('<span class="badge" style="background:rgba(251,191,36,0.14);color:#fbbf24">'+e.modalidade_lucro_real+'</span>'):'<span style="color:#334155">—</span>';
+      var ret=e.retencao_lucro?'<span class="badge" style="background:rgba(244,63,94,0.14);color:#f43f5e">Sim</span>':'<span style="color:#334155">—</span>';
+      return '<td style="font-family:monospace;font-size:10px;color:#64748b">'+fmt+'</td>'+
+        '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
+        '<td style="color:#94a3b8;font-size:11px">'+(e.grupo||'—')+'</td>'+
+        '<td>'+tagCont+'</td>'+
+        '<td style="color:#94a3b8;font-size:11px">'+(e.regime||'—')+'</td>'+
+        '<td>'+per+'</td>'+
+        '<td>'+mod+'</td>'+
+        '<td>'+ret+'</td>'+
+        '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
+        '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>';
+    }
+  },
+  folha:{
+    heads:['CNPJ','Empresa','Grupo','TAG DP','Regime','Tipo CNPJ','Adiantamento','Fechamento','UF','Status'],
+    row:function(e,fmt,tags,st,stC,stB){
+      var tagDP=((_dbTags[e.cnpj]||[]).filter(function(t){return t.toLowerCase().indexOf('dp')>=0||t.toLowerCase().indexOf('folha')>=0||t.toLowerCase().indexOf('pessoal')>=0;})
+        .map(function(t){return'<span class="badge" style="background:rgba(56,189,248,0.14);color:#38bdf8;margin-right:2px">'+t+'</span>';}).join(''))||'<span style="color:#334155">—</span>';
+      var tipo=e.tipo_cnpj?('<span class="badge" style="background:rgba(167,139,250,0.14);color:#c4b5fd">'+e.tipo_cnpj+'</span>'):'<span style="color:#334155">—</span>';
+      var adto=e.adiantamento?'<span class="badge" style="background:rgba(74,222,128,0.14);color:#4ade80">Sim</span>':'<span style="color:#334155">—</span>';
+      var fech=e.fechamento_folha?('<span class="badge" style="background:rgba(251,191,36,0.14);color:#fbbf24">'+e.fechamento_folha+'</span>'):'<span style="color:#334155">—</span>';
+      return '<td style="font-family:monospace;font-size:10px;color:#64748b">'+fmt+'</td>'+
+        '<td style="font-weight:600;font-size:12px;color:#f1f5f9">'+(e.razao||'—')+'</td>'+
+        '<td style="color:#94a3b8;font-size:11px">'+(e.grupo||'—')+'</td>'+
+        '<td>'+tagDP+'</td>'+
+        '<td style="color:#94a3b8;font-size:11px">'+(e.regime||'—')+'</td>'+
+        '<td>'+tipo+'</td>'+
+        '<td>'+adto+'</td>'+
+        '<td>'+fech+'</td>'+
+        '<td><span class="badge" style="background:rgba(56,189,248,0.14);color:#7dd3fc">'+(e.uf||'—')+'</span></td>'+
+        '<td><span class="badge" style="color:'+stC+';background:'+stB+'">'+st+'</span></td>';
+    }
+  }
+};
+
+function renderETab(tab, data){
+  var cfg=_eCols[tab]||_eCols.geral;
+  var n=cfg.heads.length;
+  // cabeçalho
+  document.getElementById('emp-thead').innerHTML='<tr>'+cfg.heads.map(function(h){return'<th>'+h+'</th>';}).join('')+'</tr>';
+  // linhas
+  if(!data||data.length===0){
+    document.getElementById('etb').innerHTML='<tr><td colspan="'+n+'" style="text-align:center;padding:20px;color:#475569">Nenhuma empresa encontrada</td></tr>';
+    return;
+  }
+  var rows=data.map(function(e){
+    var cnpj=e.cnpj||'';
+    var fmt=cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5');
+    var st=e.status||'Ativa';
+    var stC=st.toLowerCase().indexOf('ativ')>=0?'#4ade80':'#f43f5e';
+    var stB=st.toLowerCase().indexOf('ativ')>=0?'rgba(74,222,128,0.14)':'rgba(244,63,94,0.14)';
+    var tags=(_dbTags[e.cnpj]||[]).map(function(t){return'<span class="badge" style="background:rgba(167,139,250,0.14);color:#c4b5fd;margin-right:2px">'+t+'</span>';}).join('')||'<span style="color:#334155">—</span>';
+    return'<tr>'+cfg.row(e,fmt,tags,st,stC,stB)+'</tr>';
+  }).join('');
+  document.getElementById('etb').innerHTML=rows;
+}
+
+/* ── Exportar Excel ── */
+function eExportar(){
+  if(!_dbEmpresas||!_dbEmpresas.length){alert('Carregue os dados primeiro.');return;}
+  var cfg=_eCols[_eTab]||_eCols.geral;
+  var data=fEFiltered();
+  var rows=data.map(function(e){
+    var cnpj=e.cnpj||'';
+    var fmt=cnpj.replace(/^(\d{2})(\d{3})(\d{3})(\d{4})(\d{2})$/,'$1.$2.$3/$4-$5');
+    var tags=(_dbTags[e.cnpj]||[]).join(', ');
+    var st=e.status||'Ativa';
+    if(_eTab==='geral') return[fmt,e.razao||'',e.grupo||'',tags,e.regime||'',e.uf||'',st];
+    if(_eTab==='fiscal') return[fmt,e.razao||'',e.grupo||'',
+      (_dbTags[e.cnpj]||[]).filter(function(t){return t.toLowerCase().indexOf('fiscal')>=0;}).join(', '),
+      e.regime||'',e.ie_normal||'',e.ie_st||'',e.im||'',e.uf||'',st];
+    if(_eTab==='contabil') return[fmt,e.razao||'',e.grupo||'',
+      (_dbTags[e.cnpj]||[]).filter(function(t){return t.toLowerCase().indexOf('cont')>=0;}).join(', '),
+      e.regime||'',e.fechamento_contabil||'',e.modalidade_lucro_real||'',e.retencao_lucro?'Sim':'',e.uf||'',st];
+    if(_eTab==='folha') return[fmt,e.razao||'',e.grupo||'',
+      (_dbTags[e.cnpj]||[]).filter(function(t){return t.toLowerCase().indexOf('dp')>=0||t.toLowerCase().indexOf('folha')>=0;}).join(', '),
+      e.regime||'',e.tipo_cnpj||'',e.adiantamento?'Sim':'',e.fechamento_folha||'',e.uf||'',st];
+    return[fmt,e.razao||'',e.grupo||'',tags,e.regime||'',e.uf||'',st];
+  });
+  var ws=XLSX.utils.aoa_to_sheet([cfg.heads].concat(rows));
+  var wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'Empresas');
+  XLSX.writeFile(wb,'empresas_'+_eTab+'_'+new Date().toISOString().slice(0,10)+'.xlsx');
+}
+
+/* ── Importar Excel ── */
+function eImportar(input){
+  var file=input.files[0]; if(!file)return;
+  var reader=new FileReader();
+  reader.onload=function(ev){
+    try{
+      var wb=XLSX.read(ev.target.result,{type:'binary'});
+      var ws=wb.Sheets[wb.SheetNames[0]];
+      var rows=XLSX.utils.sheet_to_json(ws,{defval:''});
+      if(!rows.length){alert('Planilha vazia.');return;}
+      // mostra prévia
+      var preview=rows.slice(0,3).map(function(r){return JSON.stringify(r);}).join('\n');
+      alert(''+rows.length+' linhas lidas.\nPrévia:\n'+preview+'\n\nFuncionalidade de importação para o Supabase será configurada em breve.');
+    }catch(err){alert('Erro ao ler arquivo: '+err.message);}
+    input.value='';
+  };
+  reader.readAsBinaryString(file);
 }
 
 function rEquipes(){
