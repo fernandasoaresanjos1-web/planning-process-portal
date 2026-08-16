@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Validação de Cadastro — Acessórias</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<style>
+:root{
+  --green:#0AE18C;--green-dark:#00BF63;--green-lt:#EAFBF4;
+  --black:#0C0C0C;--charcoal:#1A1A1A;--ink:#2C2C2C;
+  --gray-70:#4A4A4A;--gray-50:#646464;--gray-30:#CDCDCD;
+  --gray-10:#E8E8E8;--gray-05:#F2F2F2;--off-white:#FAFAFA;
+  --white:#FFFFFF;--border:#E2E2E2;
+  --red:#DC2626;--red-lt:#FEE2E2;
+  --amber:#FA6914;--amber-lt:#FFF3E0;
+  --blue:#14C8FA;--blue-lt:#DDF6FF;
+  --radius:10px;--radius-lg:16px;
+  --shadow-sm:0 1px 4px rgba(0,0,0,.06);
+  --font:'Poppins',sans-serif;--tr:all .18s ease;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--off-white);color:var(--ink);font-family:var(--font);font-size:14px;-webkit-font-smoothing:antialiased}
+
+.topbar{background:var(--black);height:54px;display:flex;align-items:center;padding:0 22px;gap:10px;position:sticky;top:0;z-index:100}
+.logo{width:30px;height:30px;background:var(--green);border-radius:7px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:13px;color:var(--black)}
+.bc{display:flex;align-items:center;gap:5px;color:rgba(255,255,255,.4);font-size:11px;font-weight:500}
+.bc strong{color:#fff}.bc span{color:rgba(255,255,255,.2)}
+
+.tabs-bar{background:var(--white);border-bottom:2px solid var(--border);display:flex;padding:0 22px;overflow-x:auto}
+.tb{font-family:var(--font);font-size:12px;font-weight:600;padding:13px 18px;border:none;background:none;color:var(--gray-50);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-2px;display:flex;align-items:center;gap:6px;transition:var(--tr);white-space:nowrap}
+.tb:hover{color:var(--ink)}
+.tb.act{color:var(--green-dark);border-bottom-color:var(--green)}
+.tbadge{font-size:10px;font-weight:700;padding:2px 6px;border-radius:12px;background:var(--gray-10);color:var(--gray-50)}
+.tb.act .tbadge{background:var(--green-lt);color:var(--green-dark)}
+.tbadge-r{background:var(--red-lt);color:var(--red)}
+.tbadge-a{background:var(--amber-lt);color:var(--amber)}
+
+.main{max-width:1200px;margin:0 auto;padding:22px 22px 80px}
+.tc{display:none}.tc.act{display:block}
+
+.ey{font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.pt{font-size:19px;font-weight:800;color:var(--charcoal);margin-bottom:3px}
+.ps{font-size:12px;color:var(--gray-50);margin-bottom:18px}
+
+/* UPLOAD */
+.upload-area{background:var(--white);border:2px dashed var(--border);border-radius:var(--radius-lg);padding:40px;text-align:center;cursor:pointer;transition:var(--tr);margin-bottom:20px}
+.upload-area:hover,.upload-area.drag{border-color:var(--green);background:var(--green-lt)}
+.upload-area input{display:none}
+.upload-area strong{display:block;font-size:14px;color:var(--charcoal);margin-top:10px}
+.upload-area span{font-size:12px;color:var(--gray-50)}
+.upload-area svg{opacity:.35}
+
+/* STATS */
+.stats-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:18px}
+.sc{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden;min-width:160px;flex:1}
+.sc-top{padding:11px 14px 8px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:8px}
+.sc-ico{width:28px;height:28px;border-radius:7px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.sc-t{font-size:11px;font-weight:700;color:var(--charcoal)}
+.sc-s{font-size:10px;color:var(--gray-50)}
+.sc-n{font-size:22px;font-weight:800;padding:10px 14px}
+.sc.ok .sc-n{color:var(--green-dark)}
+.sc.warn .sc-n{color:var(--red)}
+.sc.amb .sc-n{color:var(--amber)}
+
+/* TOOLBAR */
+.toolbar{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.sw{position:relative;flex:1;min-width:180px;max-width:340px}
+.sw svg{position:absolute;left:9px;top:50%;transform:translateY(-50%);opacity:.4;pointer-events:none}
+.si{width:100%;font-family:var(--font);font-size:12px;padding:8px 10px 8px 32px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none;transition:var(--tr)}
+.si:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(10,225,140,.1)}
+.si::placeholder{color:var(--gray-30)}
+.sel{font-family:var(--font);font-size:12px;padding:7px 10px;border:1px solid var(--border);border-radius:var(--radius);background:var(--white);color:var(--ink);outline:none;cursor:pointer}
+.sel:focus{border-color:var(--green)}
+.tsp{flex:1}
+.btn{display:inline-flex;align-items:center;gap:5px;font-family:var(--font);font-size:11px;font-weight:600;padding:7px 13px;border-radius:var(--radius);border:1px solid var(--border);background:var(--white);color:var(--gray-70);cursor:pointer;transition:var(--tr);white-space:nowrap}
+.btn:hover{border-color:var(--gray-30);color:var(--ink)}
+.btn svg{width:12px;height:12px}
+.btn-g{background:var(--green);border-color:var(--green);color:var(--black)}
+.btn-g:hover{background:var(--green-dark);border-color:var(--green-dark)}
+
+/* TABLE */
+.tw{background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);box-shadow:var(--shadow-sm);overflow:hidden}
+.th-row{display:grid;padding:0 14px;background:var(--gray-05);border-bottom:1px solid var(--border)}
+.th{padding:9px 7px;font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.5px}
+.tb-body{display:flex;flex-direction:column}
+.tr{display:grid;padding:0 14px;border-bottom:1px solid var(--border);align-items:center;transition:background .1s}
+.tr:last-child{border-bottom:none}
+.tr:hover{background:#FAFFFD}
+.td{padding:8px 7px;font-size:11px;color:var(--ink)}
+.cnpj{font-family:monospace;font-size:10.5px;font-weight:600;color:var(--charcoal)}
+.razao{font-weight:600;color:var(--charcoal);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sub{font-size:10px;color:var(--gray-50);margin-top:1px}
+.chip{font-size:10px;font-weight:600;padding:2px 8px;border-radius:20px;white-space:nowrap}
+.chip-r{background:var(--red-lt);color:var(--red)}
+.chip-a{background:var(--amber-lt);color:var(--amber)}
+.chip-g{background:var(--green-lt);color:var(--green-dark)}
+.chip-b{background:var(--blue-lt);color:#0284C7}
+.chip-gr{background:var(--gray-10);color:var(--gray-70)}
+
+/* PAGER */
+.pager{display:flex;align-items:center;justify-content:space-between;padding:10px 14px;border-top:1px solid var(--border);background:var(--gray-05)}
+.pg-info{font-size:11px;color:var(--gray-50)}
+.pg-btns{display:flex;gap:3px}
+.pg-btn{font-family:var(--font);font-size:11px;font-weight:600;padding:4px 9px;border-radius:6px;border:1px solid var(--border);background:var(--white);color:var(--gray-70);cursor:pointer;transition:var(--tr)}
+.pg-btn:hover{border-color:var(--green);color:var(--green-dark)}
+.pg-btn.cur{background:var(--charcoal);color:var(--white);border-color:var(--charcoal)}
+.pg-btn:disabled{opacity:.35;cursor:default;pointer-events:none}
+
+/* EMPTY */
+.empty{display:flex;flex-direction:column;align-items:center;padding:44px 22px;gap:9px;color:var(--gray-50)}
+.empty svg{opacity:.3}
+.empty strong{font-size:13px;color:var(--charcoal)}
+.empty span{font-size:12px}
+
+/* ALERT */
+.alert{border:1px solid;border-radius:var(--radius);padding:10px 14px;display:flex;align-items:flex-start;gap:9px;margin-bottom:14px;font-size:12px}
+.alert svg{flex-shrink:0;margin-top:1px}
+.alert-a{background:var(--amber-lt);border-color:#fed7aa;color:#92400e}
+.alert-r{background:var(--red-lt);border-color:#fca5a5;color:var(--red)}
+
+/* TOAST */
+.toast{position:fixed;bottom:22px;right:22px;background:var(--charcoal);color:var(--white);padding:11px 16px;border-radius:var(--radius);font-size:12px;font-weight:600;display:flex;align-items:center;gap:7px;box-shadow:var(--shadow-sm);z-index:999;transform:translateY(80px);opacity:0;transition:all .3s ease}
+.toast.show{transform:translateY(0);opacity:1}
+.toast svg{width:13px;height:13px;color:var(--green)}
+
+/* RESUMO POR EQUIPE */
+.resumo-dept{margin-bottom:24px}
+.resumo-dept-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;padding:6px 12px;border-radius:var(--radius);display:inline-block;margin-bottom:10px}
+.resumo-table{width:100%;border-collapse:collapse;background:var(--white);border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.resumo-table th{padding:9px 12px;font-size:10px;font-weight:700;color:var(--gray-50);text-transform:uppercase;letter-spacing:.5px;background:var(--gray-05);border-bottom:1px solid var(--border);text-align:left;white-space:nowrap}
+.resumo-table th.num{text-align:right}
+.resumo-table td{padding:9px 12px;font-size:12px;border-bottom:1px solid var(--gray-10);color:var(--ink)}
+.resumo-table tr:last-child td{border-bottom:none}
+.resumo-table tr:hover td{background:#FAFFFD;cursor:pointer}
+.resumo-table td.num{text-align:right;font-weight:700;font-family:monospace;font-size:13px}
+.resumo-table td.num.zero{color:var(--gray-30);font-weight:400}
+.resumo-table td.num.warn{color:var(--red)}
+.resumo-table td.num.amb{color:var(--amber)}
+.resumo-table td.num.ok{color:var(--green-dark)}
+.resumo-equipe{font-weight:600;color:var(--charcoal)}
+.resumo-pct{font-size:10px;color:var(--gray-50);margin-left:4px}
+.resumo-bar-wrap{width:60px;height:6px;background:var(--gray-10);border-radius:3px;display:inline-block;vertical-align:middle;margin-left:6px}
+.resumo-bar{height:6px;border-radius:3px;transition:width .3s}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="logo">P</div>
+  <div class="bc"><span>Portal</span><span>&#8250;</span><span>Acess&#243;rias</span><span>&#8250;</span><strong>Valida&#231;&#227;o de Cadastro</strong></div>
+</div>
+
+<div class="tabs-bar" style="display:flex;align-items:center">
+  <button class="tb act" onclick="setTab('regime',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    Regime Tribut&#225;rio <span class="tbadge tbadge-r" id="bRegime">—</span>
+  </button>
+  <button class="tb" onclick="setTab('ie',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    Inscri&#231;&#227;o Estadual <span class="tbadge tbadge-r" id="bIE">—</span>
+  </button>
+  <button class="tb" onclick="setTab('im',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+    Inscri&#231;&#227;o Municipal <span class="tbadge tbadge-a" id="bIM">—</span>
+  </button>
+  <button class="tb" onclick="setTab('cc',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    Constru&#231;&#227;o Civil <span class="tbadge" style="background:var(--purple-lt);color:#7C3AED" id="bCC">—</span>
+  </button>
+  <button class="tb" onclick="setTab('resumo',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+    Resumo por Equipe
+  </button>
+  <div style="flex:1"></div>
+  <label style="display:flex;align-items:center;gap:6px;font-family:var(--font);font-size:11px;font-weight:600;padding:8px 14px;border-radius:var(--radius);border:1px solid var(--border);background:var(--white);color:var(--gray-70);cursor:pointer;margin:6px 0;transition:var(--tr)" onmouseover="this.style.borderColor='var(--green)'" onmouseout="this.style.borderColor='var(--border)'">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+    Trocar planilha
+    <input type="file" accept=".xlsx,.xls" style="display:none" onchange="handleFile(this.files[0])"/>
+  </label>
+  <button class="tb" onclick="setTab('cc',this)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+    Constru&#231;&#227;o Civil <span class="tbadge" style="background:var(--purple-lt,#F5F3FF);color:#7C3AED" id="bCC">—</span>
+  </button>
+</div>
+
+<div class="main">
+
+<!-- UPLOAD (aparece em todas as abas quando sem dados) -->
+<div id="uploadWrap">
+  <div class="ey">Acess&#243;rias &middot; Valida&#231;&#227;o de Cadastro</div>
+  <div class="pt">Valida&#231;&#227;o de Cadastro</div>
+  <div class="ps">Carregue a planilha de empresas para iniciar a valida&#231;&#227;o de Regime Tribut&#225;rio, Inscri&#231;&#245;es Estaduais e Municipais.</div>
+  <label class="upload-area" id="uploadZone" ondragover="onDrag(event,true)" ondragleave="onDrag(event,false)" ondrop="onDrop(event)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="48" height="48"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+    <strong>Arraste ou clique para selecionar a planilha</strong>
+    <span>Arquivo S3D_empresas .xlsx com CNPJ, Regime, Inscri&#231;&#245;es, etc.</span>
+    <input type="file" accept=".xlsx,.xls" id="fileInput" onchange="handleFile(this.files[0])"/>
+  </label>
+</div>
+
+<!-- ABA 1: REGIME -->
+<div class="tc act" id="tab-regime" style="display:none">
+  <div class="ey">Acess&#243;rias &middot; Valida&#231;&#227;o</div>
+  <div class="pt">Regime Tribut&#225;rio</div>
+  <div class="ps">Empresas sem regime tribut&#225;rio informado no cadastro</div>
+  <div class="stats-row" id="statsRegime"></div>
+  <div class="toolbar">
+    <select class="sel" id="filtTag" onchange="applyTagFilter()">
+      <option value="">Todas as equipes</option>
+      <optgroup label="DP">
+        <option value="Equipe DP 1">Equipe DP 1</option>
+        <option value="Equipe DP 2">Equipe DP 2</option>
+      </optgroup>
+      <optgroup label="Fiscal">
+        <option value="Equipe Fiscal 1">Equipe Fiscal 1</option>
+        <option value="Equipe Fiscal 2">Equipe Fiscal 2</option>
+        <option value="Equipe Fiscal 3">Equipe Fiscal 3</option>
+        <option value="Equipe Fiscal 4">Equipe Fiscal 4</option>
+        <option value="Equipe Fiscal 5">Equipe Fiscal 5</option>
+        <option value="Equipe Fiscal 6">Equipe Fiscal 6</option>
+        <option value="Equipe Fiscal 7">Equipe Fiscal 7</option>
+        <option value="Equipe Fiscal 8">Equipe Fiscal 8</option>
+      </optgroup>
+      <optgroup label="Cont&#225;bil">
+        <option value="Equipe Cont&#225;bil 1">Equipe Cont&#225;bil 1</option>
+        <option value="Equipe Cont&#225;bil 2">Equipe Cont&#225;bil 2</option>
+        <option value="Equipe Cont&#225;bil 3">Equipe Cont&#225;bil 3</option>
+        <option value="Equipe Cont&#225;bil 4">Equipe Cont&#225;bil 4</option>
+        <option value="Equipe Cont&#225;bil 5">Equipe Cont&#225;bil 5</option>
+        <option value="Equipe Cont&#225;bil 6">Equipe Cont&#225;bil 6</option>
+        <option value="Equipe Cont&#225;bil 7">Equipe Cont&#225;bil 7</option>
+        <option value="Equipe Cont&#225;bil 8">Equipe Cont&#225;bil 8</option>
+        <option value="Equipe Cont&#225;bil 9">Equipe Cont&#225;bil 9</option>
+        <option value="Equipe Cont&#225;bil 10">Equipe Cont&#225;bil 10</option>
+        <option value="Equipe Dedicada Uniggel">Equipe Dedicada Uniggel</option>
+      </optgroup>
+      <optgroup label="CC">
+        <option value="Equipe DP 4">Equipe DP 4</option>
+        <option value="Equipe CC 1">Equipe CC 1</option>
+        <option value="Equipe CC 2">Equipe CC 2</option>
+        <option value="Equipe CC 4">Equipe CC 4</option>
+        <option value="Equipe Dedicada Canopus">Equipe Dedicada Canopus</option>
+      </optgroup>
+      <optgroup label="Outros">
+        <option value="Equipe CBF">Equipe CBF</option>
+        <option value="Equipe Integra&#231;&#227;o">Equipe Integra&#231;&#227;o</option>
+        <option value="Equipe Cont&#225;bil Teste 2">Equipe Cont&#225;bil Teste 2</option>
+        <option value="Equipe Fiscal Teste 1">Equipe Fiscal Teste 1</option>
+      </optgroup>
+    </select>
+    <div class="sw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="searchRegime" placeholder="Buscar CNPJ, raz&#227;o ou grupo..." oninput="renderRegime()"/>
+    </div>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportTab('regime')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Exportar CSV
+    </button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:140px 1fr 140px 80px">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o / Grupo</div><div class="th">Regime</div><div class="th">Situa&#231;&#227;o</div>
+    </div>
+    <div class="tb-body" id="bodyRegime"></div>
+    <div class="pager" id="pagerRegime"></div>
+  </div>
+</div>
+
+<!-- ABA 2: IE -->
+<div class="tc" id="tab-ie">
+  <div class="ey">Acess&#243;rias &middot; Valida&#231;&#227;o</div>
+  <div class="pt">Inscri&#231;&#227;o Estadual</div>
+  <div class="ps">Empresas n&#227;o isentas que n&#227;o possuem Inscri&#231;&#227;o Estadual cadastrada. Empresas marcadas como <strong>Isento: Sim</strong> s&#227;o ignoradas.</div>
+  <div class="alert alert-a">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="15" height="15"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    <span><strong>Regra:</strong> Se o campo <em>Empresa Isenta</em> estiver marcado como <strong>Sim</strong>, a empresa n&#227;o precisa de IE. Caso contr&#225;rio, a aus&#234;ncia de IE &#233; apontada como pend&#234;ncia.</span>
+  </div>
+  <div class="stats-row" id="statsIE"></div>
+  <div class="toolbar">
+    <select class="sel" id="filtTag" onchange="applyTagFilter()">
+      <option value="">Todas as equipes</option>
+      <optgroup label="DP">
+        <option value="Equipe DP 1">Equipe DP 1</option>
+        <option value="Equipe DP 2">Equipe DP 2</option>
+      </optgroup>
+      <optgroup label="Fiscal">
+        <option value="Equipe Fiscal 1">Equipe Fiscal 1</option>
+        <option value="Equipe Fiscal 2">Equipe Fiscal 2</option>
+        <option value="Equipe Fiscal 3">Equipe Fiscal 3</option>
+        <option value="Equipe Fiscal 4">Equipe Fiscal 4</option>
+        <option value="Equipe Fiscal 5">Equipe Fiscal 5</option>
+        <option value="Equipe Fiscal 6">Equipe Fiscal 6</option>
+        <option value="Equipe Fiscal 7">Equipe Fiscal 7</option>
+        <option value="Equipe Fiscal 8">Equipe Fiscal 8</option>
+      </optgroup>
+      <optgroup label="Cont&#225;bil">
+        <option value="Equipe Cont&#225;bil 1">Equipe Cont&#225;bil 1</option>
+        <option value="Equipe Cont&#225;bil 2">Equipe Cont&#225;bil 2</option>
+        <option value="Equipe Cont&#225;bil 3">Equipe Cont&#225;bil 3</option>
+        <option value="Equipe Cont&#225;bil 4">Equipe Cont&#225;bil 4</option>
+        <option value="Equipe Cont&#225;bil 5">Equipe Cont&#225;bil 5</option>
+        <option value="Equipe Cont&#225;bil 6">Equipe Cont&#225;bil 6</option>
+        <option value="Equipe Cont&#225;bil 7">Equipe Cont&#225;bil 7</option>
+        <option value="Equipe Cont&#225;bil 8">Equipe Cont&#225;bil 8</option>
+        <option value="Equipe Cont&#225;bil 9">Equipe Cont&#225;bil 9</option>
+        <option value="Equipe Cont&#225;bil 10">Equipe Cont&#225;bil 10</option>
+        <option value="Equipe Dedicada Uniggel">Equipe Dedicada Uniggel</option>
+      </optgroup>
+      <optgroup label="CC">
+        <option value="Equipe DP 4">Equipe DP 4</option>
+        <option value="Equipe CC 1">Equipe CC 1</option>
+        <option value="Equipe CC 2">Equipe CC 2</option>
+        <option value="Equipe CC 4">Equipe CC 4</option>
+        <option value="Equipe Dedicada Canopus">Equipe Dedicada Canopus</option>
+      </optgroup>
+      <optgroup label="Outros">
+        <option value="Equipe CBF">Equipe CBF</option>
+        <option value="Equipe Integra&#231;&#227;o">Equipe Integra&#231;&#227;o</option>
+        <option value="Equipe Cont&#225;bil Teste 2">Equipe Cont&#225;bil Teste 2</option>
+        <option value="Equipe Fiscal Teste 1">Equipe Fiscal Teste 1</option>
+      </optgroup>
+    </select>
+    <div class="sw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="searchIE" placeholder="Buscar CNPJ, raz&#227;o ou grupo..." oninput="renderIE()"/>
+    </div>
+    <select class="sel" id="filtIE" onchange="renderIE()">
+      <option value="sem_ie">Sem IE (n&#227;o isentas)</option>
+      <option value="com_ie">Com IE cadastrada</option>
+      <option value="isentas">Isentas (IE dispensada)</option>
+      <option value="all">Todas as empresas</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportTab('ie')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Exportar CSV
+    </button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:140px 1fr 80px 80px 1fr">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o / Grupo</div>
+      <div class="th">UF</div><div class="th">Isento</div><div class="th">IE Cadastrada</div>
+    </div>
+    <div class="tb-body" id="bodyIE"></div>
+    <div class="pager" id="pagerIE"></div>
+  </div>
+</div>
+
+<!-- ABA 3: IM -->
+<div class="tc" id="tab-im">
+  <div class="ey">Acess&#243;rias &middot; Valida&#231;&#227;o</div>
+  <div class="pt">Inscri&#231;&#227;o Municipal</div>
+  <div class="ps">Empresas sem Inscri&#231;&#227;o Municipal cadastrada</div>
+  <div class="stats-row" id="statsIM"></div>
+  <div class="toolbar">
+    <select class="sel" id="filtTag" onchange="applyTagFilter()">
+      <option value="">Todas as equipes</option>
+      <optgroup label="DP">
+        <option value="Equipe DP 1">Equipe DP 1</option>
+        <option value="Equipe DP 2">Equipe DP 2</option>
+      </optgroup>
+      <optgroup label="Fiscal">
+        <option value="Equipe Fiscal 1">Equipe Fiscal 1</option>
+        <option value="Equipe Fiscal 2">Equipe Fiscal 2</option>
+        <option value="Equipe Fiscal 3">Equipe Fiscal 3</option>
+        <option value="Equipe Fiscal 4">Equipe Fiscal 4</option>
+        <option value="Equipe Fiscal 5">Equipe Fiscal 5</option>
+        <option value="Equipe Fiscal 6">Equipe Fiscal 6</option>
+        <option value="Equipe Fiscal 7">Equipe Fiscal 7</option>
+        <option value="Equipe Fiscal 8">Equipe Fiscal 8</option>
+      </optgroup>
+      <optgroup label="Cont&#225;bil">
+        <option value="Equipe Cont&#225;bil 1">Equipe Cont&#225;bil 1</option>
+        <option value="Equipe Cont&#225;bil 2">Equipe Cont&#225;bil 2</option>
+        <option value="Equipe Cont&#225;bil 3">Equipe Cont&#225;bil 3</option>
+        <option value="Equipe Cont&#225;bil 4">Equipe Cont&#225;bil 4</option>
+        <option value="Equipe Cont&#225;bil 5">Equipe Cont&#225;bil 5</option>
+        <option value="Equipe Cont&#225;bil 6">Equipe Cont&#225;bil 6</option>
+        <option value="Equipe Cont&#225;bil 7">Equipe Cont&#225;bil 7</option>
+        <option value="Equipe Cont&#225;bil 8">Equipe Cont&#225;bil 8</option>
+        <option value="Equipe Cont&#225;bil 9">Equipe Cont&#225;bil 9</option>
+        <option value="Equipe Cont&#225;bil 10">Equipe Cont&#225;bil 10</option>
+        <option value="Equipe Dedicada Uniggel">Equipe Dedicada Uniggel</option>
+      </optgroup>
+      <optgroup label="CC">
+        <option value="Equipe DP 4">Equipe DP 4</option>
+        <option value="Equipe CC 1">Equipe CC 1</option>
+        <option value="Equipe CC 2">Equipe CC 2</option>
+        <option value="Equipe CC 4">Equipe CC 4</option>
+        <option value="Equipe Dedicada Canopus">Equipe Dedicada Canopus</option>
+      </optgroup>
+      <optgroup label="Outros">
+        <option value="Equipe CBF">Equipe CBF</option>
+        <option value="Equipe Integra&#231;&#227;o">Equipe Integra&#231;&#227;o</option>
+        <option value="Equipe Cont&#225;bil Teste 2">Equipe Cont&#225;bil Teste 2</option>
+        <option value="Equipe Fiscal Teste 1">Equipe Fiscal Teste 1</option>
+      </optgroup>
+    </select>
+    <div class="sw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="searchIM" placeholder="Buscar CNPJ, raz&#227;o ou grupo..." oninput="renderIM()"/>
+    </div>
+    <select class="sel" id="filtIM" onchange="renderIM()">
+      <option value="sem_im">Sem IM</option>
+      <option value="com_im">Com IM cadastrada</option>
+      <option value="all">Todas</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportTab('im')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Exportar CSV
+    </button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:140px 1fr 140px 1fr">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o / Grupo</div>
+      <div class="th">Regime</div><div class="th">IM Cadastrada</div>
+    </div>
+    <div class="tb-body" id="bodyIM"></div>
+    <div class="pager" id="pagerIM"></div>
+  </div>
+</div>
+
+
+<!-- ABA CC: CONSTRUÇÃO CIVIL -->
+<div class="tc" id="tab-cc">
+  <div class="ey">Acess&#243;rias &middot; Constru&#231;&#227;o Civil</div>
+  <div class="pt">Empresas da Constru&#231;&#227;o Civil</div>
+  <div class="ps">TAGs: CC 1, CC 2, CC 4, DP 4, Dedicada Canopus — separadas das auditorias principais</div>
+  <div class="stats-row" id="statsCC"></div>
+  <div class="toolbar">
+    <select class="sel" id="filtTag" onchange="applyTagFilter()">
+      <option value="">Todas as equipes</option>
+      <optgroup label="DP">
+        <option value="Equipe DP 1">Equipe DP 1</option>
+        <option value="Equipe DP 2">Equipe DP 2</option>
+      </optgroup>
+      <optgroup label="Fiscal">
+        <option value="Equipe Fiscal 1">Equipe Fiscal 1</option>
+        <option value="Equipe Fiscal 2">Equipe Fiscal 2</option>
+        <option value="Equipe Fiscal 3">Equipe Fiscal 3</option>
+        <option value="Equipe Fiscal 4">Equipe Fiscal 4</option>
+        <option value="Equipe Fiscal 5">Equipe Fiscal 5</option>
+        <option value="Equipe Fiscal 6">Equipe Fiscal 6</option>
+        <option value="Equipe Fiscal 7">Equipe Fiscal 7</option>
+        <option value="Equipe Fiscal 8">Equipe Fiscal 8</option>
+      </optgroup>
+      <optgroup label="Cont&#225;bil">
+        <option value="Equipe Cont&#225;bil 1">Equipe Cont&#225;bil 1</option>
+        <option value="Equipe Cont&#225;bil 2">Equipe Cont&#225;bil 2</option>
+        <option value="Equipe Cont&#225;bil 3">Equipe Cont&#225;bil 3</option>
+        <option value="Equipe Cont&#225;bil 4">Equipe Cont&#225;bil 4</option>
+        <option value="Equipe Cont&#225;bil 5">Equipe Cont&#225;bil 5</option>
+        <option value="Equipe Cont&#225;bil 6">Equipe Cont&#225;bil 6</option>
+        <option value="Equipe Cont&#225;bil 7">Equipe Cont&#225;bil 7</option>
+        <option value="Equipe Cont&#225;bil 8">Equipe Cont&#225;bil 8</option>
+        <option value="Equipe Cont&#225;bil 9">Equipe Cont&#225;bil 9</option>
+        <option value="Equipe Cont&#225;bil 10">Equipe Cont&#225;bil 10</option>
+        <option value="Equipe Dedicada Uniggel">Equipe Dedicada Uniggel</option>
+      </optgroup>
+      <optgroup label="CC">
+        <option value="Equipe DP 4">Equipe DP 4</option>
+        <option value="Equipe CC 1">Equipe CC 1</option>
+        <option value="Equipe CC 2">Equipe CC 2</option>
+        <option value="Equipe CC 4">Equipe CC 4</option>
+        <option value="Equipe Dedicada Canopus">Equipe Dedicada Canopus</option>
+      </optgroup>
+      <optgroup label="Outros">
+        <option value="Equipe CBF">Equipe CBF</option>
+        <option value="Equipe Integra&#231;&#227;o">Equipe Integra&#231;&#227;o</option>
+        <option value="Equipe Cont&#225;bil Teste 2">Equipe Cont&#225;bil Teste 2</option>
+        <option value="Equipe Fiscal Teste 1">Equipe Fiscal Teste 1</option>
+      </optgroup>
+    </select>
+    <div class="sw">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="si" id="searchCC" placeholder="Buscar CNPJ, raz&#227;o ou grupo..." oninput="renderCC()"/>
+    </div>
+    <select class="sel" id="filtCC" onchange="renderCC()">
+      <option value="sem_regime">Sem regime</option>
+      <option value="sem_ie">Sem IE (n&#227;o isentas)</option>
+      <option value="sem_im">Sem IM</option>
+      <option value="all">Todas</option>
+    </select>
+    <div class="tsp"></div>
+    <button class="btn" onclick="exportTab('cc')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+      Exportar CSV
+    </button>
+  </div>
+  <div class="tw">
+    <div class="th-row" style="grid-template-columns:140px 1fr 140px 80px 80px">
+      <div class="th">CNPJ</div><div class="th">Raz&#227;o / Grupo</div>
+      <div class="th">Regime</div><div class="th">Isento</div><div class="th">IE</div>
+    </div>
+    <div class="tb-body" id="bodyCC"></div>
+    <div class="pager" id="pagerCC"></div>
+  </div>
+</div>
+
+<!-- ABA RESUMO -->
+<div class="tc" id="tab-resumo">
+  <div class="ey">Acess&#243;rias &middot; Valida&#231;&#227;o</div>
+  <div class="pt">Resumo por Equipe</div>
+  <div class="ps">Vis&#227;o consolidada das pend&#234;ncias cadastrais por equipe &#8212; exclu&#237; Constru&#231;&#227;o Civil</div>
+  <div id="resumoGrid"></div>
+</div>
+
+</div>
+
+<div class="toast" id="toast">
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+  <span id="toastMsg">OK</span>
+</div>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+
+var TAGS_RESUMO = ["Equipe DP 1","Equipe DP 2","Equipe Fiscal 1","Equipe Fiscal 2","Equipe Fiscal 3","Equipe Fiscal 4","Equipe Fiscal 5","Equipe Fiscal 6","Equipe Fiscal 7","Equipe Fiscal 8","Equipe Contábil 1","Equipe Contábil 2","Equipe Contábil 3","Equipe Contábil 4","Equipe Contábil 5","Equipe Contábil 6","Equipe Contábil 7","Equipe Contábil 8","Equipe Contábil 9","Equipe Contábil 10","Equipe Dedicada Uniggel","Equipe DP 4","Equipe CC 1","Equipe CC 2","Equipe CC 4","Equipe Dedicada Canopus"];
+var TAG_DEPT_MAP = {};
+TAG_DEPT_MAP["Equipe DP 1"] = "DP"; TAG_DEPT_MAP["Equipe DP 2"] = "DP"; TAG_DEPT_MAP["Equipe Fiscal 1"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 2"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 3"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 4"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 5"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 6"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 7"] = "Fiscal"; TAG_DEPT_MAP["Equipe Fiscal 8"] = "Fiscal"; TAG_DEPT_MAP["Equipe Contábil 1"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 2"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 3"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 4"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 5"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 6"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 7"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 8"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 9"] = "Contábil"; TAG_DEPT_MAP["Equipe Contábil 10"] = "Contábil"; TAG_DEPT_MAP["Equipe Dedicada Uniggel"] = "Contábil"; TAG_DEPT_MAP["Equipe DP 4"] = "CC"; TAG_DEPT_MAP["Equipe CC 1"] = "CC"; TAG_DEPT_MAP["Equipe CC 2"] = "CC"; TAG_DEPT_MAP["Equipe CC 4"] = "CC"; TAG_DEPT_MAP["Equipe Dedicada Canopus"] = "CC"; 
+
+
+var TAGS_BASE=[{"key": "Equipe DP 1", "label": "DP 1", "dept": "DP", "coord": "Mariana Rezende"}, {"key": "Equipe DP 2", "label": "DP 2", "dept": "DP", "coord": "Renata Soares"}, {"key": "Equipe Fiscal 1", "label": "Fiscal 1", "dept": "Fiscal", "coord": "Nathaly Alves"}, {"key": "Equipe Fiscal 2", "label": "Fiscal 2", "dept": "Fiscal", "coord": "Yuri Bessa"}, {"key": "Equipe Fiscal 3", "label": "Fiscal 3", "dept": "Fiscal", "coord": "Jessica Amaral"}, {"key": "Equipe Fiscal 4", "label": "Fiscal 4", "dept": "Fiscal", "coord": "Rejane Morais"}, {"key": "Equipe Fiscal 5", "label": "Fiscal 5", "dept": "Fiscal", "coord": "Ingrid Bernardi"}, {"key": "Equipe Fiscal 6", "label": "Fiscal 6", "dept": "Fiscal", "coord": "Jusely Prado"}, {"key": "Equipe Fiscal 7", "label": "Fiscal 7", "dept": "Fiscal", "coord": "Cristiana Barbosa"}, {"key": "Equipe Fiscal 8", "label": "Fiscal 8", "dept": "Fiscal", "coord": "Arynna Marques"}, {"key": "Equipe Contábil 1", "label": "Contábil 1", "dept": "Contábil", "coord": "Lusanna Melo"}, {"key": "Equipe Contábil 2", "label": "Contábil 2", "dept": "Contábil", "coord": "Maysa Caixeta"}, {"key": "Equipe Contábil 3", "label": "Contábil 3", "dept": "Contábil", "coord": "Tatyanne Carvalho"}, {"key": "Equipe Contábil 4", "label": "Contábil 4", "dept": "Contábil", "coord": "Rodney Silva"}, {"key": "Equipe Contábil 5", "label": "Contábil 5", "dept": "Contábil", "coord": "Rodney Silva"}, {"key": "Equipe Contábil 6", "label": "Contábil 6", "dept": "Contábil", "coord": "Natalia Xaves"}, {"key": "Equipe Contábil 7", "label": "Contábil 7", "dept": "Contábil", "coord": "Gisely Alves"}, {"key": "Equipe Contábil 8", "label": "Contábil 8", "dept": "Contábil", "coord": "Matheus Mendonça"}, {"key": "Equipe Contábil 9", "label": "Contábil 9", "dept": "Contábil", "coord": "Hugo Leonardo"}, {"key": "Equipe Contábil 10", "label": "Contábil 10", "dept": "Contábil", "coord": "Delmira Marques"}, {"key": "Equipe Dedicada Uniggel", "label": "Ded. Uniggel", "dept": "Contábil", "coord": "Roberta Oliveira"}];
+function renderResumo(){
+  if(!DADOS.length){
+    document.getElementById("resumoGrid").innerHTML='<div class="empty"><strong>Carregue a planilha para ver o resumo</strong></div>';
+    return;
+  }
+  var deptOrder=["DP","Fiscal","Cont\u00e1bil"];
+  var deptColor={
+    "DP":["#E0F2FE","#0284C7"],
+    "Fiscal":["#FFF7ED","#FA6914"],
+    "Cont\u00e1bil":["#EAFBF4","#00BF63"]
+  };
+  // DP: s\u00f3 Regime | Cont\u00e1bil: s\u00f3 Regime | Fiscal: Regime + IE + IM
+  var deptCols={
+    "DP":["sem_regime"],
+    "Cont\u00e1bil":["sem_regime"],
+    "Fiscal":["sem_regime","sem_ie","sem_im"]
+  };
+  var colLabel={"sem_regime":"Sem Regime","sem_ie":"Sem IE","sem_im":"Sem IM"};
+  var colWarn={"sem_regime":"warn","sem_ie":"warn","sem_im":"amb"};
+
+  var depts={};
+  TAGS_BASE.forEach(function(t){
+    var tag=t.key; var dept=t.dept;
+    if(dept==="CC")return;
+    var empresas=DADOS.filter(function(e){return e.tags_arr&&e.tags_arr.indexOf(tag)>-1;});
+    var total=empresas.length;
+    if(total===0)return;
+    var sem_regime=empresas.filter(function(e){return !e.regime;}).length;
+    var sem_ie=empresas.filter(function(e){return !isentoSim(e.isento)&&!e.ie;}).length;
+    var sem_im=empresas.filter(function(e){return !e.im;}).length;
+    if(!depts[dept])depts[dept]=[];
+    depts[dept].push({tag:tag,label:t.label,coord:t.coord,total:total,
+      sem_regime:sem_regime,sem_ie:sem_ie,sem_im:sem_im});
+  });
+
+  var html="";
+  deptOrder.forEach(function(dept){
+    var rows=depts[dept]; if(!rows||!rows.length)return;
+    var co=deptColor[dept]||["#f5f5f5","#333"];
+    var cols=deptCols[dept]||["sem_regime"];
+    html+='<div class="resumo-dept">';
+    html+='<div class="resumo-dept-title" style="background:'+co[0]+';color:'+co[1]+'">'+esc(dept)+'</div>';
+    html+='<table class="resumo-table"><thead><tr>'
+      +'<th>Equipe</th><th>Coordenador</th><th class="num">Empresas</th>';
+    cols.forEach(function(c){html+='<th class="num">'+colLabel[c]+'</th>';});
+    html+='<th class="num">% Pend.</th></tr></thead><tbody>';
+    rows.forEach(function(r){
+      var maxPend=0;
+      cols.forEach(function(c){if(r[c]>maxPend)maxPend=r[c];});
+      var pct=r.total>0?Math.round((maxPend/r.total)*100):0;
+      var barColor=pct>50?"var(--red)":pct>20?"var(--amber)":"var(--green-dark)";
+      html+='<tr data-tag="'+esc(r.tag)+'" onclick="goToTag(this.dataset.tag)" style="cursor:pointer">'
+        +'<td class="resumo-equipe">'+esc(r.label)+'</td>'
+        +'<td style="font-size:11px;color:var(--gray-70)">'+esc(r.coord)+'</td>'
+        +'<td class="num ok">'+r.total.toLocaleString("pt-BR")+'</td>';
+      cols.forEach(function(c){
+        html+='<td class="num '+(r[c]>0?colWarn[c]:"zero")+'">'+r[c]+'</td>';
+      });
+      html+='<td class="num"><span style="font-size:11px;color:'+barColor+'">'+pct+'%</span>'
+        +'<span class="resumo-bar-wrap"><span class="resumo-bar" style="width:'+Math.min(100,pct)+'%;background:'+barColor+'"></span></span>'
+        +'</td></tr>';
+    });
+    html+='</tbody></table></div>';
+  });
+  document.getElementById("resumoGrid").innerHTML=html||'<div class="empty"><strong>Nenhuma equipe encontrada</strong></div>';
+}
+
+function goToTag(tag){
+  // Vai para aba regime filtrando pela tag
+  var selTag = document.getElementById("filtTag");
+  if(selTag){ selTag.value = tag; TAG_FILTER = tag; }
+  var tbRegime = document.querySelector('.tb[onclick*="regime"]');
+  if(tbRegime) setTab('regime', tbRegime);
+}
+
+
+
+var DADOS = [];
+var PER = 50;
+var pages = {regime:1, ie:1, im:1};
+
+function esc(s){
+  return String(s||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+}
+
+// ── UPLOAD ──
+function onDrag(e, on){
+  e.preventDefault();
+  document.getElementById("uploadZone").classList.toggle("drag", on);
+}
+function onDrop(e){
+  e.preventDefault();
+  onDrag(e, false);
+  handleFile(e.dataTransfer.files[0]);
+}
+
+function handleFile(file){
+  if(!file) return;
+  showToast("Processando planilha...");
+  var reader = new FileReader();
+  reader.onload = function(e){
+    try{
+      var wb = XLSX.read(e.target.result, {type:"binary"});
+      var ws = wb.Sheets[wb.SheetNames[0]];
+      var rows = XLSX.utils.sheet_to_json(ws, {header:1, defval:""});
+      var hdr = rows[0].map(function(h){return String(h).trim();});
+
+      function ci(name){return hdr.indexOf(name);}
+      var cols = {
+        cnpj:   ci("CNPJ"),
+        razao:  ci("Razão social"),
+        regime: ci("Regime"),
+        ie:     ci("Inscrições Estaduais"),
+        isento: ci("Empresa Isenta"),
+        im:     ci("Insc. Municipal"),
+        uf:     ci("UF"),
+        grupo:  ci("Grupo de Empresas"),
+        tags:   ci("Tags")
+      };
+
+      DADOS = [];
+      for(var i=1; i<rows.length; i++){
+        var r = rows[i];
+        var cnpj = String(r[cols.cnpj]||"").trim();
+        if(!cnpj) continue;
+        var tags_raw = String(r[cols.tags]||"").trim();
+        var tags_arr = tags_raw ? tags_raw.split(",").map(function(t){return t.trim();}).filter(function(t){return t&&t!=="CX";}) : [];
+        DADOS.push({
+          cnpj:   cnpj,
+          razao:  String(r[cols.razao] ||"").trim().substring(0,60),
+          regime: String(r[cols.regime]||"").trim(),
+          ie:     String(r[cols.ie]    ||"").trim(),
+          isento: String(r[cols.isento]||"").trim(),
+          im:     String(r[cols.im]    ||"").trim(),
+          uf:     String(r[cols.uf]    ||"").trim(),
+          grupo:  String(r[cols.grupo] ||"").trim().substring(0,40),
+          tags:   tags_raw,
+          tags_arr: tags_arr,
+          is_cc:  isCC(tags_arr)
+        });
+      }
+
+      document.getElementById("uploadWrap").style.display = "none";
+      // Ativa a aba atual ou a primeira
+      var activeTab = document.querySelector(".tc.act");
+      if(!activeTab){
+        // Primeira carga: ativa aba regime
+        var firstTb = document.querySelector(".tb:not(:first-child)");
+        if(firstTb) setTab('regime', firstTb);
+      } else {
+        // Recarga: mantém aba ativa visível
+        activeTab.style.display = "block";
+      }
+
+      renderAll();
+      showToast(DADOS.length.toLocaleString("pt-BR") + " empresas carregadas!");
+    } catch(err){
+      showToast("Erro: " + err.message);
+    }
+  };
+  reader.readAsBinaryString(file);
+}
+
+var CC_TAGS = ["Equipe DP 4","Equipe CC 1","Equipe CC 2","Equipe CC 4","Equipe Dedicada Canopus"];
+function isCC(tags){return tags && tags.some(function(t){return CC_TAGS.indexOf(t)>-1;});}
+function isentoSim(v){
+  return ["sim","s","yes","1","true"].indexOf((v||"").toLowerCase()) > -1;
+}
+
+// ── RENDER ALL ──
+
+// ── FILTRO GLOBAL POR TAG ──
+var TAG_FILTER = "";
+function applyTagFilter(){
+  TAG_FILTER = document.getElementById("filtTag").value;
+  renderAll();
+}
+function tagMatch(e){
+  if(!TAG_FILTER) return true;
+  return e.tags_arr && e.tags_arr.indexOf(TAG_FILTER) > -1;
+}
+function renderAll(){
+  renderRegime();
+  renderIE();
+  renderIM();
+  renderCC();
+  renderResumo();
+}
+
+// ── ABA 1: REGIME ──
+var filtRegime = [];
+function renderRegime(){
+  pages.regime = 1;
+  var q = (document.getElementById("searchRegime").value||"").toLowerCase();
+  filtRegime = DADOS.filter(function(e){
+    return tagMatch(e) && !e.is_cc && !e.regime && (!q || e.cnpj.toLowerCase().indexOf(q)>-1 || e.razao.toLowerCase().indexOf(q)>-1 || e.grupo.toLowerCase().indexOf(q)>-1);
+  });
+
+  var naoCC = DADOS.filter(function(e){return !e.is_cc&&tagMatch(e);});
+  var semR = naoCC.filter(function(e){return !e.regime;}).length;
+  var comR = naoCC.filter(function(e){return !!e.regime;}).length;
+  var total = naoCC.length;
+
+  document.getElementById("bRegime").textContent = semR;
+  document.getElementById("statsRegime").innerHTML =
+    sCard("warn","Sem Regime","Pendentes de cadastro", semR) +
+    sCard("ok","Com Regime","Regime informado", comR) +
+    sCard("all","Total","Excl. Const. Civil", total);
+
+  drawTable("bodyRegime", "pagerRegime", filtRegime, rowRegime, "regime");
+}
+
+function rowRegime(e){
+  return '<div class="tr" style="grid-template-columns:140px 1fr 140px 80px">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div><div class="sub">'+esc(e.grupo)+'</div></div>'
+    +'<div class="td"><span class="chip chip-r">Sem regime</span></div>'
+    +'<div class="td"><span class="chip chip-r">&#9888; Pendente</span></div>'
+    +'</div>';
+}
+
+// ── ABA 2: IE ──
+var filtIE = [];
+function renderIE(){
+  pages.ie = 1;
+  var q    = (document.getElementById("searchIE").value||"").toLowerCase();
+  var modo = document.getElementById("filtIE").value;
+
+  var sem_ie   = DADOS.filter(function(e){return tagMatch(e) && !e.is_cc && !isentoSim(e.isento) && !e.ie;});
+  var com_ie   = DADOS.filter(function(e){return tagMatch(e) && !e.is_cc && !isentoSim(e.isento) && e.ie;});
+  var isentas  = DADOS.filter(function(e){return tagMatch(e) && !e.is_cc && isentoSim(e.isento);});
+
+  document.getElementById("bIE").textContent = sem_ie.length;
+  document.getElementById("statsIE").innerHTML =
+    sCard("warn","Sem IE","N&#227;o isenta e sem IE", sem_ie.length) +
+    sCard("ok","Com IE","IE cadastrada", com_ie.length) +
+    sCard("amb","Isentas","IE dispensada", isentas.length) +
+    sCard("all","Total","Excl. Const. Civil", DADOS.filter(function(e){return !e.is_cc&&tagMatch(e);}).length);
+
+  var pool = modo==="sem_ie" ? sem_ie : modo==="com_ie" ? com_ie : modo==="isentas" ? isentas : DADOS;
+  filtIE = q ? pool.filter(function(e){
+    return e.cnpj.toLowerCase().indexOf(q)>-1 || e.razao.toLowerCase().indexOf(q)>-1 || e.grupo.toLowerCase().indexOf(q)>-1;
+  }) : pool;
+
+  drawTable("bodyIE", "pagerIE", filtIE, rowIE, "ie");
+}
+
+function rowIE(e){
+  var isento = isentoSim(e.isento);
+  var temIE  = !!e.ie;
+  var statusChip = isento
+    ? '<span class="chip chip-b">Isenta</span>'
+    : temIE
+      ? '<span class="chip chip-g">OK</span>'
+      : '<span class="chip chip-r">&#9888; Sem IE</span>';
+  var ieExib = e.ie
+    ? '<span style="font-size:10px;color:var(--gray-70)">'+esc(e.ie.substring(0,50))+'</span>'
+    : '<span style="font-size:10px;color:var(--gray-30)">—</span>';
+  return '<div class="tr" style="grid-template-columns:140px 1fr 80px 80px 1fr">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div><div class="sub">'+esc(e.grupo)+'</div></div>'
+    +'<div class="td"><span class="chip chip-gr">'+esc(e.uf||"—")+'</span></div>'
+    +'<div class="td">'+statusChip+'</div>'
+    +'<div class="td">'+ieExib+'</div>'
+    +'</div>';
+}
+
+// ── ABA 3: IM ──
+var filtIM = [];
+function renderIM(){
+  pages.im = 1;
+  var q    = (document.getElementById("searchIM").value||"").toLowerCase();
+  var modo = document.getElementById("filtIM").value;
+
+  var sem_im = DADOS.filter(function(e){return tagMatch(e) && !e.is_cc && !e.im;});
+  var com_im = DADOS.filter(function(e){return tagMatch(e) && !e.is_cc && !!e.im;});
+
+  var naoCC_im = DADOS.filter(function(e){return !e.is_cc&&tagMatch(e);});
+  document.getElementById("bIM").textContent = sem_im.length;
+  document.getElementById("statsIM").innerHTML =
+    sCard("warn","Sem IM","Sem inscri&#231;&#227;o municipal", sem_im.length) +
+    sCard("ok","Com IM","IM cadastrada", com_im.length) +
+    sCard("all","Total","Excl. Const. Civil", naoCC_im.length);
+
+  var pool = modo==="sem_im" ? sem_im : modo==="com_im" ? com_im : DADOS;
+  filtIM = q ? pool.filter(function(e){
+    return e.cnpj.toLowerCase().indexOf(q)>-1 || e.razao.toLowerCase().indexOf(q)>-1 || e.grupo.toLowerCase().indexOf(q)>-1;
+  }) : pool;
+
+  drawTable("bodyIM", "pagerIM", filtIM, rowIM, "im");
+}
+
+function rowIM(e){
+  var temIM = !!e.im;
+  var imExib = e.im
+    ? '<span style="font-size:10px;color:var(--gray-70)">'+esc(e.im.substring(0,50))+'</span>'
+    : '<span class="chip chip-a">&#9888; Sem IM</span>';
+  return '<div class="tr" style="grid-template-columns:140px 1fr 140px 1fr">'
+    +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+    +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div><div class="sub">'+esc(e.grupo)+'</div></div>'
+    +'<div class="td"><span style="font-size:10px;color:var(--gray-70)">'+esc(e.regime||"Sem regime")+'</span></div>'
+    +'<div class="td">'+imExib+'</div>'
+    +'</div>';
+}
+
+// ── HELPERS ──
+function sCard(cls, t, s, n){
+  var bg = cls==="warn"?"var(--red-lt)":cls==="ok"?"var(--green-lt)":cls==="amb"?"var(--amber-lt)":"var(--gray-05)";
+  var ic = cls==="warn"?"var(--red)":cls==="ok"?"var(--green-dark)":cls==="amb"?"var(--amber)":"var(--gray-50)";
+  var bc = cls==="warn"?"#fca5a5":cls==="ok"?"#6ee7b7":cls==="amb"?"#fed7aa":"var(--border)";
+  return '<div class="sc '+cls+'" style="border-color:'+bc+'">'
+    +'<div class="sc-top"><div class="sc-ico" style="background:'+bg+'">'
+    +'<svg viewBox="0 0 24 24" fill="none" stroke="'+ic+'" stroke-width="2" width="13" height="13"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>'
+    +'</div><div><div class="sc-t">'+t+'</div><div class="sc-s">'+s+'</div></div></div>'
+    +'<div class="sc-n">'+Number(n).toLocaleString("pt-BR")+'</div></div>';
+}
+
+function drawTable(bodyId, pagerId, data, rowFn, tabKey){
+  var body  = document.getElementById(bodyId);
+  var pager = document.getElementById(pagerId);
+  var p     = pages[tabKey];
+  var total = data.length;
+  var start = (p-1)*PER;
+  var slice = data.slice(start, start+PER);
+
+  if(!slice.length){
+    body.innerHTML = '<div class="empty">'
+      +'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>'
+      +'<strong>Nenhum resultado</strong><span>Ajuste os filtros</span></div>';
+    pager.innerHTML = "";
+    return;
+  }
+
+  body.innerHTML = slice.map(rowFn).join("");
+
+  var pages_total = Math.ceil(total/PER);
+  var s2 = start+1, e2 = Math.min(p*PER, total);
+  var p1 = Math.max(1,p-3), p2 = Math.min(pages_total, p+3);
+  var btns = "";
+  for(var pp=p1;pp<=p2;pp++){
+    btns += '<button class="pg-btn'+(pp===p?" cur":"")+'" onclick="goPage(\''+tabKey+'\','+pp+')">'+pp+'</button>';
+  }
+  pager.innerHTML = '<span class="pg-info">'+s2.toLocaleString("pt-BR")+"&ndash;"+e2.toLocaleString("pt-BR")+" de "+total.toLocaleString("pt-BR")+'</span>'
+    +'<div class="pg-btns"><button class="pg-btn" onclick="goPage(\''+tabKey+'\','+(p-1)+')" '+(p<=1?"disabled":"")+'>&#8249;</button>'
+    +btns
+    +'<button class="pg-btn" onclick="goPage(\''+tabKey+'\','+(p+1)+')" '+(p>=pages_total?"disabled":"")+'>&#8250;</button></div>';
+}
+
+function goPage(tab, p){
+  var total = tab==="regime" ? filtRegime.length : tab==="ie" ? filtIE.length : filtIM.length;
+  var max = Math.ceil(total/PER);
+  if(p<1||p>max) return;
+  pages[tab] = p;
+  if(tab==="regime") drawTable("bodyRegime","pagerRegime",filtRegime,rowRegime,"regime");
+  else if(tab==="ie") drawTable("bodyIE","pagerIE",filtIE,rowIE,"ie");
+  else drawTable("bodyIM","pagerIM",filtIM,rowIM,"im");
+}
+
+function exportTab(tab){
+  var data = tab==="regime" ? filtRegime : tab==="ie" ? filtIE : filtIM;
+  var hdr, rows;
+  if(tab==="regime"){
+    hdr = ["CNPJ","Razao Social","Grupo","UF","Regime","Situacao"];
+    rows = data.map(function(e){return [e.cnpj,e.razao,e.grupo,e.uf,e.regime||"SEM REGIME","Pendente"];});
+  } else if(tab==="ie"){
+    hdr = ["CNPJ","Razao Social","Grupo","UF","Isento","IE Cadastrada","Situacao"];
+    rows = data.map(function(e){
+      var sit = isentoSim(e.isento)?"Isenta":e.ie?"Com IE":"Sem IE";
+      return [e.cnpj,e.razao,e.grupo,e.uf,e.isento,e.ie,sit];
+    });
+  } else {
+    hdr = ["CNPJ","Razao Social","Grupo","Regime","IM Cadastrada","Situacao"];
+    rows = data.map(function(e){return [e.cnpj,e.razao,e.grupo,e.regime,e.im,e.im?"Com IM":"Sem IM"];});
+  }
+  var csv = [hdr].concat(rows).map(function(r){
+    return r.map(function(v){return '"'+String(v||"").replace(/"/g,'""')+'"';}).join(",");
+  }).join("\n");
+  var blob = new Blob(["\ufeff"+csv],{type:"text/csv;charset=utf-8;"});
+  var a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "validacao_"+tab+".csv";
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  showToast("CSV exportado!");
+}
+
+
+var filtCC = [];
+var pageCC = 1;
+function renderCC(){
+  pageCC = 1;
+  var q = (document.getElementById("searchCC").value||"").toLowerCase();
+  var modo = document.getElementById("filtCC").value;
+  var pool = DADOS.filter(function(e){return e.is_cc && (!TAG_FILTER||tagMatch(e));});
+  if(modo==="sem_regime") pool = pool.filter(function(e){return !e.regime;});
+  else if(modo==="sem_ie") pool = pool.filter(function(e){return !isentoSim(e.isento) && !e.ie;});
+  else if(modo==="sem_im") pool = pool.filter(function(e){return !e.im;});
+  if(q) pool = pool.filter(function(e){return e.cnpj.toLowerCase().indexOf(q)>-1||e.razao.toLowerCase().indexOf(q)>-1||e.grupo.toLowerCase().indexOf(q)>-1;});
+  filtCC = pool;
+  var all_cc = DADOS.filter(function(e){return e.is_cc;});
+  document.getElementById("bCC").textContent = all_cc.length;
+  document.getElementById("statsCC").innerHTML =
+    sCard("all","Total CC","",all_cc.length) +
+    sCard("warn","Sem Regime","",all_cc.filter(function(e){return !e.regime;}).length) +
+    sCard("warn","Sem IE","N&#227;o isentas",all_cc.filter(function(e){return !isentoSim(e.isento)&&!e.ie;}).length) +
+    sCard("amb","Sem IM","",all_cc.filter(function(e){return !e.im;}).length);
+  drawCC();
+}
+function drawCC(){
+  var start=(pageCC-1)*50, slice=filtCC.slice(start,start+50);
+  var body = document.getElementById("bodyCC");
+  var pager = document.getElementById("pagerCC");
+  if(!slice.length){
+    body.innerHTML='<div class="empty"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" width="36" height="36"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg><strong>Nenhum resultado</strong></div>';
+    pager.innerHTML=""; return;
+  }
+  body.innerHTML = slice.map(function(e){
+    var ieChip = e.ie ? '<span class="chip" style="background:var(--green-lt);color:var(--green-dark)">Sim</span>' : '<span class="chip" style="background:var(--red-lt);color:var(--red)">N&#227;o</span>';
+    var isentoChip = isentoSim(e.isento) ? '<span class="chip" style="background:var(--blue-lt,#DDF6FF);color:#0284C7">Isenta</span>' : '<span class="chip" style="background:var(--gray-10);color:var(--gray-70)">N&#227;o</span>';
+    return '<div class="tr" style="grid-template-columns:140px 1fr 140px 80px 80px">'
+      +'<div class="td"><span class="cnpj">'+esc(e.cnpj)+'</span></div>'
+      +'<div class="td"><div class="razao" title="'+esc(e.razao)+'">'+esc(e.razao)+'</div><div class="sub">'+esc(e.grupo)+'</div></div>'
+      +'<div class="td"><span style="font-size:10px;color:var(--gray-70)">'+esc(e.regime||"Sem regime")+'</span></div>'
+      +'<div class="td">'+isentoChip+'</div>'
+      +'<div class="td">'+ieChip+'</div>'
+      +'</div>';
+  }).join("");
+  var total=filtCC.length, pages=Math.ceil(total/50);
+  var s=(pageCC-1)*50+1, en=Math.min(pageCC*50,total);
+  var btns="";
+  for(var p=Math.max(1,pageCC-3);p<=Math.min(pages,pageCC+3);p++){
+    btns+='<button class="pg-btn'+(p===pageCC?" cur":"")+'" onclick="goCC('+p+')">'+p+'</button>';
+  }
+  pager.innerHTML='<span class="pg-info">'+s.toLocaleString("pt-BR")+"&ndash;"+en.toLocaleString("pt-BR")+" de "+total.toLocaleString("pt-BR")+'</span>'
+    +'<div class="pg-btns"><button class="pg-btn" onclick="goCC('+(pageCC-1)+')" '+(pageCC<=1?"disabled":"")+'>&#8249;</button>'+btns+'<button class="pg-btn" onclick="goCC('+(pageCC+1)+')" '+(pageCC>=pages?"disabled":"")+'>&#8250;</button></div>';
+}
+function goCC(p){var pt=Math.ceil(filtCC.length/50);if(p<1||p>pt)return;pageCC=p;drawCC();}
+
+function setTab(id, btn){
+  document.querySelectorAll(".tc").forEach(function(t){
+    t.classList.remove("act");
+    t.style.display = "none";
+  });
+  document.querySelectorAll(".tb").forEach(function(b){b.classList.remove("act");});
+  var target = document.getElementById("tab-"+id);
+  target.classList.add("act");
+  target.style.display = "block";
+  btn.classList.add("act");
+  if(id==="resumo") renderResumo();
+}
+
+var tTimer;
+function showToast(msg){
+  var t = document.getElementById("toast");
+  document.getElementById("toastMsg").textContent = msg;
+  t.classList.add("show");
+  clearTimeout(tTimer);
+  tTimer = setTimeout(function(){t.classList.remove("show");}, 2800);
+}
+
+</script>
+</body>
+</html>
