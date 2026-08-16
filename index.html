@@ -1221,12 +1221,21 @@ function rCruzamento(){
   return '<div style="max-width:900px">' +
     '<p style="color:#94a3b8;font-size:13px;margin-bottom:16px">Selecione a empresa e a competência para cruzar os valores do SPED Fiscal com a Guia de ICMS.</p>' +
     '<div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap">' +
-      '<select id="crz-emp" style="flex:1;min-width:260px" onchange="cruzCarregarEmpresas()"><option value="">— Selecione a empresa —</option></select>' +
-      '<input id="crz-comp" type="month" value="'+new Date().toISOString().slice(0,7)+'" style="width:160px" onchange="cruzBuscar()">' +
+      '<select id="crz-emp" style="flex:1;min-width:260px"><option value="">— Selecione a empresa —</option></select>' +
+      '<input id="crz-comp" type="month" value="'+new Date().toISOString().slice(0,7)+'" style="width:160px">' +
       '<button onclick="cruzBuscar()" style="padding:8px 18px;background:#00bf63;color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer">Buscar</button>' +
+      '<button onclick="cruzSincManual()" style="padding:8px 18px;background:transparent;border:1px solid #38bdf8;color:#38bdf8;border-radius:8px;font-weight:700;cursor:pointer">&#8635; Sincronizar</button>' +
     '</div>' +
     '<div id="crz-result" style="min-height:120px"></div>' +
   '</div>';
+}
+
+function cruzSincManual(){
+  var cnpj = (document.getElementById('crz-emp')||{}).value;
+  var comp = (document.getElementById('crz-comp')||{}).value;
+  var res  = document.getElementById('crz-result');
+  if(!cnpj || !comp){ res.innerHTML='<p style="color:#f43f5e">Selecione a empresa e a competência primeiro.</p>'; return; }
+  cruzSincronizar(cnpj, comp);
 }
 
 async function initCruzamento(){
