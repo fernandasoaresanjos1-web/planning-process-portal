@@ -1316,10 +1316,12 @@ async function cruzSincronizar(cnpj, comp){
   var res = document.getElementById('crz-result');
   res.innerHTML='<div style="text-align:center;padding:32px;color:#64748b">🔄 Sincronizando com Acessórias...</div>';
   try {
+    // Remove formatação do CNPJ (pontos, barra, hífen)
+    var cnpjLimpo = cnpj.replace(/[.\/\-]/g, '');
     var resp = await fetch('https://sync-acessorias.fernandasoaresanjos1.workers.dev', {
       method: 'POST',
       headers:{ 'Content-Type':'application/json' },
-      body: JSON.stringify({ cnpj: cnpj, competencia: comp })
+      body: JSON.stringify({ cnpj: cnpjLimpo, competencia: comp })
     });
     var text = await resp.text();
     if(!text) throw new Error('Sem resposta - verifique logs do Netlify');
